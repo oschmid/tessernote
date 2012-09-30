@@ -16,7 +16,7 @@ import (
 const lenPath = len("/view/")
 const tagSeparator = ", "
 
-var templates = template.Must(template.ParseFiles("tmpl/edit.html", "tmpl/view.html"))
+var templates = template.Must(template.ParseFiles("src/tmpl/edit.html", "src/tmpl/view.html"))
 var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
 func ViewHandler(w http.ResponseWriter, r *http.Request, title string) {
