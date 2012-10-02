@@ -1,4 +1,4 @@
-notes
+Grivet
 =====
 
-simple note taking webapp
+Grivet is a plain text note taking web application where notes are organized according to tags.
