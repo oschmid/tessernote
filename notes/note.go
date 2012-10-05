@@ -25,7 +25,7 @@ import (
 
 type Note struct {
 	Title string
-	Body  []byte
+	Body  string
 	Tags  []string
 }
 

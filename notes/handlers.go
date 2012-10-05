@@ -49,7 +49,7 @@ func EditHandler(w http.ResponseWriter, r *http.Request, title string) {
 func SaveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	body := r.FormValue("body")
 	tags := strings.Split(r.FormValue("tags"), tagSeparator)
-	note := Note{Title: title, Body: []byte(body), Tags: tags}
+	note := Note{Title: title, Body: body, Tags: tags}
 	err := saveNote(note)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
