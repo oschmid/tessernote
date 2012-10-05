@@ -17,6 +17,7 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
+	"log"
 	"notes"
 	"net/http"
 )
@@ -26,5 +27,5 @@ func main() {
 	http.HandleFunc("/edit/", notes.MakeHandler(notes.EditHandler))
 	http.HandleFunc("/save/", notes.MakeHandler(notes.SaveHandler))
 	http.HandleFunc("/", notes.RootHandler)
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
