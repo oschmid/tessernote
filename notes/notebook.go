@@ -16,6 +16,8 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
 package notes
 
+// TODO store notes by GUID
+
 type NoteBook struct {
 	notes map[string]string          // note title -> note body
 	tags  map[string]map[string]bool // tag name -> note titles -> true if note has tag
@@ -62,7 +64,7 @@ func (n NoteBook) allTitles() []string {
 }
 
 func (n NoteBook) allTitlesOfTag(tag string) []string {
-	titles := make([]string, len(n.tags))
+	titles := []string{}
 	for title, tagged := range n.tags[tag] {
 		if tagged {
 			titles = append(titles, title)
@@ -95,4 +97,21 @@ func (n NoteBook) TagsOfNote(title string) []string {
 		}
 	}
 	return tags
+}
+
+func (n NoteBook) Remove(title string) {
+	// remove body
+	delete(n.notes, title)
+
+	// remove note from tags
+	for _, tag := range n.TagsOfNote(title) {
+		delete(n.tags[tag], title)
+	}
+}
+
+func (n NoteBook) Update(note Note) {
+	// update body
+	n.notes[note.Title] = note.Body
+
+	// TODO update tags
 }

@@ -17,12 +17,13 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package notes
 
 import (
+	"fmt"
 	"testing"
 )
 
 func TestAddNote(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
-	note := Note{Title: "title", Body: "body", Tags: tags}
+	note := Note{"title", "body", tags}
 	notebook := NewNoteBook()
 	notebook.Add(note)
 
@@ -36,26 +37,93 @@ func TestAddNote(t *testing.T) {
 	if len(actual.Tags) != len(note.Tags) {
 		t.Fatalf("expected=%d actual=%d", len(note.Tags), len(actual.Tags))
 	}
-	if actual.Tags[0] != note.Tags[0] && actual.Tags[1] != note.Tags[0] {
+	if !contains(actual.Tags, note.Tags[0]) {
 		t.Fatalf("actual does not contain=%s", note.Tags[0])
 	}
-	if actual.Tags[0] != note.Tags[1] && actual.Tags[1] != note.Tags[1] {
+	if !contains(actual.Tags, note.Tags[1]) {
 		t.Fatalf("actual does not contain=%s", note.Tags[1])
 	}
 }
 
 func TestRemoveNote(t *testing.T) {
-	t.Fatal("Not yet implemented")
+	tags := []string{"tag1", "tag2"}
+	note := Note{"title", "body", tags}
+	notebook := NewNoteBook()
+	notebook.Add(note)
+	titles := notebook.Titles()
+	if len(titles) != 1 {
+		t.Fatalf("note not added")
+	}
+
+	notebook.Remove(note.Title)
+	titles = notebook.Titles()
+	if len(titles) > 0 {
+		t.Fatalf("expected=0 actual=%d", len(titles))
+	}
 }
 
-func TestEditNote(t *testing.T) {
-	t.Fatal("Not yet implemented")
+func TestEditNoteBody(t *testing.T) {
+	tags := []string{"tag1", "tag2"}
+	note := Note{"title", "body", tags}
+	notebook := NewNoteBook()
+	notebook.Add(note)
+
+	note.Body = "body2"
+	notebook.Update(note)
+	actual := notebook.Note(note.Title)
+	if actual.Body != note.Body {
+		t.Fatalf("expected=%s actual=%s", note.Body, actual.Body)
+	}
 }
+
+// TODO test update tags
 
 func TestAllTitles(t *testing.T) {
-	t.Fatal("Not yet implemented")
+	num := 10
+	notebook := newFullNoteBook(num)
+
+	titles := notebook.Titles()
+	if len(titles) != num {
+		t.Fatalf("expected=%d actual=%d", num, len(titles))
+	}
+	for i := 0; i < num; i++ {
+		title := number("title", i)
+		if !contains(titles, title) {
+			t.Fatalf("%v does not contain %s", titles, title)
+		}
+	}
 }
 
 func TestAllTitlesOfTag(t *testing.T) {
-	t.Fatal("Not yet implemented")
+	num := 10
+	notebook := newFullNoteBook(num)
+
+	titles := notebook.Titles(number("tag", 2))
+	if len(titles) != 2 {
+		t.Fatalf("expected=%d actual=%d %v", 2, len(titles), titles)
+	}
+}
+
+// helper functions
+
+func newFullNoteBook(num int) NoteBook {
+	notebook := *NewNoteBook()
+	for i := 0; i < num; i++ {
+		tags := []string{number("tag", i), number("tag", i+1)}
+		notebook.Add(Note{number("title", i), number("body", 0), tags})
+	}
+	return notebook
+}
+
+func number(text string, num int) string {
+	return fmt.Sprint(text, num)
+}
+
+func contains(slice []string, elem string) bool {
+	for _, value := range slice {
+		if value == elem {
+			return true
+		}
+	}
+	return false
 }

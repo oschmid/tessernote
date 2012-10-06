@@ -24,10 +24,10 @@ func set(elements ...string) map[string]bool {
 	return s
 }
 
-func intersection(s []string, t []string) []string {
-	u := make([]string, len(s))
-	for _, sElem := range s {
-		for _, tElem := range t {
+func intersection(a []string, b []string) []string {
+	u := make([]string, len(a))
+	for _, sElem := range a {
+		for _, tElem := range b {
 			if sElem == tElem {
 				u = append(u, sElem)
 			}
@@ -46,3 +46,23 @@ func intersection2(s map[string]bool, t map[string]bool) map[string]bool {
 	}
 	return u
 }*/
+
+func equals(a []string, b []string) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := 0; i < len(a); i++ {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
+}

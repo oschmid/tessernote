@@ -25,7 +25,7 @@ import (
 type Note struct {
 	Title string
 	Body  string
-	Tags  []string
+	Tags  []string // TODO convert to set
 }
 
 func (note Note) TagsAsString() string {

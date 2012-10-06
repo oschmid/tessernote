@@ -21,5 +21,27 @@ import (
 )
 
 func TestIntersection(t *testing.T) {
+	a := []string{"one", "two", "three", "four"}
+	b := []string{"zero", "two", "four", "five"}
+	expected := []string{"two", "four"}
+	actual := intersection(a, b)
+	if equals(actual, expected) {
+		t.Fatalf("expected=%v actual=%v", expected, actual)
+	}
+}
 
+func TestEquals(t *testing.T) {
+	a := []string{"one", "two", "three"}
+	b := []string{"one", "two", "three"}
+	c := []string{"one", "two", "four"}
+	d := []string{"one", "two", "three", "four"}
+	if !equals(a, b) {
+		t.FailNow()
+	}
+	if equals(a, c) {
+		t.FailNow()
+	}
+	if equals(a, d) {
+		t.FailNow()
+	}
 }
