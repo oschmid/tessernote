@@ -13,11 +13,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 package notes
 
 import (
-	"bytes"
 	"encoding/gob"
 	"fmt"
 	"os"
@@ -29,16 +28,17 @@ type Note struct {
 	Tags  []string
 }
 
-func (note Note) TagsAsString() (*string, error) {
-	tags := new(string)
-	buffer := bytes.NewBufferString(*tags)
-	for _, tag := range note.Tags {
-		_, err := buffer.WriteString(tag + tagSeparator)
-		if err != nil {
-			return nil, err
-		}
+func (note Note) TagsAsString() string {
+	if len(note.Tags) == 0 {
+		return ""
 	}
-	return tags, nil // TODO remove last separator
+
+	tags := note.Tags[0]
+	for _, tag := range note.Tags[1:] {
+		tags += tagSeparator + tag
+	}
+
+	return tags
 }
 
 func saveNote(note Note) error {

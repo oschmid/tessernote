@@ -13,7 +13,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 package notes
 
 import (
@@ -26,7 +26,7 @@ import (
 const lenPath = len("/view/")
 const tagSeparator = ", "
 
-var templates = template.Must(template.ParseFiles("src/tmpl/edit.html", "src/tmpl/view.html"))
+var Templates *template.Template
 var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
 func ViewHandler(w http.ResponseWriter, r *http.Request, title string) {
@@ -75,7 +75,7 @@ func MakeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, page *Note) {
-	err := templates.ExecuteTemplate(w, tmpl+".html", page)
+	err := Templates.ExecuteTemplate(w, tmpl+".html", page)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

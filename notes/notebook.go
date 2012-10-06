@@ -13,23 +13,33 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 package notes
 
 type NoteBook struct {
-	notes map[string] string // note title -> note body
-	tags map[string] map[string]bool // tag name -> note titles -> true if note has tag
+	notes map[string]string          // note title -> note body
+	tags  map[string]map[string]bool // tag name -> note titles -> true if note has tag
+}
+
+func NewNoteBook() *NoteBook {
+	noteBook := new(NoteBook)
+	noteBook.notes = make(map[string]string)
+	noteBook.tags = make(map[string]map[string]bool)
+	return noteBook
 }
 
 // Returns the titles of all notes in the subset of notes specified by "tags"
 // If no tags are specified, returns all notes
-func (n NoteBook) Notes(tags ...string) []string {
+func (n NoteBook) Titles(tags ...string) []string {
 	if tags == nil || len(tags) == 0 {
 		return n.allTitles()
 	}
 
 	// get the notes of the first tag
 	notes := n.allTitlesOfTag(tags[0])
+	if len(notes) == 0 {
+		return notes
+	}
 
 	// intersect with each following subset of notes
 	for _, tag := range tags[1:] {
@@ -62,20 +72,23 @@ func (n NoteBook) allTitlesOfTag(tag string) []string {
 }
 
 func (n NoteBook) Add(note Note) {
-	n.notes[note.Title]=note.Body
+	n.notes[note.Title] = note.Body
 	for _, tag := range note.Tags {
-		n.tags[tag][note.Title]=true
+		if n.tags[tag] == nil {
+			n.tags[tag] = make(map[string]bool)
+		}
+		n.tags[tag][note.Title] = true
 	}
 }
 
 func (n NoteBook) Note(title string) Note {
 	body := n.notes[title]
-	tags := n.Tags(title)
+	tags := n.TagsOfNote(title)
 	return Note{title, body, tags}
 }
 
-func (n NoteBook) Tags(title string) []string {
-	tags := make([]string, len(n.tags))
+func (n NoteBook) TagsOfNote(title string) []string {
+	tags := *new([]string)
 	for tag, notes := range n.tags {
 		if notes[title] {
 			tags = append(tags, tag)

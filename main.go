@@ -13,16 +13,18 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 package main
 
 import (
+	"html/template"
 	"log"
-	"notes"
 	"net/http"
+	"notes"
 )
 
 func main() {
+	notes.Templates = template.Must(template.ParseFiles("src/tmpl/edit.html", "src/tmpl/view.html"))
 	http.HandleFunc("/view/", notes.MakeHandler(notes.ViewHandler))
 	http.HandleFunc("/edit/", notes.MakeHandler(notes.EditHandler))
 	http.HandleFunc("/save/", notes.MakeHandler(notes.SaveHandler))

@@ -13,7 +13,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 package notes
 
 import (
@@ -22,12 +22,9 @@ import (
 
 func TestTagsAsString(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
-	note := Note{Title: "title", Body: []byte("body"), Tags: tags}
-	stringTags, err := note.TagsAsString()
-	if *stringTags != tags[0]+tagSeparator+tags[1] {
-		t.Fail()
-	}
-	if err != nil {
+	note := Note{"title", "body", tags}
+	stringTags := note.TagsAsString()
+	if stringTags != tags[0]+tagSeparator+tags[1] {
 		t.Fail()
 	}
 }
