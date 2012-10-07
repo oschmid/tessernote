@@ -47,6 +47,26 @@ func intersection2(s map[string]bool, t map[string]bool) map[string]bool {
 	return u
 }*/
 
+// Returns a-b i.e. all the elements of a that are not in b
+func difference(a []string, b []string) []string {
+	c := []string{}
+	for _, elem := range a {
+		if !contains(b, elem) {
+			c = append(c, elem)
+		}
+	}
+	return c
+}
+
+func contains(slice []string, elem string) bool {
+	for _, value := range slice {
+		if value == elem {
+			return true
+		}
+	}
+	return false
+}
+
 func equals(a []string, b []string) bool {
 	if a == nil && b == nil {
 		return true
@@ -58,8 +78,8 @@ func equals(a []string, b []string) bool {
 		return false
 	}
 
-	for i := 0; i < len(a); i++ {
-		if a[i] != b[i] {
+	for _, elem := range a {
+		if !contains(b, elem) {
 			return false
 		}
 	}

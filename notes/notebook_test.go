@@ -45,7 +45,7 @@ func TestAddNote(t *testing.T) {
 	}
 }
 
-func TestRemoveNote(t *testing.T) {
+func TestDeleteNote(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
 	note := Note{"title", "body", tags}
 	notebook := NewNoteBook()
@@ -55,7 +55,7 @@ func TestRemoveNote(t *testing.T) {
 		t.Fatalf("note not added")
 	}
 
-	notebook.Remove(note.Title)
+	notebook.Delete(note.Title)
 	titles = notebook.Titles()
 	if len(titles) > 0 {
 		t.Fatalf("expected=0 actual=%d", len(titles))
@@ -76,7 +76,19 @@ func TestEditNoteBody(t *testing.T) {
 	}
 }
 
-// TODO test update tags
+func TestUpdateTags(t *testing.T) {
+	tags := []string{"tag1", "tag2"}
+	note := Note{"title", "body", tags}
+	notebook := NewNoteBook()
+	notebook.Add(note)
+
+	note.Tags = []string{"tag3", "tag4", "tag5"}
+	notebook.Update(note)
+	actual := notebook.Note(note.Title)
+	if !equals(actual.Tags, note.Tags) {
+		t.Fatal("expected=%v actual=%v", note.Tags, actual.Tags)
+	}
+}
 
 func TestAllTitles(t *testing.T) {
 	num := 10
@@ -117,13 +129,4 @@ func newFullNoteBook(num int) NoteBook {
 
 func number(text string, num int) string {
 	return fmt.Sprint(text, num)
-}
-
-func contains(slice []string, elem string) bool {
-	for _, value := range slice {
-		if value == elem {
-			return true
-		}
-	}
-	return false
 }

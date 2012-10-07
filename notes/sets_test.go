@@ -30,11 +30,30 @@ func TestIntersection(t *testing.T) {
 	}
 }
 
+func TestDifference(t *testing.T) {
+	a := []string{"one", "two", "three"}
+	b := []string{"two", "four", "one", "five"}
+	c := difference(a, b)
+	d := difference(b, a)
+
+	expectedC := []string{"three"}
+	if !equals(c, expectedC) {
+		t.Fatalf("expected=%v actual=%v", expectedC, c)
+	}
+
+	expectedD := []string{"four", "five"}
+	if !equals(d, expectedD) {
+		t.Fatalf("expected=%v actual=%v", expectedD, d)
+	}
+}
+
 func TestEquals(t *testing.T) {
 	a := []string{"one", "two", "three"}
 	b := []string{"one", "two", "three"}
 	c := []string{"one", "two", "four"}
 	d := []string{"one", "two", "three", "four"}
+	e := []string{"two", "three", "one"}
+
 	if !equals(a, b) {
 		t.FailNow()
 	}
@@ -42,6 +61,9 @@ func TestEquals(t *testing.T) {
 		t.FailNow()
 	}
 	if equals(a, d) {
+		t.FailNow()
+	}
+	if !equals(a, e) {
 		t.FailNow()
 	}
 }

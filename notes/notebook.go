@@ -76,11 +76,15 @@ func (n NoteBook) allTitlesOfTag(tag string) []string {
 func (n NoteBook) Add(note Note) {
 	n.notes[note.Title] = note.Body
 	for _, tag := range note.Tags {
-		if n.tags[tag] == nil {
-			n.tags[tag] = make(map[string]bool)
-		}
-		n.tags[tag][note.Title] = true
+		n.addTag(tag, note.Title)
 	}
+}
+
+func (n NoteBook) addTag(tag string, note string) {
+	if n.tags[tag] == nil {
+		n.tags[tag] = make(map[string]bool)
+	}
+	n.tags[tag][note] = true
 }
 
 func (n NoteBook) Note(title string) Note {
@@ -99,11 +103,11 @@ func (n NoteBook) TagsOfNote(title string) []string {
 	return tags
 }
 
-func (n NoteBook) Remove(title string) {
-	// remove body
+func (n NoteBook) Delete(title string) {
+	// delete body
 	delete(n.notes, title)
 
-	// remove note from tags
+	// delete note from tags
 	for _, tag := range n.TagsOfNote(title) {
 		delete(n.tags[tag], title)
 	}
@@ -113,5 +117,19 @@ func (n NoteBook) Update(note Note) {
 	// update body
 	n.notes[note.Title] = note.Body
 
-	// TODO update tags
+	// update tags
+	oldTags := n.TagsOfNote(note.Title)
+	if !equals(oldTags, note.Tags) {
+		// remove note from tags it no longer has
+		remove := difference(oldTags, note.Tags)
+		for _, tag := range remove {
+			delete(n.tags[tag], note.Title)
+		}
+
+		// add note to tags it has gained
+		add := difference(note.Tags, oldTags)
+		for _, tag := range add {
+			n.addTag(tag, note.Title)
+		}
+	}
 }
