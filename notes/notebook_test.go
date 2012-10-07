@@ -23,11 +23,11 @@ import (
 
 func TestAddNote(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
-	note := Note{"title", "body", tags}
+	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
 
-	actual := notebook.Note(note.Title)
+	actual := notebook.Note(note.Id)
 	if actual.Title != note.Title {
 		t.Fatalf("expected=%s actual=%s", note.Title, actual.Title)
 	}
@@ -47,7 +47,7 @@ func TestAddNote(t *testing.T) {
 
 func TestDeleteNote(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
-	note := Note{"title", "body", tags}
+	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
 	titles := notebook.Titles()
@@ -55,22 +55,46 @@ func TestDeleteNote(t *testing.T) {
 		t.Fatalf("note not added")
 	}
 
-	notebook.Delete(note.Title)
+	notebook.Delete(note.Id)
 	titles = notebook.Titles()
 	if len(titles) > 0 {
 		t.Fatalf("expected=0 actual=%d", len(titles))
 	}
 }
 
+func TestDeleteNonExistentNote(t *testing.T) {
+	title := "title"
+	tags := []string{"tag1", "tag2"}
+	note := *NewNote(title, "body", tags)
+	notebook := NewNoteBook()
+	notebook.Add(note)
+
+	note2 := *NewNote(title, "body", tags)
+	if note2.Id == note.Id {
+		t.Fatalf("note IDs are not unique")
+	}
+
+	notebook.Delete(note2.Id)
+	titles := notebook.Titles()
+	if len(titles) != 1 {
+		t.Fatalf("expected=1 actual=%d %v", len(titles), titles)
+	}
+}
+
 func TestEditNoteBody(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
-	note := Note{"title", "body", tags}
+	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
 
 	note.Body = "body2"
+	actual := notebook.Note(note.Id)
+	if actual.Body == note.Body {
+		t.Fatal("NoteBook storage updated before call to update")
+	}
+
 	notebook.Update(note)
-	actual := notebook.Note(note.Title)
+	actual = notebook.Note(note.Id)
 	if actual.Body != note.Body {
 		t.Fatalf("expected=%s actual=%s", note.Body, actual.Body)
 	}
@@ -78,13 +102,18 @@ func TestEditNoteBody(t *testing.T) {
 
 func TestUpdateTags(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
-	note := Note{"title", "body", tags}
+	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
 
 	note.Tags = []string{"tag3", "tag4", "tag5"}
+	actual := notebook.Note(note.Id)
+	if equals(actual.Tags, note.Tags) {
+		t.Fatal("NoteBook storage updated before call to update")
+	}
+
 	notebook.Update(note)
-	actual := notebook.Note(note.Title)
+	actual = notebook.Note(note.Id)
 	if !equals(actual.Tags, note.Tags) {
 		t.Fatal("expected=%v actual=%v", note.Tags, actual.Tags)
 	}
@@ -98,6 +127,7 @@ func TestAllTitles(t *testing.T) {
 	if len(titles) != num {
 		t.Fatalf("expected=%d actual=%d", num, len(titles))
 	}
+
 	for i := 0; i < num; i++ {
 		title := number("title", i)
 		if !contains(titles, title) {
@@ -122,7 +152,7 @@ func newFullNoteBook(num int) NoteBook {
 	notebook := *NewNoteBook()
 	for i := 0; i < num; i++ {
 		tags := []string{number("tag", i), number("tag", i+1)}
-		notebook.Add(Note{number("title", i), number("body", 0), tags})
+		notebook.Add(*NewNote(number("title", i), "body", tags))
 	}
 	return notebook
 }

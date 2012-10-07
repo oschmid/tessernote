@@ -17,15 +17,23 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package notes
 
 import (
+	"code.google.com/p/go-uuid/uuid"
 	"encoding/gob"
 	"fmt"
 	"os"
 )
 
 type Note struct {
+	Id    string
 	Title string
 	Body  string
 	Tags  []string // TODO convert to set
+}
+
+func NewNote(title string, body string, tags []string) *Note {
+	note := &Note{Title:title, Body:body,Tags:tags}
+	note.Id = uuid.New()
+	return note
 }
 
 func (note Note) TagsAsString() string {

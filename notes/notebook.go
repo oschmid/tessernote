@@ -16,11 +16,13 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
 package notes
 
-// TODO store notes by GUID
+import "strings"
+
+const TITLE_BODY_SEPARATOR string = "\n"
 
 type NoteBook struct {
-	notes map[string]string          // note title -> note body
-	tags  map[string]map[string]bool // tag name -> note titles -> true if note has tag
+	notes map[string]string          // note ID -> note title and body
+	tags  map[string]map[string]bool // tag name -> note IDs -> true if note has tag
 }
 
 func NewNoteBook() *NoteBook {
@@ -30,106 +32,119 @@ func NewNoteBook() *NoteBook {
 	return noteBook
 }
 
-// Returns the titles of all notes in the subset of notes specified by "tags"
-// If no tags are specified, returns all notes
-func (n NoteBook) Titles(tags ...string) []string {
+// Returns the UUIDs of all notes in the subset of notes specified by "tags"
+// If no tags are specified, returns all note UUIDs
+func (n NoteBook) UUIDs(tags ...string) []string {
 	if tags == nil || len(tags) == 0 {
-		return n.allTitles()
+		return n.allUUIDs()
 	}
 
-	// get the notes of the first tag
-	notes := n.allTitlesOfTag(tags[0])
-	if len(notes) == 0 {
-		return notes
+	// get the note UUIDs associated with the first tag
+	uuids := n.allUUIDsOfTag(tags[0])
+	if len(uuids) == 0 {
+		return uuids
 	}
 
-	// intersect with each following subset of notes
+	// intersect with each following subset of note UUIDs
 	for _, tag := range tags[1:] {
-		titles := n.allTitlesOfTag(tag)
-		notes = intersection(notes, titles)
-		if len(notes) == 0 {
+		tagUUIDs := n.allUUIDsOfTag(tag)
+		uuids = intersection(uuids, tagUUIDs)
+		if len(uuids) == 0 {
 			break
 		}
 	}
 
-	return notes
+	return uuids
 }
 
-func (n NoteBook) allTitles() []string {
-	titles := []string{}
-	for title, _ := range n.notes {
-		titles = append(titles, title)
+func (n NoteBook) allUUIDs() []string {
+	uuids := []string{}
+	for id, _ := range n.notes {
+		uuids = append(uuids, id)
 	}
-	return titles
+	return uuids
 }
 
-func (n NoteBook) allTitlesOfTag(tag string) []string {
-	titles := []string{}
-	for title, tagged := range n.tags[tag] {
+func (n NoteBook) allUUIDsOfTag(tag string) []string {
+	uuids := []string{}
+	for id, tagged := range n.tags[tag] {
 		if tagged {
-			titles = append(titles, title)
+			uuids = append(uuids, id)
 		}
 	}
+	return uuids
+}
+
+// Returns the titles of all notes in the subset of notes specified by "tags"
+// If no tags are specified, returns all notes
+func (n NoteBook) Titles(tags ...string) []string {
+	titles := []string{}
+	for _, id := range n.UUIDs(tags...) {
+		title := strings.SplitN(n.notes[id], TITLE_BODY_SEPARATOR, 2)[0]
+		titles = append(titles, title)
+	}
+
 	return titles
 }
 
 func (n NoteBook) Add(note Note) {
-	n.notes[note.Title] = note.Body
+	n.notes[note.Id] = note.Title + TITLE_BODY_SEPARATOR + note.Body
 	for _, tag := range note.Tags {
-		n.addTag(tag, note.Title)
+		n.addTag(tag, note.Id)
 	}
 }
 
-func (n NoteBook) addTag(tag string, note string) {
+func (n NoteBook) addTag(tag string, noteId string) {
 	if n.tags[tag] == nil {
 		n.tags[tag] = make(map[string]bool)
 	}
-	n.tags[tag][note] = true
+	n.tags[tag][noteId] = true
 }
 
-func (n NoteBook) Note(title string) Note {
-	body := n.notes[title]
-	tags := n.TagsOfNote(title)
-	return Note{title, body, tags}
+func (n NoteBook) Note(id string) Note {
+	note := strings.SplitN(n.notes[id], TITLE_BODY_SEPARATOR, 2)
+	title, body := note[0], note[1]
+	tags := n.TagsOfNote(id)
+	return Note{id, title, body, tags}
 }
 
-func (n NoteBook) TagsOfNote(title string) []string {
+func (n NoteBook) TagsOfNote(id string) []string {
 	tags := *new([]string)
 	for tag, notes := range n.tags {
-		if notes[title] {
+		if notes[id] {
 			tags = append(tags, tag)
 		}
 	}
 	return tags
 }
 
-func (n NoteBook) Delete(title string) {
+func (n NoteBook) Delete(id string) {
 	// delete body
-	delete(n.notes, title)
+	delete(n.notes, id)
 
 	// delete note from tags
-	for _, tag := range n.TagsOfNote(title) {
-		delete(n.tags[tag], title)
+	for _, tag := range n.TagsOfNote(id) {
+		delete(n.tags[tag], id)
 	}
 }
 
 func (n NoteBook) Update(note Note) {
 	// update body
-	n.notes[note.Title] = note.Body
+	n.notes[note.Id] = note.Title + TITLE_BODY_SEPARATOR + note.Body
 
 	// update tags
-	oldTags := n.TagsOfNote(note.Title)
+	oldTags := n.TagsOfNote(note.Id)
 	if !equals(oldTags, note.Tags) {
 		// remove note from tags it no longer has
 		remove := difference(oldTags, note.Tags)
 		for _, tag := range remove {
-			delete(n.tags[tag], note.Title)
+			delete(n.tags[tag], note.Id)
 		}
 
 		// add note to tags it has gained
 		add := difference(note.Tags, oldTags)
 		for _, tag := range add {
-			n.addTag(tag, note.Title)
+			n.addTag(tag, note.Id)
 		}
 	}
 }
