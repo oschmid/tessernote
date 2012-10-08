@@ -17,8 +17,9 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package notes
 
 import (
-	"strings"
+	"collections/set"
 	"fmt"
+	"strings"
 )
 
 const TITLE_BODY_SEPARATOR string = "\n"
@@ -51,7 +52,7 @@ func (n NoteBook) UUIDs(tags ...string) map[string]bool {
 	// intersect with each following subset of note UUIDs
 	for _, tag := range tags[1:] {
 		tagUUIDs := n.allUUIDsOfTag(tag)
-		uuids = intersection(uuids, tagUUIDs)
+		uuids = set.Intersection(uuids, tagUUIDs)
 		if len(uuids) == 0 {
 			break
 		}
@@ -146,15 +147,15 @@ func (n NoteBook) Update(note Note) error {
 
 	// update tags
 	oldTags := n.TagsOfNote(note.Id)
-	if !equals(oldTags, note.Tags) {
+	if !set.Equals(oldTags, note.Tags) {
 		// remove note from tags it no longer has
-		remove := difference(oldTags, note.Tags)
+		remove := set.Difference(oldTags, note.Tags)
 		for tag, _ := range remove {
 			delete(n.tags[tag], note.Id)
 		}
 
 		// add note to tags it has gained
-		add := difference(note.Tags, oldTags)
+		add := set.Difference(note.Tags, oldTags)
 		for tag, _ := range add {
 			n.addTag(tag, note.Id)
 		}

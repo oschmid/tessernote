@@ -17,12 +17,13 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package notes
 
 import (
+	"collections/set"
 	"fmt"
 	"testing"
 )
 
 func TestAddNote(t *testing.T) {
-	tags := set("tag1", "tag2")
+	tags := set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
@@ -40,7 +41,7 @@ func TestAddNote(t *testing.T) {
 	if len(actual.Tags) != len(note.Tags) {
 		t.Fatalf("expected=%d actual=%d", len(note.Tags), len(actual.Tags))
 	}
-	if !equals(actual.Tags, note.Tags) {
+	if !set.Equals(actual.Tags, note.Tags) {
 		t.Fatalf("expected=%v actual=%v", note.Tags, actual.Tags)
 	}
 }
@@ -57,7 +58,7 @@ func TestNonExistentNote(t *testing.T) {
 }
 
 func TestDeleteNote(t *testing.T) {
-	tags := set("tag1", "tag2")
+	tags := set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
@@ -75,7 +76,7 @@ func TestDeleteNote(t *testing.T) {
 
 func TestDeleteNonExistentNote(t *testing.T) {
 	title := "title"
-	tags := set("tag1", "tag2")
+	tags := set.New("tag1", "tag2")
 	note := *NewNote(title, "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
@@ -93,7 +94,7 @@ func TestDeleteNonExistentNote(t *testing.T) {
 }
 
 func TestUpdateBody(t *testing.T) {
-	tags := set("tag1", "tag2")
+	tags := set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
@@ -118,17 +119,17 @@ func TestUpdateBody(t *testing.T) {
 }
 
 func TestUpdateTags(t *testing.T) {
-	tags := set("tag1", "tag2")
+	tags := set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
 
-	note.Tags = set("tag3", "tag4", "tag5")
+	note.Tags = set.New("tag3", "tag4", "tag5")
 	actual, err := notebook.Note(note.Id)
 	if err != nil {
 		t.Fatal("unexpected error", err)
 	}
-	if equals(actual.Tags, note.Tags) {
+	if set.Equals(actual.Tags, note.Tags) {
 		t.Fatal("NoteBook storage updated before call to update")
 	}
 
@@ -137,13 +138,13 @@ func TestUpdateTags(t *testing.T) {
 	if err != nil {
 		t.Fatal("unexpected error", err)
 	}
-	if !equals(actual.Tags, note.Tags) {
+	if !set.Equals(actual.Tags, note.Tags) {
 		t.Fatal("expected=%v actual=%v", note.Tags, actual.Tags)
 	}
 }
 
 func TestUpdateNonExistent(t *testing.T) {
-	tags := set("tag1", "tag2")
+	tags := set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	err := notebook.Update(note)
@@ -192,7 +193,7 @@ func TestAllTitlesOfTag(t *testing.T) {
 func newFullNoteBook(num int) NoteBook {
 	notebook := *NewNoteBook()
 	for i := 0; i < num; i++ {
-		tags := set(number("tag", i), number("tag", i+1))
+		tags := set.New(number("tag", i), number("tag", i+1))
 		notebook.Add(*NewNote(number("title", i), "body", tags))
 	}
 	return notebook

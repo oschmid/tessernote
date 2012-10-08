@@ -14,9 +14,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
-package notes
+package set
 
-func set(elements ...string) map[string]bool {
+func New(elements ...string) map[string]bool {
 	s := make(map[string]bool)
 	for _, elem := range elements {
 		s[elem] = true
@@ -25,7 +25,7 @@ func set(elements ...string) map[string]bool {
 }
 
 // Returns the intersection of sets "a" and "b" i.e. all the elements that are in both "a" and "b"
-func intersection(s map[string]bool, t map[string]bool) map[string]bool {
+func Intersection(s map[string]bool, t map[string]bool) map[string]bool {
 	u := make(map[string]bool)
 	for elem, sContains := range s {
 		if sContains && t[elem] {
@@ -36,7 +36,7 @@ func intersection(s map[string]bool, t map[string]bool) map[string]bool {
 }
 
 // Returns a-b i.e. all the elements of a that are not in b
-func difference(a map[string]bool, b map[string]bool) map[string]bool {
+func Difference(a map[string]bool, b map[string]bool) map[string]bool {
 	c := make(map[string]bool)
 	for elem, _ := range a {
 		if !b[elem] {
@@ -46,7 +46,7 @@ func difference(a map[string]bool, b map[string]bool) map[string]bool {
 	return c
 }
 
-func equals(a map[string]bool, b map[string]bool) bool {
+func Equals(a map[string]bool, b map[string]bool) bool {
 	if a == nil && b == nil {
 		return true
 	}

@@ -14,61 +14,59 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
-package notes
+package set
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestIntersection(t *testing.T) {
-	a := set("one", "two", "three", "four")
-	b := set("zero", "two", "four", "five")
-	expected := set("two", "four")
-	actual := intersection(a, b)
-	if !equals(actual, expected) {
+	a := New("one", "two", "three", "four")
+	b := New("zero", "two", "four", "five")
+	expected := New("two", "four")
+	actual := Intersection(a, b)
+	if !Equals(actual, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 
-	actual = intersection(b, a)
-	if !equals(actual, expected) {
+	actual = Intersection(b, a)
+	if !Equals(actual, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 }
 
 func TestDifference(t *testing.T) {
-	a := set("one", "two", "three")
-	b := set("two", "four", "one", "five")
-	c := difference(a, b)
-	d := difference(b, a)
+	a := New("one", "two", "three")
+	b := New("two", "four", "one", "five")
+	c := Difference(a, b)
+	d := Difference(b, a)
 
-	expectedC := set("three")
-	if !equals(c, expectedC) {
+	expectedC := New("three")
+	if !Equals(c, expectedC) {
 		t.Fatalf("expected=%v actual=%v", expectedC, c)
 	}
 
-	expectedD := set("four", "five")
-	if !equals(d, expectedD) {
+	expectedD := New("four", "five")
+	if !Equals(d, expectedD) {
 		t.Fatalf("expected=%v actual=%v", expectedD, d)
 	}
 }
 
 func TestEquals(t *testing.T) {
-	a := set("one", "two", "three")
-	b := set("one", "two", "three")
-	c := set("one", "two", "four")
-	d := set("one", "two", "three", "four")
-	e := set("two", "three", "one")
+	a := New("one", "two", "three")
+	b := New("one", "two", "three")
+	c := New("one", "two", "four")
+	d := New("one", "two", "three", "four")
+	e := New("two", "three", "one")
 
-	if !equals(a, b) {
+	if !Equals(a, b) {
 		t.FailNow()
 	}
-	if equals(a, c) {
+	if Equals(a, c) {
 		t.FailNow()
 	}
-	if equals(a, d) {
+	if Equals(a, d) {
 		t.FailNow()
 	}
-	if !equals(a, e) {
+	if !Equals(a, e) {
 		t.FailNow()
 	}
 }
