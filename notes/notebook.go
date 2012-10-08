@@ -126,6 +126,17 @@ func (n NoteBook) TagsOfNote(id string) map[string]bool {
 	return tags
 }
 
+// Given a set of chosen tags T, returns the largest superset of T where each tag refers to a note referred to by T
+// If "tags" is empty, returns all tags
+func (n NoteBook) Tags(tags ...string) map[string]bool {
+	notes := n.UUIDs(tags...)
+	super := make(map[string]bool)
+	for id, _ := range notes {
+		super = set.Union(super, n.TagsOfNote(id))
+	}
+	return super
+}
+
 func (n NoteBook) Delete(id string) {
 	// delete body
 	delete(n.notes, id)

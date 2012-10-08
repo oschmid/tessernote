@@ -52,11 +52,13 @@ func (note Note) TagString() string {
 
 	tagString := *new(string)
 	for _, tag := range tags {
-		tagString += tag + tagSeparator
+		tagString += tag + TAG_SEPARATOR
 	}
 
-	return tagString[:len(tagString)-len(tagSeparator)]
+	return tagString[:len(tagString)-len(TAG_SEPARATOR)]
 }
+
+// TODO save NoteBooks instead of individual Notes
 
 func saveNote(note Note) error {
 	fileName := "data/" + note.Title + ".txt"

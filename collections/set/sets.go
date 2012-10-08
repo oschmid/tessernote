@@ -16,6 +16,8 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
 package set
 
+// TODO return pointers not values to save on memory
+
 func New(elements ...string) map[string]bool {
 	s := make(map[string]bool)
 	for _, elem := range elements {
@@ -42,6 +44,18 @@ func Difference(a map[string]bool, b map[string]bool) map[string]bool {
 		if !b[elem] {
 			c[elem] = true
 		}
+	}
+	return c
+}
+
+// Returns the union of sets "a" and "b" i.e. all the elements that are in "a", "b" or both "a" and "b"
+func Union(a map[string]bool, b map[string]bool) map[string]bool {
+	c := make(map[string]bool)
+	for elem, _ := range a {
+		c[elem]=true
+	}
+	for elem, _ := range b {
+		c[elem]=true
 	}
 	return c
 }

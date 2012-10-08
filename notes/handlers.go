@@ -24,10 +24,10 @@ import (
 	"strings"
 )
 
-const lenPath = len("/view/")
-const tagSeparator = ", "
+const PATH_LENGTH = len("/view/")
+const TAG_SEPARATOR = ", "
 
-var Templates *template.Template
+var templates *template.Template
 var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
 func ViewHandler(w http.ResponseWriter, r *http.Request, title string) {
@@ -49,7 +49,7 @@ func EditHandler(w http.ResponseWriter, r *http.Request, title string) {
 
 func SaveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	body := r.FormValue("body")
-	tags := set.New(strings.Split(r.FormValue("tags"), tagSeparator)...)
+	tags := set.New(strings.Split(r.FormValue("tags"), TAG_SEPARATOR)...)
 	note := *NewNote(title, body, tags)
 	err := saveNote(note)
 	if err != nil {
@@ -66,7 +66,7 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 
 func MakeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		title := r.URL.Path[lenPath:]
+		title := r.URL.Path[PATH_LENGTH:]
 		if !titleValidator.MatchString(title) {
 			http.NotFound(w, r)
 			return
@@ -76,7 +76,7 @@ func MakeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, page *Note) {
-	err := Templates.ExecuteTemplate(w, tmpl+".html", page)
+	err := templates.ExecuteTemplate(w, tmpl+".html", page)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

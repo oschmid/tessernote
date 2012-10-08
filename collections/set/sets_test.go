@@ -50,6 +50,21 @@ func TestDifference(t *testing.T) {
 	}
 }
 
+func TestUnion(t *testing.T) {
+	a := New("one", "two", "three")
+	b := New("two", "four", "five", "one")
+	c := Union(a, b)
+	d := Union(b, a)
+
+	expected := New("one", "two", "three", "four", "five")
+	if !Equals(c, expected) {
+		t.Fatalf("expected=%v actual=%v", expected, c)
+	}
+	if !Equals(d, expected) {
+		t.Fatalf("expected=%v actual=%v", expected, d)
+	}
+}
+
 func TestEquals(t *testing.T) {
 	a := New("one", "two", "three")
 	b := New("one", "two", "three")
