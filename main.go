@@ -17,17 +17,17 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
+	"handlers"
 	"html/template"
 	"log"
 	"net/http"
-	"notes"
 )
 
 func main() {
-	notes.Templates = template.Must(template.ParseFiles("src/tmpl/edit.html", "src/tmpl/view.html"))
-	http.HandleFunc("/view/", notes.MakeHandler(notes.ViewHandler))
-	http.HandleFunc("/edit/", notes.MakeHandler(notes.EditHandler))
-	http.HandleFunc("/save/", notes.MakeHandler(notes.SaveHandler))
-	http.HandleFunc("/", notes.RootHandler)
+	handlers.Templates = template.Must(template.ParseFiles("src/tmpl/edit.html", "src/tmpl/view.html"))
+	http.HandleFunc("/view/", handlers.MakeHandler(handlers.ViewHandler))
+	http.HandleFunc("/edit/", handlers.MakeHandler(handlers.EditHandler))
+	http.HandleFunc("/save/", handlers.MakeHandler(handlers.SaveHandler))
+	http.HandleFunc("/", handlers.RootHandler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

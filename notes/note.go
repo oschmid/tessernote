@@ -24,6 +24,8 @@ import (
 	"sort"
 )
 
+const TAG_SEPARATOR = ", "
+
 type Note struct {
 	Id    string
 	Title string
@@ -60,7 +62,7 @@ func (note Note) TagString() string {
 
 // TODO save NoteBooks instead of individual Notes
 
-func saveNote(note Note) error {
+func SaveNote(note Note) error {
 	fileName := "data/" + note.Title + ".txt"
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -73,7 +75,7 @@ func saveNote(note Note) error {
 	return nil
 }
 
-func loadNote(title string) (*Note, error) {
+func LoadNote(title string) (*Note, error) {
 	fileName := "data/" + title + ".txt"
 	file, err := os.Open(fileName)
 	if err != nil {
