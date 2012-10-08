@@ -27,7 +27,7 @@ import (
 const PATH_LENGTH = len("/view/")
 const TAG_SEPARATOR = ", "
 
-var templates *template.Template
+var Templates *template.Template
 var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
 func ViewHandler(w http.ResponseWriter, r *http.Request, title string) {
@@ -76,7 +76,7 @@ func MakeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, page *Note) {
-	err := templates.ExecuteTemplate(w, tmpl+".html", page)
+	err := Templates.ExecuteTemplate(w, tmpl+".html", page)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
