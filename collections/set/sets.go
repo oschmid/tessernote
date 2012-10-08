@@ -16,40 +16,38 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
 package set
 
-// TODO return pointers not values to save on memory
-
-func New(elements ...string) map[string]bool {
+func New(elements ...string) *map[string]bool {
 	s := make(map[string]bool)
 	for _, elem := range elements {
 		s[elem] = true
 	}
-	return s
+	return &s
 }
 
 // Returns the intersection of sets "a" and "b" i.e. all the elements that are in both "a" and "b"
-func Intersection(s map[string]bool, t map[string]bool) map[string]bool {
+func Intersection(s map[string]bool, t map[string]bool) *map[string]bool {
 	u := make(map[string]bool)
 	for elem, sContains := range s {
 		if sContains && t[elem] {
 			u[elem] = true
 		}
 	}
-	return u
+	return &u
 }
 
 // Returns a-b i.e. all the elements of a that are not in b
-func Difference(a map[string]bool, b map[string]bool) map[string]bool {
+func Difference(a map[string]bool, b map[string]bool) *map[string]bool {
 	c := make(map[string]bool)
 	for elem, _ := range a {
 		if !b[elem] {
 			c[elem] = true
 		}
 	}
-	return c
+	return &c
 }
 
 // Returns the union of sets "a" and "b" i.e. all the elements that are in "a", "b" or both "a" and "b"
-func Union(a map[string]bool, b map[string]bool) map[string]bool {
+func Union(a map[string]bool, b map[string]bool) *map[string]bool {
 	c := make(map[string]bool)
 	for elem, _ := range a {
 		c[elem]=true
@@ -57,7 +55,7 @@ func Union(a map[string]bool, b map[string]bool) map[string]bool {
 	for elem, _ := range b {
 		c[elem]=true
 	}
-	return c
+	return &c
 }
 
 func Equals(a map[string]bool, b map[string]bool) bool {

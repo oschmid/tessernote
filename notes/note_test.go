@@ -23,7 +23,7 @@ import (
 
 func TestTagString(t *testing.T) {
 	tag1, tag2 := "tag1", "tag2"
-	tags := set.New(tag1, tag2)
+	tags := *set.New(tag1, tag2)
 	note := NewNote("title", "body", tags)
 	tagString := note.TagString()
 	expected := tag1 + TAG_SEPARATOR + tag2

@@ -23,7 +23,7 @@ import (
 )
 
 func TestAddNote(t *testing.T) {
-	tags := set.New("tag1", "tag2")
+	tags := *set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
@@ -58,7 +58,7 @@ func TestNonExistentNote(t *testing.T) {
 }
 
 func TestDeleteNote(t *testing.T) {
-	tags := set.New("tag1", "tag2")
+	tags := *set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
@@ -76,7 +76,7 @@ func TestDeleteNote(t *testing.T) {
 
 func TestDeleteNonExistentNote(t *testing.T) {
 	title := "title"
-	tags := set.New("tag1", "tag2")
+	tags := *set.New("tag1", "tag2")
 	note := *NewNote(title, "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
@@ -94,19 +94,19 @@ func TestDeleteNonExistentNote(t *testing.T) {
 }
 
 func TestDeleteNoteTags(t *testing.T) {
-	note := *NewNote("title", "body", set.New("tag1", "tag2"))
+	note := *NewNote("title", "body", *set.New("tag1", "tag2"))
 	notebook := NewNoteBook()
 	notebook.Add(note)
-	notebook.Add(*NewNote("title", "body", set.New("tag1", "tag3")))
+	notebook.Add(*NewNote("title", "body", *set.New("tag1", "tag3")))
 
-	expected := set.New("tag1", "tag2", "tag3")
+	expected := *set.New("tag1", "tag2", "tag3")
 	tags := notebook.Tags()
 	if !set.Equals(tags, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, tags)
 	}
 
 	notebook.Delete(note.Id)
-	expected = set.New("tag1", "tag3")
+	expected = *set.New("tag1", "tag3")
 	tags = notebook.Tags()
 	if !set.Equals(tags, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, tags)
@@ -114,7 +114,7 @@ func TestDeleteNoteTags(t *testing.T) {
 }
 
 func TestUpdateBody(t *testing.T) {
-	tags := set.New("tag1", "tag2")
+	tags := *set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
@@ -139,12 +139,12 @@ func TestUpdateBody(t *testing.T) {
 }
 
 func TestUpdateTags(t *testing.T) {
-	tags := set.New("tag1", "tag2")
+	tags := *set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
 
-	note.Tags = set.New("tag3", "tag4", "tag5")
+	note.Tags = *set.New("tag3", "tag4", "tag5")
 	actual, err := notebook.Note(note.Id)
 	if err != nil {
 		t.Fatal("unexpected error", err)
@@ -164,7 +164,7 @@ func TestUpdateTags(t *testing.T) {
 }
 
 func TestUpdateNonExistent(t *testing.T) {
-	tags := set.New("tag1", "tag2")
+	tags := *set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	err := notebook.Update(note)
@@ -210,11 +210,11 @@ func TestAllTitlesOfTag(t *testing.T) {
 
 func TestDistinguishingTagsFromTags(t *testing.T) {
 	notebook := NewNoteBook()
-	notebook.Add(*NewNote("title", "body", set.New("tag1", "tag2")))
-	notebook.Add(*NewNote("title", "body", set.New("tag2", "tag3")))
-	notebook.Add(*NewNote("title", "body", set.New("tag1", "tag2", "tag3")))
+	notebook.Add(*NewNote("title", "body", *set.New("tag1", "tag2")))
+	notebook.Add(*NewNote("title", "body", *set.New("tag2", "tag3")))
+	notebook.Add(*NewNote("title", "body", *set.New("tag1", "tag2", "tag3")))
 
-	expected := set.New("tag1", "tag2", "tag3")
+	expected := *set.New("tag1", "tag2", "tag3")
 	actual := notebook.Tags("tag2", "tag3")
 	if !set.Equals(actual, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
@@ -226,7 +226,7 @@ func TestDistinguishingTagsFromTags(t *testing.T) {
 func newFullNoteBook(num int) NoteBook {
 	notebook := *NewNoteBook()
 	for i := 0; i < num; i++ {
-		tags := set.New(number("tag", i), number("tag", i+1))
+		tags := *set.New(number("tag", i), number("tag", i+1))
 		notebook.Add(*NewNote(number("title", i), "body", tags))
 	}
 	return notebook

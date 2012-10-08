@@ -52,7 +52,7 @@ func (n NoteBook) UUIDs(tags ...string) map[string]bool {
 	// intersect with each following subset of note UUIDs
 	for _, tag := range tags[1:] {
 		tagUUIDs := n.allUUIDsOfTag(tag)
-		uuids = set.Intersection(uuids, tagUUIDs)
+		uuids = *set.Intersection(uuids, tagUUIDs)
 		if len(uuids) == 0 {
 			break
 		}
@@ -132,7 +132,7 @@ func (n NoteBook) Tags(tags ...string) map[string]bool {
 	notes := n.UUIDs(tags...)
 	super := make(map[string]bool)
 	for id, _ := range notes {
-		super = set.Union(super, n.TagsOfNote(id))
+		super = *set.Union(super, n.TagsOfNote(id))
 	}
 	return super
 }
@@ -160,13 +160,13 @@ func (n NoteBook) Update(note Note) error {
 	oldTags := n.TagsOfNote(note.Id)
 	if !set.Equals(oldTags, note.Tags) {
 		// remove note from tags it no longer has
-		remove := set.Difference(oldTags, note.Tags)
+		remove := *set.Difference(oldTags, note.Tags)
 		for tag, _ := range remove {
 			delete(n.tags[tag], note.Id)
 		}
 
 		// add note to tags it has gained
-		add := set.Difference(note.Tags, oldTags)
+		add := *set.Difference(note.Tags, oldTags)
 		for tag, _ := range add {
 			n.addTag(tag, note.Id)
 		}
