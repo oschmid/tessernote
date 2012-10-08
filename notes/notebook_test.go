@@ -27,7 +27,10 @@ func TestAddNote(t *testing.T) {
 	notebook := NewNoteBook()
 	notebook.Add(note)
 
-	actual := notebook.Note(note.Id)
+	actual, err := notebook.Note(note.Id)
+	if err != nil {
+		t.Fatal("unexpected error", err)
+	}
 	if actual.Title != note.Title {
 		t.Fatalf("expected=%s actual=%s", note.Title, actual.Title)
 	}
@@ -39,6 +42,17 @@ func TestAddNote(t *testing.T) {
 	}
 	if !equals(actual.Tags, note.Tags) {
 		t.Fatalf("expected=%v actual=%v", note.Tags, actual.Tags)
+	}
+}
+
+func TestNonExistentNote(t *testing.T) {
+	notebook := NewNoteBook()
+	note, err := notebook.Note("this uuid doesn't refer to anything")
+	if note != nil {
+		t.Fatal("note should be nil")
+	}
+	if err == nil {
+		t.Fatal("fetching a non-existent note should result in error")
 	}
 }
 
@@ -78,20 +92,26 @@ func TestDeleteNonExistentNote(t *testing.T) {
 	}
 }
 
-func TestEditNoteBody(t *testing.T) {
+func TestUpdateBody(t *testing.T) {
 	tags := set("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
 
 	note.Body = "body2"
-	actual := notebook.Note(note.Id)
+	actual, err := notebook.Note(note.Id)
+	if err != nil {
+		t.Fatal("unexpected error", err)
+	}
 	if actual.Body == note.Body {
 		t.Fatal("NoteBook storage updated before call to update")
 	}
 
 	notebook.Update(note)
-	actual = notebook.Note(note.Id)
+	actual, err = notebook.Note(note.Id)
+	if err != nil {
+		t.Fatal("unexpected error", err)
+	}
 	if actual.Body != note.Body {
 		t.Fatalf("expected=%s actual=%s", note.Body, actual.Body)
 	}
@@ -104,15 +124,39 @@ func TestUpdateTags(t *testing.T) {
 	notebook.Add(note)
 
 	note.Tags = set("tag3", "tag4", "tag5")
-	actual := notebook.Note(note.Id)
+	actual, err := notebook.Note(note.Id)
+	if err != nil {
+		t.Fatal("unexpected error", err)
+	}
 	if equals(actual.Tags, note.Tags) {
 		t.Fatal("NoteBook storage updated before call to update")
 	}
 
 	notebook.Update(note)
-	actual = notebook.Note(note.Id)
+	actual, err = notebook.Note(note.Id)
+	if err != nil {
+		t.Fatal("unexpected error", err)
+	}
 	if !equals(actual.Tags, note.Tags) {
 		t.Fatal("expected=%v actual=%v", note.Tags, actual.Tags)
+	}
+}
+
+func TestUpdateNonExistent(t *testing.T) {
+	tags := set("tag1", "tag2")
+	note := *NewNote("title", "body", tags)
+	notebook := NewNoteBook()
+	err := notebook.Update(note)
+	if err == nil {
+		t.Fatal("update non-existent note should error")
+	}
+
+	actual, err := notebook.Note(note.Id)
+	if actual != nil {
+		t.Fatalf("expected=nil actual=%v", actual)
+	}
+	if err == nil {
+		t.Fatal("note should not have been added")
 	}
 }
 

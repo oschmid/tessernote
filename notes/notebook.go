@@ -16,7 +16,10 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
 package notes
 
-import "strings"
+import (
+	"strings"
+	"fmt"
+)
 
 const TITLE_BODY_SEPARATOR string = "\n"
 
@@ -101,11 +104,15 @@ func (n NoteBook) addTag(tag string, noteId string) {
 	n.tags[tag][noteId] = true
 }
 
-func (n NoteBook) Note(id string) Note {
+func (n NoteBook) Note(id string) (*Note, error) {
 	note := strings.SplitN(n.notes[id], TITLE_BODY_SEPARATOR, 2)
+	if len(note) != 2 {
+		return nil, fmt.Errorf("note %s: does not exist", id)
+	}
+
 	title, body := note[0], note[1]
 	tags := n.TagsOfNote(id)
-	return Note{id, title, body, tags}
+	return &Note{id, title, body, tags}, nil
 }
 
 func (n NoteBook) TagsOfNote(id string) map[string]bool {
@@ -128,7 +135,12 @@ func (n NoteBook) Delete(id string) {
 	}
 }
 
-func (n NoteBook) Update(note Note) {
+func (n NoteBook) Update(note Note) error {
+	_, contains := n.notes[note.Id]
+	if !contains {
+		return fmt.Errorf("update %s: note does not exist")
+	}
+
 	// update body
 	n.notes[note.Id] = note.Title + TITLE_BODY_SEPARATOR + note.Body
 
@@ -147,4 +159,6 @@ func (n NoteBook) Update(note Note) {
 			n.addTag(tag, note.Id)
 		}
 	}
+
+	return nil
 }
