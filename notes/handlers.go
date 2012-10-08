@@ -41,15 +41,15 @@ func ViewHandler(w http.ResponseWriter, r *http.Request, title string) {
 func EditHandler(w http.ResponseWriter, r *http.Request, title string) {
 	note, err := loadNote(title)
 	if err != nil {
-		note = &Note{Title: title}
+		note = NewNote(title, "", make(map[string]bool))
 	}
 	renderTemplate(w, "edit", note)
 }
 
 func SaveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	body := r.FormValue("body")
-	tags := strings.Split(r.FormValue("tags"), tagSeparator)
-	note := Note{Title: title, Body: body, Tags: tags}
+	tags := set(strings.Split(r.FormValue("tags"), tagSeparator)...)
+	note := *NewNote(title, body, tags)
 	err := saveNote(note)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

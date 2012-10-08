@@ -21,32 +21,41 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
+	"sort"
 )
 
 type Note struct {
 	Id    string
 	Title string
 	Body  string
-	Tags  []string // TODO convert to set
+	Tags  map[string]bool
 }
 
-func NewNote(title string, body string, tags []string) *Note {
-	note := &Note{Title:title, Body:body,Tags:tags}
+func NewNote(title string, body string, tags map[string]bool) *Note {
+	note := &Note{Title: title, Body: body, Tags: tags}
 	note.Id = uuid.New()
 	return note
 }
 
-func (note Note) TagsAsString() string {
+// Returns a string representation of this Note's tags
+func (note Note) TagString() string {
 	if len(note.Tags) == 0 {
 		return ""
 	}
 
-	tags := note.Tags[0]
-	for _, tag := range note.Tags[1:] {
-		tags += tagSeparator + tag
+	// sort tags in alphabetical order
+	tags := []string{}
+	for tag, _ := range note.Tags {
+		tags = append(tags, tag)
+	}
+	sort.Strings(tags)
+
+	tagString := *new(string)
+	for _, tag := range tags {
+		tagString += tag + tagSeparator
 	}
 
-	return tags
+	return tagString[:len(tagString)-len(tagSeparator)]
 }
 
 func saveNote(note Note) error {

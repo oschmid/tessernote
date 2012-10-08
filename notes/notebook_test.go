@@ -22,7 +22,7 @@ import (
 )
 
 func TestAddNote(t *testing.T) {
-	tags := []string{"tag1", "tag2"}
+	tags := set("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
@@ -37,16 +37,13 @@ func TestAddNote(t *testing.T) {
 	if len(actual.Tags) != len(note.Tags) {
 		t.Fatalf("expected=%d actual=%d", len(note.Tags), len(actual.Tags))
 	}
-	if !contains(actual.Tags, note.Tags[0]) {
-		t.Fatalf("actual does not contain=%s", note.Tags[0])
-	}
-	if !contains(actual.Tags, note.Tags[1]) {
-		t.Fatalf("actual does not contain=%s", note.Tags[1])
+	if !equals(actual.Tags, note.Tags) {
+		t.Fatalf("expected=%v actual=%v", note.Tags, actual.Tags)
 	}
 }
 
 func TestDeleteNote(t *testing.T) {
-	tags := []string{"tag1", "tag2"}
+	tags := set("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
@@ -64,7 +61,7 @@ func TestDeleteNote(t *testing.T) {
 
 func TestDeleteNonExistentNote(t *testing.T) {
 	title := "title"
-	tags := []string{"tag1", "tag2"}
+	tags := set("tag1", "tag2")
 	note := *NewNote(title, "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
@@ -82,7 +79,7 @@ func TestDeleteNonExistentNote(t *testing.T) {
 }
 
 func TestEditNoteBody(t *testing.T) {
-	tags := []string{"tag1", "tag2"}
+	tags := set("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
@@ -101,12 +98,12 @@ func TestEditNoteBody(t *testing.T) {
 }
 
 func TestUpdateTags(t *testing.T) {
-	tags := []string{"tag1", "tag2"}
+	tags := set("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Add(note)
 
-	note.Tags = []string{"tag3", "tag4", "tag5"}
+	note.Tags = set("tag3", "tag4", "tag5")
 	actual := notebook.Note(note.Id)
 	if equals(actual.Tags, note.Tags) {
 		t.Fatal("NoteBook storage updated before call to update")
@@ -151,7 +148,7 @@ func TestAllTitlesOfTag(t *testing.T) {
 func newFullNoteBook(num int) NoteBook {
 	notebook := *NewNoteBook()
 	for i := 0; i < num; i++ {
-		tags := []string{number("tag", i), number("tag", i+1)}
+		tags := set(number("tag", i), number("tag", i+1))
 		notebook.Add(*NewNote(number("title", i), "body", tags))
 	}
 	return notebook
@@ -159,4 +156,13 @@ func newFullNoteBook(num int) NoteBook {
 
 func number(text string, num int) string {
 	return fmt.Sprint(text, num)
+}
+
+func contains(slice []string, elem string) bool {
+	for _, value := range slice {
+		if value == elem {
+			return true
+		}
+	}
+	return false
 }

@@ -34,7 +34,7 @@ func NewNoteBook() *NoteBook {
 
 // Returns the UUIDs of all notes in the subset of notes specified by "tags"
 // If no tags are specified, returns all note UUIDs
-func (n NoteBook) UUIDs(tags ...string) []string {
+func (n NoteBook) UUIDs(tags ...string) map[string]bool {
 	if tags == nil || len(tags) == 0 {
 		return n.allUUIDs()
 	}
@@ -57,19 +57,19 @@ func (n NoteBook) UUIDs(tags ...string) []string {
 	return uuids
 }
 
-func (n NoteBook) allUUIDs() []string {
-	uuids := []string{}
+func (n NoteBook) allUUIDs() map[string]bool {
+	uuids := make(map[string]bool)
 	for id, _ := range n.notes {
-		uuids = append(uuids, id)
+		uuids[id] = true
 	}
 	return uuids
 }
 
-func (n NoteBook) allUUIDsOfTag(tag string) []string {
-	uuids := []string{}
+func (n NoteBook) allUUIDsOfTag(tag string) map[string]bool {
+	uuids := make(map[string]bool)
 	for id, tagged := range n.tags[tag] {
 		if tagged {
-			uuids = append(uuids, id)
+			uuids[id] = true
 		}
 	}
 	return uuids
@@ -79,7 +79,7 @@ func (n NoteBook) allUUIDsOfTag(tag string) []string {
 // If no tags are specified, returns all notes
 func (n NoteBook) Titles(tags ...string) []string {
 	titles := []string{}
-	for _, id := range n.UUIDs(tags...) {
+	for id, _ := range n.UUIDs(tags...) {
 		title := strings.SplitN(n.notes[id], TITLE_BODY_SEPARATOR, 2)[0]
 		titles = append(titles, title)
 	}
@@ -89,7 +89,7 @@ func (n NoteBook) Titles(tags ...string) []string {
 
 func (n NoteBook) Add(note Note) {
 	n.notes[note.Id] = note.Title + TITLE_BODY_SEPARATOR + note.Body
-	for _, tag := range note.Tags {
+	for tag, _ := range note.Tags {
 		n.addTag(tag, note.Id)
 	}
 }
@@ -108,11 +108,11 @@ func (n NoteBook) Note(id string) Note {
 	return Note{id, title, body, tags}
 }
 
-func (n NoteBook) TagsOfNote(id string) []string {
-	tags := *new([]string)
+func (n NoteBook) TagsOfNote(id string) map[string]bool {
+	tags := make(map[string]bool)
 	for tag, notes := range n.tags {
 		if notes[id] {
-			tags = append(tags, tag)
+			tags[tag] = true
 		}
 	}
 	return tags
@@ -123,7 +123,7 @@ func (n NoteBook) Delete(id string) {
 	delete(n.notes, id)
 
 	// delete note from tags
-	for _, tag := range n.TagsOfNote(id) {
+	for tag, _ := range n.TagsOfNote(id) {
 		delete(n.tags[tag], id)
 	}
 }
@@ -137,13 +137,13 @@ func (n NoteBook) Update(note Note) {
 	if !equals(oldTags, note.Tags) {
 		// remove note from tags it no longer has
 		remove := difference(oldTags, note.Tags)
-		for _, tag := range remove {
+		for tag, _ := range remove {
 			delete(n.tags[tag], note.Id)
 		}
 
 		// add note to tags it has gained
 		add := difference(note.Tags, oldTags)
-		for _, tag := range add {
+		for tag, _ := range add {
 			n.addTag(tag, note.Id)
 		}
 	}

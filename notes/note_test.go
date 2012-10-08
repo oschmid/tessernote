@@ -20,11 +20,13 @@ import (
 	"testing"
 )
 
-func TestTagsAsString(t *testing.T) {
-	tags := []string{"tag1", "tag2"}
+func TestTagString(t *testing.T) {
+	tag1, tag2 := "tag1", "tag2"
+	tags := set(tag1, tag2)
 	note := NewNote("title", "body", tags)
-	stringTags := note.TagsAsString()
-	if stringTags != tags[0]+tagSeparator+tags[1] {
-		t.Fail()
+	tagString := note.TagString()
+	expected := tag1 + tagSeparator + tag2
+	if tagString != expected {
+		t.Fatalf("expected=%v actual=%v", expected, tagString)
 	}
 }

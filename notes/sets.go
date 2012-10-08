@@ -24,50 +24,29 @@ func set(elements ...string) map[string]bool {
 	return s
 }
 
-func intersection(a []string, b []string) []string {
-	u := make([]string, len(a))
-	for _, sElem := range a {
-		for _, tElem := range b {
-			if sElem == tElem {
-				u = append(u, sElem)
-			}
+// Returns the intersection of sets "a" and "b" i.e. all the elements that are in both "a" and "b"
+func intersection(s map[string]bool, t map[string]bool) map[string]bool {
+	u := make(map[string]bool)
+	for elem, sContains := range s {
+		if sContains && t[elem] {
+			u[elem] = true
 		}
 	}
 	return u
 }
 
-/* TODO uses sets not lists
-func intersection2(s map[string]bool, t map[string]bool) map[string]bool {
-	u := make(map[string]bool)
-	for elem, sContains := range s {
-		if sContains && t[elem] {
-			u[elem]=true
-		}
-	}
-	return u
-}*/
-
 // Returns a-b i.e. all the elements of a that are not in b
-func difference(a []string, b []string) []string {
-	c := []string{}
-	for _, elem := range a {
-		if !contains(b, elem) {
-			c = append(c, elem)
+func difference(a map[string]bool, b map[string]bool) map[string]bool {
+	c := make(map[string]bool)
+	for elem, _ := range a {
+		if !b[elem] {
+			c[elem] = true
 		}
 	}
 	return c
 }
 
-func contains(slice []string, elem string) bool {
-	for _, value := range slice {
-		if value == elem {
-			return true
-		}
-	}
-	return false
-}
-
-func equals(a []string, b []string) bool {
+func equals(a map[string]bool, b map[string]bool) bool {
 	if a == nil && b == nil {
 		return true
 	}
@@ -78,8 +57,8 @@ func equals(a []string, b []string) bool {
 		return false
 	}
 
-	for _, elem := range a {
-		if !contains(b, elem) {
+	for elem, _ := range a {
+		if !b[elem] {
 			return false
 		}
 	}

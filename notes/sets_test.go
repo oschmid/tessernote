@@ -21,38 +21,43 @@ import (
 )
 
 func TestIntersection(t *testing.T) {
-	a := []string{"one", "two", "three", "four"}
-	b := []string{"zero", "two", "four", "five"}
-	expected := []string{"two", "four"}
+	a := set("one", "two", "three", "four")
+	b := set("zero", "two", "four", "five")
+	expected := set("two", "four")
 	actual := intersection(a, b)
-	if equals(actual, expected) {
+	if !equals(actual, expected) {
+		t.Fatalf("expected=%v actual=%v", expected, actual)
+	}
+
+	actual = intersection(b, a)
+	if !equals(actual, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 }
 
 func TestDifference(t *testing.T) {
-	a := []string{"one", "two", "three"}
-	b := []string{"two", "four", "one", "five"}
+	a := set("one", "two", "three")
+	b := set("two", "four", "one", "five")
 	c := difference(a, b)
 	d := difference(b, a)
 
-	expectedC := []string{"three"}
+	expectedC := set("three")
 	if !equals(c, expectedC) {
 		t.Fatalf("expected=%v actual=%v", expectedC, c)
 	}
 
-	expectedD := []string{"four", "five"}
+	expectedD := set("four", "five")
 	if !equals(d, expectedD) {
 		t.Fatalf("expected=%v actual=%v", expectedD, d)
 	}
 }
 
 func TestEquals(t *testing.T) {
-	a := []string{"one", "two", "three"}
-	b := []string{"one", "two", "three"}
-	c := []string{"one", "two", "four"}
-	d := []string{"one", "two", "three", "four"}
-	e := []string{"two", "three", "one"}
+	a := set("one", "two", "three")
+	b := set("one", "two", "three")
+	c := set("one", "two", "four")
+	d := set("one", "two", "three", "four")
+	e := set("two", "three", "one")
 
 	if !equals(a, b) {
 		t.FailNow()
