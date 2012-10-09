@@ -36,6 +36,10 @@ func NewNote(title string, body string, tags map[string]bool) *Note {
 	return note
 }
 
+func (note Note) TitleBodyString() string {
+	return note.Title + TITLE_BODY_SEPARATOR + note.Body
+}
+
 // Returns a string representation of this Note's tags
 func (note Note) TagString() string {
 	if len(note.Tags) == 0 {

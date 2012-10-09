@@ -40,7 +40,6 @@ func ViewHandler(w http.ResponseWriter, r *http.Request, id string) {
 	renderTemplate(w, "view", note)
 }
 
-// TODO title and body should be editable in same text area, the first line always becomes the title
 func EditHandler(w http.ResponseWriter, r *http.Request, id string) {
 	note, err := notebook.Note(id)
 	if err != nil {
@@ -52,8 +51,16 @@ func EditHandler(w http.ResponseWriter, r *http.Request, id string) {
 }
 
 func SaveHandler(w http.ResponseWriter, r *http.Request, id string) {
-	title := r.FormValue("title")
-	body := r.FormValue("body")
+	titleAndBody := strings.SplitN(r.FormValue("title_body"), notes.TITLE_BODY_SEPARATOR, 2)
+	var title, body string
+	if len(titleAndBody) == 0 {
+		title, body = "Untitled", ""
+	} else if len(titleAndBody) == 1 {
+		title, body = titleAndBody[0], ""
+	} else {
+		title, body = titleAndBody[0], titleAndBody[1]
+	}
+
 	tags := *set.New(strings.Split(r.FormValue("tags"), notes.TAG_SEPARATOR)...)
 	note := *notes.NewNote(title, body, tags)
 	note.Id = id
