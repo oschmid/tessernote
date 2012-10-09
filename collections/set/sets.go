@@ -50,10 +50,10 @@ func Difference(a map[string]bool, b map[string]bool) *map[string]bool {
 func Union(a map[string]bool, b map[string]bool) *map[string]bool {
 	c := make(map[string]bool)
 	for elem, _ := range a {
-		c[elem]=true
+		c[elem] = true
 	}
 	for elem, _ := range b {
-		c[elem]=true
+		c[elem] = true
 	}
 	return &c
 }

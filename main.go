@@ -24,7 +24,7 @@ import (
 )
 
 func main() {
-	handlers.Templates = template.Must(template.ParseFiles("src/tmpl/edit.html", "src/tmpl/view.html"))
+	handlers.Templates = template.Must(template.ParseFiles("tmpl/edit.html", "tmpl/view.html"))
 	http.HandleFunc("/view/", handlers.MakeHandler(handlers.ViewHandler))
 	http.HandleFunc("/edit/", handlers.MakeHandler(handlers.EditHandler))
 	http.HandleFunc("/save/", handlers.MakeHandler(handlers.SaveHandler))
