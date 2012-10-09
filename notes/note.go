@@ -18,9 +18,6 @@ package notes
 
 import (
 	"code.google.com/p/go-uuid/uuid"
-	"encoding/gob"
-	"fmt"
-	"os"
 	"sort"
 )
 
@@ -60,8 +57,7 @@ func (note Note) TagString() string {
 	return tagString[:len(tagString)-len(TAG_SEPARATOR)]
 }
 
-// TODO save NoteBooks instead of individual Notes
-
+/*
 func SaveNote(note Note) error {
 	fileName := "data/" + note.Title + ".txt"
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0600)
@@ -87,3 +83,4 @@ func LoadNote(title string) (*Note, error) {
 	err = gob.NewDecoder(file).Decode(&note)
 	return &note, err
 }
+*/

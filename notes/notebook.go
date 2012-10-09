@@ -91,20 +91,6 @@ func (n NoteBook) Titles(tags ...string) []string {
 	return titles
 }
 
-func (n NoteBook) Add(note Note) {
-	n.notes[note.Id] = note.Title + TITLE_BODY_SEPARATOR + note.Body
-	for tag, _ := range note.Tags {
-		n.addTag(tag, note.Id)
-	}
-}
-
-func (n NoteBook) addTag(tag string, noteId string) {
-	if n.tags[tag] == nil {
-		n.tags[tag] = make(map[string]bool)
-	}
-	n.tags[tag][noteId] = true
-}
-
 func (n NoteBook) Note(id string) (*Note, error) {
 	note := strings.SplitN(n.notes[id], TITLE_BODY_SEPARATOR, 2)
 	if len(note) != 2 {
@@ -128,7 +114,7 @@ func (n NoteBook) TagsOfNote(id string) map[string]bool {
 
 // Given a set of chosen tags T, returns the largest superset of T where each tag refers to a note referred to by T
 // If "tags" is empty, returns all tags
-func (n NoteBook) Tags(tags ...string) map[string]bool {
+func (n NoteBook) Tags(tags ...string) map[string]bool { // TODO return map[string]int where int is the # of notes with that tag
 	notes := n.UUIDs(tags...)
 	super := make(map[string]bool)
 	for id, _ := range notes {
@@ -147,16 +133,12 @@ func (n NoteBook) Delete(id string) {
 	}
 }
 
-func (n NoteBook) Update(note Note) error {
-	_, contains := n.notes[note.Id]
-	if !contains {
-		return fmt.Errorf("update %s: note does not exist")
-	}
-
-	// update body
+// Adds note if it didn't exist before, updates all information if it did.
+func (n NoteBook) Set(note Note) {
+	// set body
 	n.notes[note.Id] = note.Title + TITLE_BODY_SEPARATOR + note.Body
 
-	// update tags
+	// set tags
 	oldTags := n.TagsOfNote(note.Id)
 	if !set.Equals(oldTags, note.Tags) {
 		// remove note from tags it no longer has
@@ -171,6 +153,11 @@ func (n NoteBook) Update(note Note) error {
 			n.addTag(tag, note.Id)
 		}
 	}
+}
 
-	return nil
+func (n NoteBook) addTag(tag string, noteId string) {
+	if n.tags[tag] == nil {
+		n.tags[tag] = make(map[string]bool)
+	}
+	n.tags[tag][noteId] = true
 }

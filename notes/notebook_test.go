@@ -26,7 +26,7 @@ func TestAddNote(t *testing.T) {
 	tags := *set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
-	notebook.Add(note)
+	notebook.Set(note)
 
 	actual, err := notebook.Note(note.Id)
 	if err != nil {
@@ -61,7 +61,7 @@ func TestDeleteNote(t *testing.T) {
 	tags := *set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
-	notebook.Add(note)
+	notebook.Set(note)
 	titles := notebook.Titles()
 	if len(titles) != 1 {
 		t.Fatalf("note not added")
@@ -79,7 +79,7 @@ func TestDeleteNonExistentNote(t *testing.T) {
 	tags := *set.New("tag1", "tag2")
 	note := *NewNote(title, "body", tags)
 	notebook := NewNoteBook()
-	notebook.Add(note)
+	notebook.Set(note)
 
 	note2 := *NewNote(title, "body", tags)
 	if note2.Id == note.Id {
@@ -96,8 +96,8 @@ func TestDeleteNonExistentNote(t *testing.T) {
 func TestDeleteNoteTags(t *testing.T) {
 	note := *NewNote("title", "body", *set.New("tag1", "tag2"))
 	notebook := NewNoteBook()
-	notebook.Add(note)
-	notebook.Add(*NewNote("title", "body", *set.New("tag1", "tag3")))
+	notebook.Set(note)
+	notebook.Set(*NewNote("title", "body", *set.New("tag1", "tag3")))
 
 	expected := *set.New("tag1", "tag2", "tag3")
 	tags := notebook.Tags()
@@ -113,11 +113,11 @@ func TestDeleteNoteTags(t *testing.T) {
 	}
 }
 
-func TestUpdateBody(t *testing.T) {
+func TestSetBody(t *testing.T) {
 	tags := *set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
-	notebook.Add(note)
+	notebook.Set(note)
 
 	note.Body = "body2"
 	actual, err := notebook.Note(note.Id)
@@ -128,7 +128,7 @@ func TestUpdateBody(t *testing.T) {
 		t.Fatal("NoteBook storage updated before call to update")
 	}
 
-	notebook.Update(note)
+	notebook.Set(note)
 	actual, err = notebook.Note(note.Id)
 	if err != nil {
 		t.Fatal("unexpected error", err)
@@ -138,11 +138,11 @@ func TestUpdateBody(t *testing.T) {
 	}
 }
 
-func TestUpdateTags(t *testing.T) {
+func TestSetTags(t *testing.T) {
 	tags := *set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
-	notebook.Add(note)
+	notebook.Set(note)
 
 	note.Tags = *set.New("tag3", "tag4", "tag5")
 	actual, err := notebook.Note(note.Id)
@@ -153,7 +153,7 @@ func TestUpdateTags(t *testing.T) {
 		t.Fatal("NoteBook storage updated before call to update")
 	}
 
-	notebook.Update(note)
+	notebook.Set(note)
 	actual, err = notebook.Note(note.Id)
 	if err != nil {
 		t.Fatal("unexpected error", err)
@@ -163,21 +163,18 @@ func TestUpdateTags(t *testing.T) {
 	}
 }
 
-func TestUpdateNonExistent(t *testing.T) {
+func TestSetNew(t *testing.T) {
 	tags := *set.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
-	err := notebook.Update(note)
-	if err == nil {
-		t.Fatal("update non-existent note should error")
-	}
+	notebook.Set(note)
 
 	actual, err := notebook.Note(note.Id)
-	if actual != nil {
-		t.Fatalf("expected=nil actual=%v", actual)
+	if actual == nil {
+		t.Fatal("note was not added")
 	}
-	if err == nil {
-		t.Fatal("note should not have been added")
+	if err != nil {
+		t.Fatal("note was not added")
 	}
 }
 
@@ -210,9 +207,9 @@ func TestAllTitlesOfTag(t *testing.T) {
 
 func TestDistinguishingTagsFromTags(t *testing.T) {
 	notebook := NewNoteBook()
-	notebook.Add(*NewNote("title", "body", *set.New("tag1", "tag2")))
-	notebook.Add(*NewNote("title", "body", *set.New("tag2", "tag3")))
-	notebook.Add(*NewNote("title", "body", *set.New("tag1", "tag2", "tag3")))
+	notebook.Set(*NewNote("title", "body", *set.New("tag1", "tag2")))
+	notebook.Set(*NewNote("title", "body", *set.New("tag2", "tag3")))
+	notebook.Set(*NewNote("title", "body", *set.New("tag1", "tag2", "tag3")))
 
 	expected := *set.New("tag1", "tag2", "tag3")
 	actual := notebook.Tags("tag2", "tag3")
@@ -227,7 +224,7 @@ func newFullNoteBook(num int) NoteBook {
 	notebook := *NewNoteBook()
 	for i := 0; i < num; i++ {
 		tags := *set.New(number("tag", i), number("tag", i+1))
-		notebook.Add(*NewNote(number("title", i), "body", tags))
+		notebook.Set(*NewNote(number("title", i), "body", tags))
 	}
 	return notebook
 }

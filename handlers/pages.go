@@ -29,49 +29,46 @@ const PATH_LENGTH = len("/view/")
 
 var Templates *template.Template
 var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
+var notebook = *notes.NewNoteBook() // TODO save between authorized sessions
 
-func ViewHandler(w http.ResponseWriter, r *http.Request, title string) {
-	note, err := notes.LoadNote(title)
+func ViewHandler(w http.ResponseWriter, r *http.Request, id string) {
+	note, err := notebook.Note(id)
 	if err != nil {
-		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
+		http.Redirect(w, r, "/edit/"+id, http.StatusFound)
 		return
 	}
 	renderTemplate(w, "view", note)
 }
 
-func EditHandler(w http.ResponseWriter, r *http.Request, title string) {
-	note, err := notes.LoadNote(title)
+// TODO title and body should be editable in same text area, the first line always becomes the title
+func EditHandler(w http.ResponseWriter, r *http.Request, id string) {
+	note, err := notebook.Note(id)
 	if err != nil {
-		note = notes.NewNote(title, "", make(map[string]bool))
+		note = notes.NewNote("", "", *set.New())
+		note.Id = id
+		notebook.Set(*note)
 	}
 	renderTemplate(w, "edit", note)
 }
 
-func SaveHandler(w http.ResponseWriter, r *http.Request, title string) {
+func SaveHandler(w http.ResponseWriter, r *http.Request, id string) {
+	title := r.FormValue("title")
 	body := r.FormValue("body")
 	tags := *set.New(strings.Split(r.FormValue("tags"), notes.TAG_SEPARATOR)...)
 	note := *notes.NewNote(title, body, tags)
-	err := notes.SaveNote(note)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	http.Redirect(w, r, "/view/"+title, http.StatusFound)
-}
-
-func RootHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO list view of notes?
-	http.Redirect(w, r, "/view/FrontNote", http.StatusFound)
+	note.Id = id
+	notebook.Set(note)
+	http.Redirect(w, r, "/view/"+id, http.StatusFound)
 }
 
 func MakeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		title := r.URL.Path[PATH_LENGTH:]
-		if !titleValidator.MatchString(title) {
+		id := r.URL.Path[PATH_LENGTH:]
+		if !titleValidator.MatchString(id) {
 			http.NotFound(w, r)
 			return
 		}
-		fn(w, r, title)
+		fn(w, r, id)
 	}
 }
 

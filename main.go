@@ -28,6 +28,5 @@ func main() {
 	http.HandleFunc("/view/", handlers.MakeHandler(handlers.ViewHandler))
 	http.HandleFunc("/edit/", handlers.MakeHandler(handlers.EditHandler))
 	http.HandleFunc("/save/", handlers.MakeHandler(handlers.SaveHandler))
-	http.HandleFunc("/", handlers.RootHandler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

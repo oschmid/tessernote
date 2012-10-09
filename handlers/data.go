@@ -13,7 +13,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 package handlers
 
-// TODO add methods to manipulate notes RESTfully
+// TODO get tags (optional tags in POST/JSON)
+
+// TODO get titles from tags in POST/JSON
+
+// TODO get note from UUID in GET
+
+// TODO set note in POST
