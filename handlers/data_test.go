@@ -22,34 +22,35 @@ import (
 	"notes"
 	"string/collections/maps"
 	"string/collections/sets"
+	"string/collections/slices"
 	"strings"
 	"testing"
 )
 
 func setUp() {
 	body = nil
+	w = *new(responseWriter)
 	notebook = *notes.NewNoteBook()
-	notebook.Set(*notes.NewNote("title", "body", *sets.New("tag1", "tag2", "tag3")))
-	notebook.Set(*notes.NewNote("title", "body", *sets.New("tag1", "tag3", "tag4")))
-	notebook.Set(*notes.NewNote("title", "body", *sets.New("tag5")))
+	notebook.Set(*notes.NewNote("title1", "body1", *sets.New("tag1", "tag2", "tag3")))
+	notebook.Set(*notes.NewNote("title2", "body2", *sets.New("tag1", "tag3", "tag4")))
+	notebook.Set(*notes.NewNote("title3", "body3", *sets.New("tag5")))
 }
 
-func TestNoTagsHandler(t *testing.T) {
+func TestTagsHandlerNoPost(t *testing.T) {
 	setUp()
 
 	// build request
-	contents, err := json.Marshal(new([]string))
+	contents, err := json.Marshal(*new([]string))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// handle request
-	w := new(responseWriter)
-	r, err := http.NewRequest("POST", "http://www.grivet.com"+TAGS, strings.NewReader(string(contents)))
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+GET_TAGS, strings.NewReader(string(contents)))
 	if err != nil {
 		t.Fatal(err)
 	}
-	TagsHandler(w, r)
+	GetTagsHandler(w, r)
 
 	// verify response
 	expected := map[string]int{"tag1": 2, "tag2": 1, "tag3": 2, "tag4": 1, "tag5": 1}
@@ -63,7 +64,7 @@ func TestNoTagsHandler(t *testing.T) {
 	}
 }
 
-func TestTagsInPostHandler(t *testing.T) {
+func TestTagsHandler(t *testing.T) {
 	setUp()
 
 	// build request
@@ -73,12 +74,11 @@ func TestTagsInPostHandler(t *testing.T) {
 	}
 
 	// handle request
-	w := new(responseWriter)
-	r, err := http.NewRequest("POST", "http://www.grivet.com"+TAGS, strings.NewReader(string(contents)))
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+GET_TAGS, strings.NewReader(string(contents)))
 	if err != nil {
 		t.Fatal(err)
 	}
-	TagsHandler(w, r)
+	GetTagsHandler(w, r)
 
 	// verify response
 	expected := map[string]int{"tag1": 2, "tag2": 1, "tag3": 2, "tag4": 1}
@@ -92,10 +92,67 @@ func TestTagsInPostHandler(t *testing.T) {
 	}
 }
 
+func TestTitlesHandlerNoPost(t *testing.T) {
+	setUp()
+
+	// build request
+	contents, err := json.Marshal(*new([]string))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// handle request
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+TITLES, strings.NewReader(string(contents)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	TitlesHandler(w, r)
+
+	// verify response
+	expected := []string{"title1", "title2", "title3"}
+	var actual []string
+	err = json.Unmarshal(body, &actual)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(expected, actual) {
+		t.Fatalf("expected=%v actual=%v", expected, actual)
+	}
+}
+
+func TestTitlesHandler(t *testing.T) {
+	setUp()
+
+	// build request
+	contents, err := json.Marshal([]string{"tag3"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// handle request
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+TITLES, strings.NewReader(string(contents)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	TitlesHandler(w, r)
+
+	// verify response
+	expected := []string{"title1", "title2"}
+	var actual []string
+	err = json.Unmarshal(body, &actual)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(expected, actual) {
+		t.Fatalf("expected=%v actual=%v", expected, actual)
+	}
+}
+
 // http.ResponseWriter for testing
 type responseWriter struct{}
 
 var body []byte
+var w responseWriter
 
 // Not Implemented
 func (w responseWriter) Header() http.Header {

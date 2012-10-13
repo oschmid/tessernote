@@ -23,30 +23,78 @@ import (
 	"net/http"
 )
 
-const TAGS = "/data/tags"
+const GET_TAGS = "/tags/get"
+//const DELETE_TAGS = "/tags/delete"
+//const RENAME_TAGS = "/tags/rename"
+const TITLES = "/titles"
+//const GET_NOTE = "/note/get"
+//const SAVE_NOTE = "/note/save"
 
-/*
-const TITLES = "/data/titles"
-const NOTE = "/note/"
-const SAVE = "/save/"
-*/
+// Returns a map of tags -> note count in JSON format.
+// Request can optionally specify a list of tags in JSON format in POST.
+func GetTagsHandler(w http.ResponseWriter, r *http.Request) {
+	// read request
+	body, err := readBody(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-// Returns a map of tags -> note count in JSON format
-// Request can optionally specify a list of tags in JSON format in POST
-func TagsHandler(w http.ResponseWriter, r *http.Request) {
 	// convert JSON -> []string
 	var tagsIn []string
-	body, _ := readBody(r) // TODO handle errors
-	_ = json.Unmarshal(body, &tagsIn)
-
-	tagsOut := *notebook.Tags(tagsIn...)
+	err = json.Unmarshal(body, &tagsIn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	// convert map[string]bool -> JSON
-	response, _ := json.Marshal(tagsOut)
-	_, _ = w.Write(response)
+	tagsOut := *notebook.Tags(tagsIn...)
+	response, err := json.Marshal(tagsOut)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// write response
+	_, err = w.Write(response)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
-// TODO get titles (optional tags in POST/JSON)
+// Returns a slice of titles in JSON format.
+// Request can optionally specify a list of tags in JSON format in POST.
+func TitlesHandler(w http.ResponseWriter, r *http.Request) {
+	// read request
+	body, err := readBody(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// convert JSON -> []string
+	var tags []string
+	err = json.Unmarshal(body, &tags)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// convert []string -> JSON
+	titles := notebook.Titles(tags...)
+	response, err := json.Marshal(titles)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// write response
+	_, err = w.Write(response)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
 
 // TODO get note from UUID in GET
 
