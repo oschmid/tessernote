@@ -24,9 +24,11 @@ import (
 )
 
 const GET_TAGS = "/tags/get"
+
 //const DELETE_TAGS = "/tags/delete"
 //const RENAME_TAGS = "/tags/rename"
 const TITLES = "/titles"
+
 //const GET_NOTE = "/note/get"
 //const SAVE_NOTE = "/note/save"
 
