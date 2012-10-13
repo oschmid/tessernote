@@ -16,10 +16,50 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
 package handlers
 
-// TODO get tags (optional tags in POST/JSON)
+import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"net/http"
+	"string/collections/slice"
+)
 
-// TODO get titles from tags in POST/JSON
+const TAGS = "/data/tags"
+
+/*
+const TITLES = "/data/titles"
+const NOTE = "/note/"
+const SAVE = "/save/"
+*/
+
+// Returns tags (optional tags in POST/JSON)
+func TagsHandler(w http.ResponseWriter, r *http.Request) {
+	// convert JSON -> map[string]bool
+	var tags map[string]bool
+	body, _ := readBody(r) // TODO handle errors
+	_ = json.Unmarshal(body, &tags)
+
+	tags = notebook.Tags(*slice.FromSet(tags)...)
+
+	// convert map[string]bool -> JSON
+	response, _ := json.Marshal(tags)
+	_, _ = w.Write(response)
+}
+
+// TODO get titles (optional tags in POST/JSON)
 
 // TODO get note from UUID in GET
 
 // TODO set note in POST
+
+// helper functions
+
+func readBody(r *http.Request) ([]byte, error) {
+	defer r.Body.Close()
+	buf := new(bytes.Buffer)
+	_, err := io.Copy(buf, r.Body)
+	if err != nil {
+		return []byte{}, err
+	}
+	return []byte(buf.String()), nil
+}

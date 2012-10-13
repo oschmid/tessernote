@@ -17,11 +17,11 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package handlers
 
 import (
-	"collections/set"
 	"html/template"
 	"net/http"
 	"notes"
 	"regexp"
+	"string/collections/set"
 	"strings"
 )
 
@@ -40,6 +40,7 @@ func ViewHandler(w http.ResponseWriter, r *http.Request, id string) {
 	renderTemplate(w, "view", note)
 }
 
+// TODO format title line in bold
 func EditHandler(w http.ResponseWriter, r *http.Request, id string) {
 	note, err := notebook.Note(id)
 	if err != nil {

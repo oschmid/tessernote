@@ -17,8 +17,8 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package notes
 
 import (
-	"collections/set"
 	"fmt"
+	"string/collections/set"
 	"testing"
 )
 

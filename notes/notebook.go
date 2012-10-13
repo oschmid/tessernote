@@ -17,8 +17,8 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package notes
 
 import (
-	"collections/set"
 	"fmt"
+	"string/collections/set"
 	"strings"
 )
 
@@ -114,7 +114,7 @@ func (n NoteBook) TagsOfNote(id string) map[string]bool {
 
 // Given a set of chosen tags T, returns the largest superset of T where each tag refers to a note referred to by T
 // If "tags" is empty, returns all tags
-func (n NoteBook) Tags(tags ...string) map[string]bool { // TODO return map[string]int where int is the # of notes with that tag
+func (n NoteBook) Tags(tags ...string) map[string]bool { // TODO return *map[string]int where int is the # of notes with that tag
 	notes := n.UUIDs(tags...)
 	super := make(map[string]bool)
 	for id, _ := range notes {
