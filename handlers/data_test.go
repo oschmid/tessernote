@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"notes"
 	"string/collections/maps"
-	"string/collections/set"
+	"string/collections/sets"
 	"strings"
 	"testing"
 )
@@ -29,9 +29,9 @@ import (
 func setUp() {
 	body = nil
 	notebook = *notes.NewNoteBook()
-	notebook.Set(*notes.NewNote("title", "body", *set.New("tag1", "tag2", "tag3")))
-	notebook.Set(*notes.NewNote("title", "body", *set.New("tag1", "tag3", "tag4")))
-	notebook.Set(*notes.NewNote("title", "body", *set.New("tag5")))
+	notebook.Set(*notes.NewNote("title", "body", *sets.New("tag1", "tag2", "tag3")))
+	notebook.Set(*notes.NewNote("title", "body", *sets.New("tag1", "tag3", "tag4")))
+	notebook.Set(*notes.NewNote("title", "body", *sets.New("tag5")))
 }
 
 func TestNoTagsHandler(t *testing.T) {
@@ -58,7 +58,7 @@ func TestNoTagsHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !maps.Equals(expected, actual) {
+	if !maps.Equal(expected, actual) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 }
@@ -87,7 +87,7 @@ func TestTagsInPostHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !maps.Equals(expected, actual) {
+	if !maps.Equal(expected, actual) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 }

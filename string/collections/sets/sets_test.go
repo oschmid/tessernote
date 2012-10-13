@@ -14,7 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
-package set
+package sets
 
 import "testing"
 
@@ -23,12 +23,12 @@ func TestIntersection(t *testing.T) {
 	b := *New("zero", "two", "four", "five")
 	expected := *New("two", "four")
 	actual := *Intersection(a, b)
-	if !Equals(actual, expected) {
+	if !Equal(actual, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 
 	actual = *Intersection(b, a)
-	if !Equals(actual, expected) {
+	if !Equal(actual, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 }
@@ -40,12 +40,12 @@ func TestDifference(t *testing.T) {
 	d := *Difference(b, a)
 
 	expectedC := *New("three")
-	if !Equals(c, expectedC) {
+	if !Equal(c, expectedC) {
 		t.Fatalf("expected=%v actual=%v", expectedC, c)
 	}
 
 	expectedD := *New("four", "five")
-	if !Equals(d, expectedD) {
+	if !Equal(d, expectedD) {
 		t.Fatalf("expected=%v actual=%v", expectedD, d)
 	}
 }
@@ -57,31 +57,31 @@ func TestUnion(t *testing.T) {
 	d := *Union(b, a)
 
 	expected := *New("one", "two", "three", "four", "five")
-	if !Equals(c, expected) {
+	if !Equal(c, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, c)
 	}
-	if !Equals(d, expected) {
+	if !Equal(d, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, d)
 	}
 }
 
-func TestEquals(t *testing.T) {
+func TestEqual(t *testing.T) {
 	a := *New("one", "two", "three")
 	b := *New("one", "two", "three")
 	c := *New("one", "two", "four")
 	d := *New("one", "two", "three", "four")
 	e := *New("two", "three", "one")
 
-	if !Equals(a, b) {
+	if !Equal(a, b) {
 		t.Fatal()
 	}
-	if Equals(a, c) {
+	if Equal(a, c) {
 		t.Fatal()
 	}
-	if Equals(a, d) {
+	if Equal(a, d) {
 		t.Fatal()
 	}
-	if !Equals(a, e) {
+	if !Equal(a, e) {
 		t.Fatal()
 	}
 }

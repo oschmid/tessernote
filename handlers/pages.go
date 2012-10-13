@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"notes"
 	"regexp"
-	"string/collections/set"
+	"string/collections/sets"
 	"strings"
 )
 
@@ -44,7 +44,7 @@ func ViewHandler(w http.ResponseWriter, r *http.Request, id string) {
 func EditHandler(w http.ResponseWriter, r *http.Request, id string) {
 	note, err := notebook.Note(id)
 	if err != nil {
-		note = notes.NewNote("", "", *set.New())
+		note = notes.NewNote("", "", *sets.New())
 		note.Id = id
 		notebook.Set(*note)
 	}
@@ -62,7 +62,7 @@ func SaveHandler(w http.ResponseWriter, r *http.Request, id string) {
 		title, body = titleAndBody[0], titleAndBody[1]
 	}
 
-	tags := *set.New(strings.Split(r.FormValue("tags"), notes.TAG_SEPARATOR)...)
+	tags := *sets.New(strings.Split(r.FormValue("tags"), notes.TAG_SEPARATOR)...)
 	note := *notes.NewNote(title, body, tags)
 	note.Id = id
 	notebook.Set(note)

@@ -17,13 +17,13 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package notes
 
 import (
-	"string/collections/set"
+	"string/collections/sets"
 	"testing"
 )
 
 func TestTagString(t *testing.T) {
 	tag1, tag2 := "tag1", "tag2"
-	tags := *set.New(tag1, tag2)
+	tags := *sets.New(tag1, tag2)
 	note := NewNote("title", "body", tags)
 	tagString := note.TagString()
 	expected := tag1 + TAG_SEPARATOR + tag2

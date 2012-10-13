@@ -18,7 +18,7 @@ package notes
 
 import (
 	"fmt"
-	"string/collections/set"
+	"string/collections/sets"
 	"strings"
 )
 
@@ -52,7 +52,7 @@ func (n NoteBook) UUIDs(tags ...string) map[string]bool {
 	// intersect with each following subset of note UUIDs
 	for _, tag := range tags[1:] {
 		tagUUIDs := n.allUUIDsOfTag(tag)
-		uuids = *set.Intersection(uuids, tagUUIDs)
+		uuids = *sets.Intersection(uuids, tagUUIDs)
 		if len(uuids) == 0 {
 			break
 		}
@@ -153,15 +153,15 @@ func (n NoteBook) Set(note Note) {
 
 	// set tags
 	oldTags := n.TagsOfNote(note.Id)
-	if !set.Equals(oldTags, note.Tags) {
+	if !sets.Equal(oldTags, note.Tags) {
 		// remove note from tags it no longer has
-		remove := *set.Difference(oldTags, note.Tags)
+		remove := *sets.Difference(oldTags, note.Tags)
 		for tag, _ := range remove {
 			delete(n.tags[tag], note.Id)
 		}
 
 		// add note to tags it has gained
-		add := *set.Difference(note.Tags, oldTags)
+		add := *sets.Difference(note.Tags, oldTags)
 		for tag, _ := range add {
 			n.addTag(tag, note.Id)
 		}

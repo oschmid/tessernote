@@ -40,7 +40,7 @@ func Union(a map[string]int, b map[string]int) *map[string]int {
 	return &c
 }
 
-func Equals(a map[string]int, b map[string]int) bool {
+func Equal(a map[string]int, b map[string]int) bool {
 	if a == nil && b == nil {
 		return true
 	}

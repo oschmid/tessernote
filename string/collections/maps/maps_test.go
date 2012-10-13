@@ -25,15 +25,15 @@ func TestUnion(t *testing.T) {
 	d := *Union(b, a)
 
 	expected := map[string]int{"one": 2, "two": 2, "three": 1, "four": 1, "five": 1}
-	if !Equals(c, expected) {
+	if !Equal(c, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, c)
 	}
-	if !Equals(d, expected) {
+	if !Equal(d, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, d)
 	}
 }
 
-func TestEquals(t *testing.T) {
+func TestEqual(t *testing.T) {
 	a := *New("one", "two", "three")
 	b := *New("one", "two", "three")
 	c := *New("one", "two", "four")
@@ -41,19 +41,19 @@ func TestEquals(t *testing.T) {
 	e := *New("two", "three", "one")
 	f := map[string]int{"one": 2, "two": 1, "three": 3}
 
-	if !Equals(a, b) {
+	if !Equal(a, b) {
 		t.Fatal()
 	}
-	if Equals(a, c) {
+	if Equal(a, c) {
 		t.Fatal()
 	}
-	if Equals(a, d) {
+	if Equal(a, d) {
 		t.Fatal()
 	}
-	if !Equals(a, e) {
+	if !Equal(a, e) {
 		t.Fatal()
 	}
-	if Equals(a, f) {
+	if Equal(a, f) {
 		t.Fatal()
 	}
 }

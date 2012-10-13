@@ -14,7 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
-package set
+package sets
 
 func New(elements ...string) *map[string]bool {
 	s := make(map[string]bool)
@@ -58,7 +58,7 @@ func Union(a map[string]bool, b map[string]bool) *map[string]bool {
 	return &c
 }
 
-func Equals(a map[string]bool, b map[string]bool) bool {
+func Equal(a map[string]bool, b map[string]bool) bool {
 	if a == nil && b == nil {
 		return true
 	}

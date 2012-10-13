@@ -19,12 +19,12 @@ package notes
 import (
 	"fmt"
 	"string/collections/maps"
-	"string/collections/set"
+	"string/collections/sets"
 	"testing"
 )
 
 func TestAddNote(t *testing.T) {
-	tags := *set.New("tag1", "tag2")
+	tags := *sets.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Set(note)
@@ -42,7 +42,7 @@ func TestAddNote(t *testing.T) {
 	if len(actual.Tags) != len(note.Tags) {
 		t.Fatalf("expected=%d actual=%d", len(note.Tags), len(actual.Tags))
 	}
-	if !set.Equals(actual.Tags, note.Tags) {
+	if !sets.Equal(actual.Tags, note.Tags) {
 		t.Fatalf("expected=%v actual=%v", note.Tags, actual.Tags)
 	}
 }
@@ -59,7 +59,7 @@ func TestNonExistentNote(t *testing.T) {
 }
 
 func TestDeleteNote(t *testing.T) {
-	tags := *set.New("tag1", "tag2")
+	tags := *sets.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Set(note)
@@ -77,7 +77,7 @@ func TestDeleteNote(t *testing.T) {
 
 func TestDeleteNonExistentNote(t *testing.T) {
 	title := "title"
-	tags := *set.New("tag1", "tag2")
+	tags := *sets.New("tag1", "tag2")
 	note := *NewNote(title, "body", tags)
 	notebook := NewNoteBook()
 	notebook.Set(note)
@@ -95,27 +95,27 @@ func TestDeleteNonExistentNote(t *testing.T) {
 }
 
 func TestDeleteNoteTags(t *testing.T) {
-	note := *NewNote("title", "body", *set.New("tag1", "tag2"))
+	note := *NewNote("title", "body", *sets.New("tag1", "tag2"))
 	notebook := NewNoteBook()
 	notebook.Set(note)
-	notebook.Set(*NewNote("title", "body", *set.New("tag1", "tag3")))
+	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag3")))
 
 	expected := map[string]int{"tag1": 2, "tag2": 1, "tag3": 1}
 	tags := *notebook.Tags()
-	if !maps.Equals(tags, expected) {
+	if !maps.Equal(tags, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, tags)
 	}
 
 	notebook.Delete(note.Id)
 	expected = map[string]int{"tag1": 1, "tag3": 1}
 	tags = *notebook.Tags()
-	if !maps.Equals(tags, expected) {
+	if !maps.Equal(tags, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, tags)
 	}
 }
 
 func TestSetBody(t *testing.T) {
-	tags := *set.New("tag1", "tag2")
+	tags := *sets.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Set(note)
@@ -140,17 +140,17 @@ func TestSetBody(t *testing.T) {
 }
 
 func TestSetTags(t *testing.T) {
-	tags := *set.New("tag1", "tag2")
+	tags := *sets.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Set(note)
 
-	note.Tags = *set.New("tag3", "tag4", "tag5")
+	note.Tags = *sets.New("tag3", "tag4", "tag5")
 	actual, err := notebook.Note(note.Id)
 	if err != nil {
 		t.Fatal("unexpected error", err)
 	}
-	if set.Equals(actual.Tags, note.Tags) {
+	if sets.Equal(actual.Tags, note.Tags) {
 		t.Fatal("NoteBook storage updated before call to update")
 	}
 
@@ -159,13 +159,13 @@ func TestSetTags(t *testing.T) {
 	if err != nil {
 		t.Fatal("unexpected error", err)
 	}
-	if !set.Equals(actual.Tags, note.Tags) {
+	if !sets.Equal(actual.Tags, note.Tags) {
 		t.Fatal("expected=%v actual=%v", note.Tags, actual.Tags)
 	}
 }
 
 func TestSetNew(t *testing.T) {
-	tags := *set.New("tag1", "tag2")
+	tags := *sets.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
 	notebook.Set(note)
@@ -208,13 +208,13 @@ func TestAllTitlesOfTag(t *testing.T) {
 
 func TestDistinguishingTagsFromTags(t *testing.T) {
 	notebook := NewNoteBook()
-	notebook.Set(*NewNote("title", "body", *set.New("tag1", "tag2")))
-	notebook.Set(*NewNote("title", "body", *set.New("tag2", "tag3")))
-	notebook.Set(*NewNote("title", "body", *set.New("tag1", "tag2", "tag3")))
+	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2")))
+	notebook.Set(*NewNote("title", "body", *sets.New("tag2", "tag3")))
+	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2", "tag3")))
 
 	expected := map[string]int{"tag1": 1, "tag2": 2, "tag3": 2}
 	actual := *notebook.Tags("tag2", "tag3")
-	if !maps.Equals(actual, expected) {
+	if !maps.Equal(actual, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 }
@@ -224,7 +224,7 @@ func TestDistinguishingTagsFromTags(t *testing.T) {
 func newFullNoteBook(num int) NoteBook {
 	notebook := *NewNoteBook()
 	for i := 0; i < num; i++ {
-		tags := *set.New(number("tag", i), number("tag", i+1))
+		tags := *sets.New(number("tag", i), number("tag", i+1))
 		notebook.Set(*NewNote(number("title", i), "body", tags))
 	}
 	return notebook
