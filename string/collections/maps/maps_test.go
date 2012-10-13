@@ -14,41 +14,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
-package set
+package maps
 
 import "testing"
-
-func TestIntersection(t *testing.T) {
-	a := *New("one", "two", "three", "four")
-	b := *New("zero", "two", "four", "five")
-	expected := *New("two", "four")
-	actual := *Intersection(a, b)
-	if !Equals(actual, expected) {
-		t.Fatalf("expected=%v actual=%v", expected, actual)
-	}
-
-	actual = *Intersection(b, a)
-	if !Equals(actual, expected) {
-		t.Fatalf("expected=%v actual=%v", expected, actual)
-	}
-}
-
-func TestDifference(t *testing.T) {
-	a := *New("one", "two", "three")
-	b := *New("two", "four", "one", "five")
-	c := *Difference(a, b)
-	d := *Difference(b, a)
-
-	expectedC := *New("three")
-	if !Equals(c, expectedC) {
-		t.Fatalf("expected=%v actual=%v", expectedC, c)
-	}
-
-	expectedD := *New("four", "five")
-	if !Equals(d, expectedD) {
-		t.Fatalf("expected=%v actual=%v", expectedD, d)
-	}
-}
 
 func TestUnion(t *testing.T) {
 	a := *New("one", "two", "three")
@@ -56,7 +24,7 @@ func TestUnion(t *testing.T) {
 	c := *Union(a, b)
 	d := *Union(b, a)
 
-	expected := *New("one", "two", "three", "four", "five")
+	expected := map[string]int{"one": 2, "two": 2, "three": 1, "four": 1, "five": 1}
 	if !Equals(c, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, c)
 	}
@@ -71,6 +39,7 @@ func TestEquals(t *testing.T) {
 	c := *New("one", "two", "four")
 	d := *New("one", "two", "three", "four")
 	e := *New("two", "three", "one")
+	f := map[string]int{"one": 2, "two": 1, "three": 3}
 
 	if !Equals(a, b) {
 		t.Fatal()
@@ -82,6 +51,9 @@ func TestEquals(t *testing.T) {
 		t.Fatal()
 	}
 	if !Equals(a, e) {
+		t.Fatal()
+	}
+	if Equals(a, f) {
 		t.Fatal()
 	}
 }

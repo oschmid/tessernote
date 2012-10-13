@@ -18,6 +18,7 @@ package notes
 
 import (
 	"fmt"
+	"string/collections/maps"
 	"string/collections/set"
 	"testing"
 )
@@ -99,16 +100,16 @@ func TestDeleteNoteTags(t *testing.T) {
 	notebook.Set(note)
 	notebook.Set(*NewNote("title", "body", *set.New("tag1", "tag3")))
 
-	expected := *set.New("tag1", "tag2", "tag3")
-	tags := notebook.Tags()
-	if !set.Equals(tags, expected) {
+	expected := map[string]int{"tag1": 2, "tag2": 1, "tag3": 1}
+	tags := *notebook.Tags()
+	if !maps.Equals(tags, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, tags)
 	}
 
 	notebook.Delete(note.Id)
-	expected = *set.New("tag1", "tag3")
-	tags = notebook.Tags()
-	if !set.Equals(tags, expected) {
+	expected = map[string]int{"tag1": 1, "tag3": 1}
+	tags = *notebook.Tags()
+	if !maps.Equals(tags, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, tags)
 	}
 }
@@ -211,9 +212,9 @@ func TestDistinguishingTagsFromTags(t *testing.T) {
 	notebook.Set(*NewNote("title", "body", *set.New("tag2", "tag3")))
 	notebook.Set(*NewNote("title", "body", *set.New("tag1", "tag2", "tag3")))
 
-	expected := *set.New("tag1", "tag2", "tag3")
-	actual := notebook.Tags("tag2", "tag3")
-	if !set.Equals(actual, expected) {
+	expected := map[string]int{"tag1": 1, "tag2": 2, "tag3": 2}
+	actual := *notebook.Tags("tag2", "tag3")
+	if !maps.Equals(actual, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 }

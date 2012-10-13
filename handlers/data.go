@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"string/collections/slice"
 )
 
 const TAGS = "/data/tags"
@@ -32,17 +31,18 @@ const NOTE = "/note/"
 const SAVE = "/save/"
 */
 
-// Returns tags (optional tags in POST/JSON)
+// Returns a map of tags -> note count in JSON format
+// Request can optionally specify a list of tags in JSON format in POST
 func TagsHandler(w http.ResponseWriter, r *http.Request) {
-	// convert JSON -> map[string]bool
-	var tags map[string]bool
+	// convert JSON -> []string
+	var tagsIn []string
 	body, _ := readBody(r) // TODO handle errors
-	_ = json.Unmarshal(body, &tags)
+	_ = json.Unmarshal(body, &tagsIn)
 
-	tags = notebook.Tags(*slice.FromSet(tags)...)
+	tagsOut := *notebook.Tags(tagsIn...)
 
 	// convert map[string]bool -> JSON
-	response, _ := json.Marshal(tags)
+	response, _ := json.Marshal(tagsOut)
 	_, _ = w.Write(response)
 }
 

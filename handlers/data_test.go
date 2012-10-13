@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"notes"
+	"string/collections/maps"
 	"string/collections/set"
 	"strings"
 	"testing"
@@ -37,7 +38,7 @@ func TestNoTagsHandler(t *testing.T) {
 	setUp()
 
 	// build request
-	contents, err := json.Marshal(new(map[string]bool))
+	contents, err := json.Marshal(new([]string))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,13 +52,13 @@ func TestNoTagsHandler(t *testing.T) {
 	TagsHandler(w, r)
 
 	// verify response
-	expected := *set.New("tag1", "tag2", "tag3", "tag4", "tag5")
-	var actual map[string]bool
+	expected := map[string]int{"tag1": 2, "tag2": 1, "tag3": 2, "tag4": 1, "tag5": 1}
+	var actual map[string]int
 	err = json.Unmarshal(body, &actual)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !set.Equals(expected, actual) {
+	if !maps.Equals(expected, actual) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 }
@@ -66,7 +67,7 @@ func TestTagsInPostHandler(t *testing.T) {
 	setUp()
 
 	// build request
-	contents, err := json.Marshal(*set.New("tag1", "tag3"))
+	contents, err := json.Marshal([]string{"tag1", "tag3"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,13 +81,13 @@ func TestTagsInPostHandler(t *testing.T) {
 	TagsHandler(w, r)
 
 	// verify response
-	expected := *set.New("tag1", "tag2", "tag3", "tag4")
-	var actual map[string]bool
-	err = json.Unmarshal(body, &actual) // TODO read body correctly
+	expected := map[string]int{"tag1": 2, "tag2": 1, "tag3": 2, "tag4": 1}
+	var actual map[string]int
+	err = json.Unmarshal(body, &actual)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !set.Equals(expected, actual) {
+	if !maps.Equals(expected, actual) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 }
