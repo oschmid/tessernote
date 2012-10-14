@@ -20,15 +20,11 @@ import (
 	"html/template"
 	"net/http"
 	"notes"
-	"regexp"
 	"string/collections/sets"
 	"strings"
 )
 
-const PATH_LENGTH = len("/view/")
-
 var Templates *template.Template
-var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 var notebook = *notes.NewNoteBook() // TODO save between authorized sessions
 
 func ViewHandler(w http.ResponseWriter, r *http.Request, id string) {
@@ -67,17 +63,6 @@ func SaveHandler(w http.ResponseWriter, r *http.Request, id string) {
 	note.Id = id
 	notebook.Set(note)
 	http.Redirect(w, r, "/view/"+id, http.StatusFound)
-}
-
-func MakeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.URL.Path[PATH_LENGTH:]
-		if !titleValidator.MatchString(id) {
-			http.NotFound(w, r)
-			return
-		}
-		fn(w, r, id)
-	}
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, page *notes.Note) {

@@ -174,3 +174,20 @@ func (n NoteBook) addTag(tag string, noteId string) {
 	}
 	n.tags[tag][noteId] = true
 }
+
+func (n NoteBook) RenameTag(old string, new string) {
+	notes, contained := n.tags[old]
+	if contained {
+		previous, contained := n.tags[new]
+		if contained {
+			n.tags[new] = *sets.Union(previous, notes)
+		} else {
+			n.tags[new] = notes
+		}
+		delete(n.tags, old)
+	}
+}
+
+func (n NoteBook) DeleteTag(tag string) {
+	delete(n.tags, tag)
+}

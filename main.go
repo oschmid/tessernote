@@ -17,16 +17,56 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
+	"bytes"
 	"handlers"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
+	"regexp"
 )
 
+var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
+
 func main() {
+	// data handlers
+	addPostHandler(handlers.UrlTagsGet, handlers.GetTagsHandler)
+	addPostHandler(handlers.UrlTagsRename, handlers.RenameTagsHandler)
+	addPostHandler(handlers.UrlTagsDelete, handlers.DeleteTagsHandler)
+	addPostHandler(handlers.UrlTitles, handlers.TitlesHandler)
+	addGetHandler(handlers.UrlNoteGet, handlers.GetNoteHandler)
+	addPostHandler(handlers.UrlNoteSave, handlers.SaveNoteHandler)
+
+	// page handlers
 	handlers.Templates = template.Must(template.ParseFiles("tmpl/edit.html", "tmpl/view.html"))
-	http.HandleFunc("/view/", handlers.MakeHandler(handlers.ViewHandler))
-	http.HandleFunc("/edit/", handlers.MakeHandler(handlers.EditHandler))
-	http.HandleFunc("/save/", handlers.MakeHandler(handlers.SaveHandler))
+	addGetHandler("/view/", handlers.ViewHandler)
+	addGetHandler("/edit/", handlers.EditHandler)
+	addGetHandler("/save/", handlers.SaveHandler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func addGetHandler(url string, fn func(http.ResponseWriter, *http.Request, string)) {
+	getHandler := func(w http.ResponseWriter, r *http.Request) {
+		get := r.URL.Path[len(url):]
+		if !titleValidator.MatchString(get) {
+			http.NotFound(w, r)
+			return
+		}
+		fn(w, r, get)
+	}
+	http.HandleFunc(url, getHandler)
+}
+
+func addPostHandler(url string, fn func(http.ResponseWriter, *http.Request, []byte)) {
+	postHandler := func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		buf := new(bytes.Buffer)
+		_, err := io.Copy(buf, r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+		post := []byte(buf.String())
+		fn(w, r, post)
+	}
+	http.HandleFunc(url, postHandler)
 }

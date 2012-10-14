@@ -17,34 +17,27 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
 )
 
-const GET_TAGS = "/tags/get"
+const (
+	UrlTagsGet    = "/tags/get"
+	UrlTagsDelete = "/tags/delete"
+	UrlTagsRename = "/tags/rename"
+	UrlTitles     = "/titles"
+	UrlNoteGet    = "/note/get"
+	UrlNoteSave   = "/note/save"
+)
 
-//const DELETE_TAGS = "/tags/delete"
-//const RENAME_TAGS = "/tags/rename"
-const TITLES = "/titles"
-
-//const GET_NOTE = "/note/get"
-//const SAVE_NOTE = "/note/save"
+// TODO get untagged notes
 
 // Returns a map of tags -> note count in JSON format.
 // Request can optionally specify a list of tags in JSON format in POST.
-func GetTagsHandler(w http.ResponseWriter, r *http.Request) {
-	// read request
-	body, err := readBody(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
+func GetTagsHandler(w http.ResponseWriter, r *http.Request, body []byte) {
 	// convert JSON -> []string
 	var tagsIn []string
-	err = json.Unmarshal(body, &tagsIn)
+	err := json.Unmarshal(body, &tagsIn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -62,22 +55,55 @@ func GetTagsHandler(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write(response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
-// Returns a slice of titles in JSON format.
-// Request can optionally specify a list of tags in JSON format in POST.
-func TitlesHandler(w http.ResponseWriter, r *http.Request) {
-	// read request
-	body, err := readBody(r)
+// Renames tags.
+// Request specifies oldTags -> newTags in JSON format in POST.
+// OldTags that don't exist are skipped. NewTags that already exist will create a union.
+func RenameTagsHandler(w http.ResponseWriter, r *http.Request, body []byte) {
+	// convert JSON -> map[string]string
+	var tags map[string]string
+	err := json.Unmarshal(body, &tags)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// rename tags
+	for old, new := range tags {
+		notebook.RenameTag(old, new)
+	}
+
+	// write response
+	w.WriteHeader(http.StatusOK)
+}
+
+func DeleteTagsHandler(w http.ResponseWriter, r *http.Request, body []byte) {
 	// convert JSON -> []string
 	var tags []string
-	err = json.Unmarshal(body, &tags)
+	err := json.Unmarshal(body, &tags)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// delete tags
+	for _, tag := range tags {
+		notebook.DeleteTag(tag)
+	}
+
+	// write response
+	w.WriteHeader(http.StatusOK)
+}
+
+// Returns a slice of titles in JSON format.
+// Request can optionally specify a list of tags in JSON format in POST.
+func TitlesHandler(w http.ResponseWriter, r *http.Request, body []byte) {
+	// convert JSON -> []string
+	var tags []string
+	err := json.Unmarshal(body, &tags)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -98,18 +124,16 @@ func TitlesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO get note from UUID in GET
+// Returns Note in JSON format.
+// Request must specify Note.Id in URL
+func GetNoteHandler(w http.ResponseWriter, r *http.Request, id string) {
+	// TODO convert Note -> JSON
+	// write response
+}
 
-// TODO set note in POST
-
-// helper functions
-
-func readBody(r *http.Request) ([]byte, error) {
-	defer r.Body.Close()
-	buf := new(bytes.Buffer)
-	_, err := io.Copy(buf, r.Body)
-	if err != nil {
-		return []byte{}, err
-	}
-	return []byte(buf.String()), nil
+// Saves Note
+// Request must specify Note in JSON format in POST
+func SaveNoteHandler(w http.ResponseWriter, r *http.Request, body []byte) {
+	// TODO convert JSON -> Note
+	// write response
 }

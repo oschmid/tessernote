@@ -219,6 +219,40 @@ func TestDistinguishingTagsFromTags(t *testing.T) {
 	}
 }
 
+func TestRenameTags(t *testing.T) {
+	notebook := NewNoteBook()
+	notebook.Set(Note{"uuid1", "title1", "body1", *sets.New("tag1", "tag2")})
+	notebook.Set(Note{"uuid2", "title2", "body2", *sets.New("tag2", "tag3", "tag4")})
+	notebook.Set(Note{"uuid3", "title3", "body3", *sets.New("tag1", "tag4")})
+
+	notebook.RenameTag("tag1", "tag4")
+	expectedTags := map[string]int{"tag2": 2, "tag3": 1, "tag4": 3}
+	actualTags := *notebook.Tags()
+	if !maps.Equal(expectedTags, actualTags) {
+		t.Fatalf("expected=%v actual=%v", expectedTags, actualTags)
+	}
+	checkNoteTags(notebook, "uuid1", *sets.New("tag2", "tag4"), t)
+	checkNoteTags(notebook, "uuid2", *sets.New("tag2", "tag3", "tag4"), t)
+	checkNoteTags(notebook, "uuid3", *sets.New("tag4"), t)
+}
+
+func TestDeleteTags(t *testing.T) {
+	notebook := NewNoteBook()
+	notebook.Set(Note{"uuid1", "title1", "body1", *sets.New("tag1", "tag2")})
+	notebook.Set(Note{"uuid2", "title2", "body2", *sets.New("tag2", "tag3", "tag4")})
+	notebook.Set(Note{"uuid3", "title3", "body3", *sets.New("tag4")})
+
+	notebook.DeleteTag("tag4")
+	expectedTags := map[string]int{"tag1": 1, "tag2": 2, "tag3": 1}
+	actualTags := *notebook.Tags()
+	if !maps.Equal(expectedTags, actualTags) {
+		t.Fatalf("expected=%v actual=%v", expectedTags, actualTags)
+	}
+	checkNoteTags(notebook, "uuid1", *sets.New("tag1", "tag2"), t)
+	checkNoteTags(notebook, "uuid2", *sets.New("tag2", "tag3"), t)
+	checkNoteTags(notebook, "uuid3", *sets.New(), t)
+}
+
 // helper functions
 
 func newFullNoteBook(num int) NoteBook {
@@ -241,4 +275,17 @@ func contains(slice []string, elem string) bool {
 		}
 	}
 	return false
+}
+
+func checkNoteTags(notebook *NoteBook, uuid string, expected map[string]bool, t *testing.T) {
+	note, err := notebook.Note(uuid)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	actual := note.Tags
+	if !sets.Equal(expected, actual) {
+		t.Fatalf("expected=%v actual=%v", expected, actual)
+	}
 }
