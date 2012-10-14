@@ -65,31 +65,3 @@ func (note Note) TagString() string {
 func (n Note) Equal(note Note) bool {
 	return n.Id == note.Id && n.Title == note.Title && n.Body == note.Body && sets.Equal(n.Tags, note.Tags)
 }
-
-/*
-func SaveNote(note Note) error {
-	fileName := "data/" + note.Title + ".txt"
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		fmt.Printf("saveNote error: %v\n", err)
-		return err
-	}
-
-	defer file.Close()
-	gob.NewEncoder(file).Encode(note)
-	return nil
-}
-
-func LoadNote(title string) (*Note, error) {
-	fileName := "data/" + title + ".txt"
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-
-	defer file.Close()
-	var note Note
-	err = gob.NewDecoder(file).Decode(&note)
-	return &note, err
-}
-*/

@@ -30,12 +30,12 @@ var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
 func main() {
 	// data handlers
-	addPostHandler(handlers.UrlTagsGet, handlers.GetTagsHandler)
-	addPostHandler(handlers.UrlTagsRename, handlers.RenameTagsHandler)
-	addPostHandler(handlers.UrlTagsDelete, handlers.DeleteTagsHandler)
-	addPostHandler(handlers.UrlTitles, handlers.TitlesHandler)
-	addGetHandler(handlers.UrlNoteGet, handlers.GetNoteHandler)
-	addPostHandler(handlers.UrlNoteSave, handlers.SaveNoteHandler)
+	addPostHandler(handlers.UrlGetTags, handlers.GetTagsHandler)
+	addPostHandler(handlers.UrlRenameTags, handlers.RenameTagsHandler)
+	addPostHandler(handlers.UrlDeleteTags, handlers.DeleteTagsHandler)
+	addPostHandler(handlers.UrlGetTitles, handlers.TitlesHandler)
+	addGetHandler(handlers.UrlGetNote, handlers.GetNoteHandler)
+	addPostHandler(handlers.UrlSaveNote, handlers.SaveNoteHandler)
 
 	// page handlers
 	handlers.Templates = template.Must(template.ParseFiles("tmpl/edit.html", "tmpl/view.html"))
@@ -47,7 +47,7 @@ func main() {
 
 func addGetHandler(url string, fn func(http.ResponseWriter, *http.Request, string)) {
 	getHandler := func(w http.ResponseWriter, r *http.Request) {
-		get := r.UqRL.Path[len(url):]
+		get := r.URL.Path[len(url):]
 		if !titleValidator.MatchString(get) {
 			http.NotFound(w, r)
 			return

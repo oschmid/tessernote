@@ -46,7 +46,7 @@ func TestGetAllTags(t *testing.T) {
 	}
 
 	// handle request
-	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlTagsGet, strings.NewReader(string(body)))
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlGetTags, strings.NewReader(string(body)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func TestGetTags(t *testing.T) {
 	}
 
 	// handle request
-	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlTagsGet, strings.NewReader(string(body)))
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlGetTags, strings.NewReader(string(body)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +102,7 @@ func TestRenameTags(t *testing.T) {
 	}
 
 	// handle request
-	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlTagsRename, strings.NewReader(string(body)))
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlRenameTags, strings.NewReader(string(body)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func TestDeleteTags(t *testing.T) {
 	}
 
 	// handle request
-	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlTagsDelete, strings.NewReader(string(body)))
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlDeleteTags, strings.NewReader(string(body)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +160,7 @@ func TestGetAllTitles(t *testing.T) {
 	}
 
 	// handle request
-	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlTitles, strings.NewReader(string(body)))
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlGetTitles, strings.NewReader(string(body)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,7 +188,7 @@ func TestGetTitles(t *testing.T) {
 	}
 
 	// handle request
-	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlTitles, strings.NewReader(string(body)))
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlGetTitles, strings.NewReader(string(body)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +210,7 @@ func TestGetNote(t *testing.T) {
 	setUp()
 
 	// handle request
-	r, err := http.NewRequest("GET", "http://www.grivet.com"+UrlNoteGet+"uuid1", nil)
+	r, err := http.NewRequest("GET", "http://www.grivet.com"+UrlGetNote+"uuid1", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -239,7 +239,7 @@ func TestNewNote(t *testing.T) {
 	}
 
 	// handle request
-	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlNoteSave, strings.NewReader(string(body)))
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlSaveNote, strings.NewReader(string(body)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,7 +283,7 @@ func TestEditNote(t *testing.T) {
 	}
 
 	// handle request
-	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlNoteSave, strings.NewReader(string(body)))
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlSaveNote, strings.NewReader(string(body)))
 	if err != nil {
 		t.Fatal(err)
 	}

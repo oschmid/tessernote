@@ -23,15 +23,15 @@ import (
 )
 
 const (
-	UrlTagsGet    = "/tags/get"
-	UrlTagsDelete = "/tags/delete"
-	UrlTagsRename = "/tags/rename"
-	UrlTitles     = "/titles"
-	UrlNoteGet    = "/note/get/"
-	UrlNoteSave   = "/note/save"
+	UrlGetTags    = "/tags/get"
+	UrlDeleteTags = "/tags/delete"
+	UrlRenameTags = "/tags/rename"
+	UrlGetTitles  = "/titles"
+	UrlGetNote    = "/note/get/"
+	UrlSaveNote   = "/note/save"
 )
 
-// TODO get untagged notes
+// TODO get untagged notes?
 
 // Returns a map of tags -> note count in JSON format.
 // Request can optionally specify a list of tags in JSON format in POST.
