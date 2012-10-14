@@ -19,6 +19,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"notes"
 )
 
 const (
@@ -26,7 +27,7 @@ const (
 	UrlTagsDelete = "/tags/delete"
 	UrlTagsRename = "/tags/rename"
 	UrlTitles     = "/titles"
-	UrlNoteGet    = "/note/get"
+	UrlNoteGet    = "/note/get/"
 	UrlNoteSave   = "/note/save"
 )
 
@@ -127,13 +128,37 @@ func TitlesHandler(w http.ResponseWriter, r *http.Request, body []byte) {
 // Returns Note in JSON format.
 // Request must specify Note.Id in URL
 func GetNoteHandler(w http.ResponseWriter, r *http.Request, id string) {
-	// TODO convert Note -> JSON
+	note, err := notebook.Note(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// convert Note -> JSON
+	response, err := json.Marshal(note)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	// write response
+	_, err = w.Write(response)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // Saves Note
 // Request must specify Note in JSON format in POST
 func SaveNoteHandler(w http.ResponseWriter, r *http.Request, body []byte) {
-	// TODO convert JSON -> Note
-	// write response
+	// convert JSON -> Note
+	var note notes.Note
+	err := json.Unmarshal(body, &note)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	// set note
+	notebook.Set(note)
+	w.WriteHeader(http.StatusOK)
 }

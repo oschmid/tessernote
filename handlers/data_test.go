@@ -36,7 +36,7 @@ func setUp() {
 	notebook.Set(notes.Note{"uuid3", "title3", "body3", *sets.New("tag5")})
 }
 
-func TestTagsHandlerNoPost(t *testing.T) {
+func TestGetAllTags(t *testing.T) {
 	setUp()
 
 	// build request
@@ -64,7 +64,7 @@ func TestTagsHandlerNoPost(t *testing.T) {
 	}
 }
 
-func TestTagsHandler(t *testing.T) {
+func TestGetTags(t *testing.T) {
 	setUp()
 
 	// build request
@@ -92,7 +92,7 @@ func TestTagsHandler(t *testing.T) {
 	}
 }
 
-func TestRenameTagsHandler(t *testing.T) {
+func TestRenameTags(t *testing.T) {
 	setUp()
 
 	// build request
@@ -121,7 +121,7 @@ func TestRenameTagsHandler(t *testing.T) {
 	checkNoteTags("uuid3", *sets.New("tag5"), t)
 }
 
-func TestDeleteTagsHandler(t *testing.T) {
+func TestDeleteTags(t *testing.T) {
 	setUp()
 
 	// build request
@@ -150,7 +150,7 @@ func TestDeleteTagsHandler(t *testing.T) {
 	checkNoteTags("uuid3", *sets.New(), t)
 }
 
-func TestTitlesHandlerNoPost(t *testing.T) {
+func TestGetAllTitles(t *testing.T) {
 	setUp()
 
 	// build request
@@ -178,7 +178,7 @@ func TestTitlesHandlerNoPost(t *testing.T) {
 	}
 }
 
-func TestTitlesHandler(t *testing.T) {
+func TestGetTitles(t *testing.T) {
 	setUp()
 
 	// build request
@@ -206,12 +206,97 @@ func TestTitlesHandler(t *testing.T) {
 	}
 }
 
-func TestGetNoteHandler(t *testing.T) {
-	t.Fatal("not yet implemented")
+func TestGetNote(t *testing.T) {
+	setUp()
+
+	// handle request
+	r, err := http.NewRequest("GET", "http://www.grivet.com"+UrlNoteGet+"uuid1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	GetNoteHandler(w, r, "uuid1")
+
+	// verify
+	expected := notes.Note{"uuid1", "title1", "body1", *sets.New("tag1", "tag2", "tag3")}
+	var actual notes.Note
+	err = json.Unmarshal(responseBody, &actual)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !expected.Equal(actual) {
+		t.Fatalf("expected=%v actual=%v", expected, actual)
+	}
 }
 
-func TestSaveNoteHandler(t *testing.T) {
-	t.Fatal("not yet implemented")
+func TestNewNote(t *testing.T) {
+	setUp()
+
+	// build request
+	note := notes.NewNote("title", "body", *sets.New("tag"))
+	body, err := json.Marshal(note)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// handle request
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlNoteSave, strings.NewReader(string(body)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	SaveNoteHandler(w, r, body)
+
+	// verify
+	expectedTags := map[string]int{"tag": 1, "tag1": 2, "tag2": 1, "tag3": 2, "tag4": 1, "tag5": 1}
+	actualTags := *notebook.Tags()
+	if !maps.Equal(expectedTags, actualTags) {
+		t.Fatalf("expected=%v actual=%v", expectedTags, actualTags)
+	}
+	actual, err := notebook.Note(note.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !note.Equal(*actual) {
+		t.Fatalf("expected=%v actual=%v", note, actual)
+	}
+}
+
+func TestEditNote(t *testing.T) {
+	setUp()
+
+	note, err := notebook.Note("uuid2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	note.Body = "new body"
+	check, err := notebook.Note("uuid2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if check.Body == note.Body {
+		t.Fatal("note passed by reference")
+	}
+
+	// build request
+	body, err := json.Marshal(note)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// handle request
+	r, err := http.NewRequest("POST", "http://www.grivet.com"+UrlNoteSave, strings.NewReader(string(body)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	SaveNoteHandler(w, r, body)
+
+	// verify
+	actual, err := notebook.Note("uuid2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !note.Equal(*actual) {
+		t.Fatalf("expected=%v actual=%v", note, actual)
+	}
 }
 
 // http.ResponseWriter for testing

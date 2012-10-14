@@ -19,6 +19,7 @@ package notes
 import (
 	"code.google.com/p/go-uuid/uuid"
 	"sort"
+	"string/collections/sets"
 )
 
 const TAG_SEPARATOR = ", "
@@ -59,6 +60,10 @@ func (note Note) TagString() string {
 	}
 
 	return tagString[:len(tagString)-len(TAG_SEPARATOR)]
+}
+
+func (n Note) Equal(note Note) bool {
+	return n.Id == note.Id && n.Title == note.Title && n.Body == note.Body && sets.Equal(n.Tags, note.Tags)
 }
 
 /*

@@ -47,7 +47,7 @@ func main() {
 
 func addGetHandler(url string, fn func(http.ResponseWriter, *http.Request, string)) {
 	getHandler := func(w http.ResponseWriter, r *http.Request) {
-		get := r.URL.Path[len(url):]
+		get := r.UqRL.Path[len(url):]
 		if !titleValidator.MatchString(get) {
 			http.NotFound(w, r)
 			return
