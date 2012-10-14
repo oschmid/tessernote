@@ -22,7 +22,7 @@ import (
 	"string/collections/sets"
 )
 
-const TAG_SEPARATOR = ", "
+const TagSeparator = ", "
 
 type Note struct {
 	Id    string
@@ -38,7 +38,7 @@ func NewNote(title string, body string, tags map[string]bool) *Note {
 }
 
 func (note Note) TitleBodyString() string {
-	return note.Title + TITLE_BODY_SEPARATOR + note.Body
+	return note.Title + TitleBodySeparator + note.Body
 }
 
 // Returns a string representation of this Note's tags
@@ -56,10 +56,10 @@ func (note Note) TagString() string {
 
 	tagString := *new(string)
 	for _, tag := range tags {
-		tagString += tag + TAG_SEPARATOR
+		tagString += tag + TagSeparator
 	}
 
-	return tagString[:len(tagString)-len(TAG_SEPARATOR)]
+	return tagString[:len(tagString)-len(TagSeparator)]
 }
 
 func (n Note) Equal(note Note) bool {

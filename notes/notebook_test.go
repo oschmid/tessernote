@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"string/collections/maps"
 	"string/collections/sets"
+	"string/collections/slices"
 	"testing"
 )
 
@@ -190,7 +191,7 @@ func TestAllTitles(t *testing.T) {
 
 	for i := 0; i < num; i++ {
 		title := number("title", i)
-		if !contains(titles, title) {
+		if !slices.Contains(titles, title) {
 			t.Fatalf("%v does not contain %s", titles, title)
 		}
 	}
@@ -266,15 +267,6 @@ func newFullNoteBook(num int) NoteBook {
 
 func number(text string, num int) string {
 	return fmt.Sprint(text, num)
-}
-
-func contains(slice []string, elem string) bool {
-	for _, value := range slice {
-		if value == elem {
-			return true
-		}
-	}
-	return false
 }
 
 func checkNoteTags(notebook *NoteBook, uuid string, expected map[string]bool, t *testing.T) {

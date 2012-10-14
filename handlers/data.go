@@ -31,8 +31,6 @@ const (
 	UrlSaveNote   = "/note/save"
 )
 
-// TODO get untagged notes?
-
 // Returns a map of tags -> note count in JSON format.
 // Request can optionally specify a list of tags in JSON format in POST.
 func GetTagsHandler(w http.ResponseWriter, r *http.Request, body []byte) {

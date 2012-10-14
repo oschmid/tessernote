@@ -26,7 +26,7 @@ func TestTagString(t *testing.T) {
 	tags := *sets.New(tag1, tag2)
 	note := NewNote("title", "body", tags)
 	tagString := note.TagString()
-	expected := tag1 + TAG_SEPARATOR + tag2
+	expected := tag1 + TagSeparator + tag2
 	if tagString != expected {
 		t.Fatalf("expected=%v actual=%v", expected, tagString)
 	}

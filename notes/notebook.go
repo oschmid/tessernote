@@ -22,7 +22,7 @@ import (
 	"strings"
 )
 
-const TITLE_BODY_SEPARATOR string = "\n"
+const TitleBodySeparator string = "\n"
 
 type NoteBook struct {
 	notes map[string]string          // note ID -> note title and body
@@ -84,7 +84,7 @@ func (n NoteBook) allUUIDsOfTag(tag string) map[string]bool {
 func (n NoteBook) Titles(tags ...string) []string {
 	titles := []string{}
 	for id, _ := range n.UUIDs(tags...) {
-		title := strings.SplitN(n.notes[id], TITLE_BODY_SEPARATOR, 2)[0]
+		title := strings.SplitN(n.notes[id], TitleBodySeparator, 2)[0]
 		titles = append(titles, title)
 	}
 
@@ -92,7 +92,7 @@ func (n NoteBook) Titles(tags ...string) []string {
 }
 
 func (n NoteBook) Note(id string) (*Note, error) {
-	note := strings.SplitN(n.notes[id], TITLE_BODY_SEPARATOR, 2)
+	note := strings.SplitN(n.notes[id], TitleBodySeparator, 2)
 	if len(note) != 2 {
 		return nil, fmt.Errorf("note %s: does not exist", id)
 	}
@@ -149,7 +149,7 @@ func (n NoteBook) Delete(id string) {
 // Adds note if it didn't exist before, updates all information if it did.
 func (n NoteBook) Set(note Note) {
 	// set body
-	n.notes[note.Id] = note.Title + TITLE_BODY_SEPARATOR + note.Body
+	n.notes[note.Id] = note.Title + TitleBodySeparator + note.Body
 
 	// set tags
 	oldTags := n.TagsOfNote(note.Id)

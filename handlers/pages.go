@@ -25,7 +25,7 @@ import (
 )
 
 var Templates *template.Template
-var notebook = *notes.NewNoteBook() // TODO save between authorized sessions
+var notebook = *notes.NewNoteBook()
 
 func ViewHandler(w http.ResponseWriter, r *http.Request, id string) {
 	note, err := notebook.Note(id)
@@ -36,7 +36,6 @@ func ViewHandler(w http.ResponseWriter, r *http.Request, id string) {
 	renderTemplate(w, "view", note)
 }
 
-// TODO format title line in bold
 func EditHandler(w http.ResponseWriter, r *http.Request, id string) {
 	note, err := notebook.Note(id)
 	if err != nil {
@@ -48,7 +47,7 @@ func EditHandler(w http.ResponseWriter, r *http.Request, id string) {
 }
 
 func SaveHandler(w http.ResponseWriter, r *http.Request, id string) {
-	titleAndBody := strings.SplitN(r.FormValue("title_body"), notes.TITLE_BODY_SEPARATOR, 2)
+	titleAndBody := strings.SplitN(r.FormValue("title_body"), notes.TitleBodySeparator, 2)
 	var title, body string
 	if len(titleAndBody) == 0 {
 		title, body = "Untitled", ""
@@ -58,7 +57,7 @@ func SaveHandler(w http.ResponseWriter, r *http.Request, id string) {
 		title, body = titleAndBody[0], titleAndBody[1]
 	}
 
-	tags := *sets.New(strings.Split(r.FormValue("tags"), notes.TAG_SEPARATOR)...)
+	tags := *sets.New(strings.Split(r.FormValue("tags"), notes.TagSeparator)...)
 	note := *notes.NewNote(title, body, tags)
 	note.Id = id
 	notebook.Set(note)
