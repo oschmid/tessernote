@@ -94,7 +94,7 @@ func (n NoteBook) Titles(tags ...string) []string {
 func (n NoteBook) Note(id string) (*Note, error) {
 	note := strings.SplitN(n.notes[id], TitleBodySeparator, 2)
 	if len(note) != 2 {
-		return nil, fmt.Errorf("note %s: does not exist", id)
+		return nil, fmt.Errorf("note \"%s\" does not exist", id)
 	}
 
 	title, body := note[0], note[1]

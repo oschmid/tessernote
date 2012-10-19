@@ -19,28 +19,40 @@ package api
 import (
 	"bytes"
 	"io"
+	"log"
 	"net/http"
+	"reflect"
 	"regexp"
+	"runtime"
 )
 
 var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
 func MakePostHandler(url string, fn func(http.ResponseWriter, []byte)) (string, func(http.ResponseWriter, *http.Request)) {
 	return url, func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		buf := new(bytes.Buffer)
-		_, err := io.Copy(buf, r.Body)
+		log.Println(runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name(), r.RemoteAddr) // TODO remove, slow
+		post, err := readPost(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		post := []byte(buf.String())
 		fn(w, post)
 	}
 }
 
+func readPost(r *http.Request) ([]byte, error) {
+	defer r.Body.Close()
+	buf := new(bytes.Buffer)
+	_, err := io.Copy(buf, r.Body)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(buf.String()), nil
+}
+
 func MakeGetHandler(url string, fn func(http.ResponseWriter, string)) (string, func(http.ResponseWriter, *http.Request)) {
 	return url, func(w http.ResponseWriter, r *http.Request) {
+		log.Println(runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name(), r.RemoteAddr) // TODO remove, slow
 		get := r.URL.Path[len(url):]
 		if !titleValidator.MatchString(get) {
 			http.NotFound(w, r)

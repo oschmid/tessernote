@@ -1,5 +1,8 @@
+var baseURL = "http://localhost:8080"
+var getTagsURL = "/tags/get"
+
 $(document).ready(function() {
-    $.post("localhost:8080/tags/get", "null", function(data) {
-        alert(data);
+    $.post(baseURL+getTagsURL, "null", function(data) {
+        alert(data)
     })
-});
+})
