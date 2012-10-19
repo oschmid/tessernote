@@ -51,7 +51,7 @@ func TestGetAllTags(t *testing.T) {
 
 func TestGetSomeTags(t *testing.T) {
 	recorder := setUp()
-	body := marshal([]string{"tag1","tag3"}, t)
+	body := marshal([]string{"tag1", "tag3"}, t)
 	request := makePostRequest(GetTagsUrl, body, t)
 	_, handle := MakePostHandler(GetTagsUrl, GetTags)
 	handle(recorder, request)
@@ -177,7 +177,7 @@ func TestEditNote(t *testing.T) {
 // helper functions
 
 func makePostRequest(url string, body []byte, t *testing.T) *http.Request {
-	request, err := http.NewRequest("POST", "http://www.grivet.ca"+url,strings.NewReader(string(body)))
+	request, err := http.NewRequest("POST", "http://www.grivet.ca"+url, strings.NewReader(string(body)))
 	if err != nil {
 		t.Fatal(err)
 	}

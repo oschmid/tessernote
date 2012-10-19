@@ -13,19 +13,19 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 package api
 
 import (
 	"bytes"
+	"io"
 	"net/http"
 	"regexp"
-	"io"
 )
 
 var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
-func MakePostHandler(url string, fn func(http.ResponseWriter,[]byte)) (string,func(http.ResponseWriter,*http.Request)) {
+func MakePostHandler(url string, fn func(http.ResponseWriter, []byte)) (string, func(http.ResponseWriter, *http.Request)) {
 	return url, func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		buf := new(bytes.Buffer)
@@ -39,7 +39,7 @@ func MakePostHandler(url string, fn func(http.ResponseWriter,[]byte)) (string,fu
 	}
 }
 
-func MakeGetHandler(url string, fn func(http.ResponseWriter, string)) (string,func(http.ResponseWriter, *http.Request)) {
+func MakeGetHandler(url string, fn func(http.ResponseWriter, string)) (string, func(http.ResponseWriter, *http.Request)) {
 	return url, func(w http.ResponseWriter, r *http.Request) {
 		get := r.URL.Path[len(url):]
 		if !titleValidator.MatchString(get) {
