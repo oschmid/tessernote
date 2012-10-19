@@ -14,7 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
-package handlers
+package api
 
 import (
 	"encoding/json"
@@ -23,17 +23,19 @@ import (
 )
 
 const (
-	UrlGetTags    = "/tags/get"
-	UrlDeleteTags = "/tags/delete"
-	UrlRenameTags = "/tags/rename"
-	UrlGetTitles  = "/titles"
-	UrlGetNote    = "/note/get/"
-	UrlSaveNote   = "/note/save"
+	GetTagsUrl    = "/tags/get"
+	DeleteTagsUrl = "/tags/delete"
+	RenameTagsUrl = "/tags/rename"
+	GetTitlesUrl  = "/titles"
+	GetNoteUrl    = "/note/get/"
+	SaveNoteUrl   = "/note/save"
 )
+
+var notebook = *notes.NewNoteBook()
 
 // Returns a map of tags -> note count in JSON format.
 // Request can optionally specify a list of tags in JSON format in POST.
-func GetTagsHandler(w http.ResponseWriter, r *http.Request, body []byte) {
+func GetTags(w http.ResponseWriter, body []byte) {
 	// convert JSON -> []string
 	var tagsIn []string
 	err := json.Unmarshal(body, &tagsIn)
@@ -61,7 +63,7 @@ func GetTagsHandler(w http.ResponseWriter, r *http.Request, body []byte) {
 // Renames tags.
 // Request specifies oldTags -> newTags in JSON format in POST.
 // OldTags that don't exist are skipped. NewTags that already exist will create a union.
-func RenameTagsHandler(w http.ResponseWriter, r *http.Request, body []byte) {
+func RenameTags(w http.ResponseWriter, body []byte) {
 	// convert JSON -> map[string]string
 	var tags map[string]string
 	err := json.Unmarshal(body, &tags)
@@ -79,7 +81,7 @@ func RenameTagsHandler(w http.ResponseWriter, r *http.Request, body []byte) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func DeleteTagsHandler(w http.ResponseWriter, r *http.Request, body []byte) {
+func DeleteTags(w http.ResponseWriter, body []byte) {
 	// convert JSON -> []string
 	var tags []string
 	err := json.Unmarshal(body, &tags)
@@ -99,7 +101,7 @@ func DeleteTagsHandler(w http.ResponseWriter, r *http.Request, body []byte) {
 
 // Returns a slice of titles in JSON format.
 // Request can optionally specify a list of tags in JSON format in POST.
-func TitlesHandler(w http.ResponseWriter, r *http.Request, body []byte) {
+func GetTitles(w http.ResponseWriter, body []byte) {
 	// convert JSON -> []string
 	var tags []string
 	err := json.Unmarshal(body, &tags)
@@ -125,7 +127,7 @@ func TitlesHandler(w http.ResponseWriter, r *http.Request, body []byte) {
 
 // Returns Note in JSON format.
 // Request must specify Note.Id in URL
-func GetNoteHandler(w http.ResponseWriter, r *http.Request, id string) {
+func GetNote(w http.ResponseWriter, id string) {
 	note, err := notebook.Note(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -148,7 +150,7 @@ func GetNoteHandler(w http.ResponseWriter, r *http.Request, id string) {
 
 // Saves Note
 // Request must specify Note in JSON format in POST
-func SaveNoteHandler(w http.ResponseWriter, r *http.Request, body []byte) {
+func SaveNote(w http.ResponseWriter, body []byte) {
 	// convert JSON -> Note
 	var note notes.Note
 	err := json.Unmarshal(body, &note)

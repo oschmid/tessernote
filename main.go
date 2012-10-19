@@ -17,56 +17,18 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-	"bytes"
-	"handlers"
-	"html/template"
-	"io"
+	"api"
 	"log"
 	"net/http"
-	"regexp"
 )
 
-var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
-
 func main() {
-	// data handlers
-	addPostHandler(handlers.UrlGetTags, handlers.GetTagsHandler)
-	addPostHandler(handlers.UrlRenameTags, handlers.RenameTagsHandler)
-	addPostHandler(handlers.UrlDeleteTags, handlers.DeleteTagsHandler)
-	addPostHandler(handlers.UrlGetTitles, handlers.TitlesHandler)
-	addGetHandler(handlers.UrlGetNote, handlers.GetNoteHandler)
-	addPostHandler(handlers.UrlSaveNote, handlers.SaveNoteHandler)
-
-	// page handlers
-	handlers.Templates = template.Must(template.ParseFiles("tmpl/edit.html", "tmpl/view.html"))
-	addGetHandler("/view/", handlers.ViewHandler)
-	addGetHandler("/edit/", handlers.EditHandler)
-	addGetHandler("/save/", handlers.SaveHandler)
+	http.HandleFunc(api.MakePostHandler(api.GetTagsUrl, api.GetTags))
+	http.HandleFunc(api.MakePostHandler(api.RenameTagsUrl, api.RenameTags))
+	http.HandleFunc(api.MakePostHandler(api.DeleteTagsUrl, api.DeleteTags))
+	http.HandleFunc(api.MakePostHandler(api.GetTitlesUrl, api.GetTitles))
+	http.HandleFunc(api.MakeGetHandler(api.GetNoteUrl, api.GetNote))
+	http.HandleFunc(api.MakePostHandler(api.SaveNoteUrl, api.SaveNote))
+	http.Handle("/notes/", http.StripPrefix("/notes/", http.FileServer(http.Dir("web"))))
 	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func addGetHandler(url string, fn func(http.ResponseWriter, *http.Request, string)) {
-	getHandler := func(w http.ResponseWriter, r *http.Request) {
-		get := r.URL.Path[len(url):]
-		if !titleValidator.MatchString(get) {
-			http.NotFound(w, r)
-			return
-		}
-		fn(w, r, get)
-	}
-	http.HandleFunc(url, getHandler)
-}
-
-func addPostHandler(url string, fn func(http.ResponseWriter, *http.Request, []byte)) {
-	postHandler := func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		buf := new(bytes.Buffer)
-		_, err := io.Copy(buf, r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		}
-		post := []byte(buf.String())
-		fn(w, r, post)
-	}
-	http.HandleFunc(url, postHandler)
 }
