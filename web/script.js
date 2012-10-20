@@ -1,8 +1,16 @@
 var baseURL = "http://localhost:8080";
 var getTagsURL = "/tags/get";
 
-$(document).ready(function() {
-    $.post(baseURL+getTagsURL, "null", function(data) {
-        alert(data);
-    });
-});
+function updateTags(tags) {
+    $.post(baseURL+getTagsURL, tags, function(data) {
+        var value = ""
+        for (var key in eval(data)) {
+            if (data.hasOwnProperty(key)) {
+                value += (key + " " + data[key] + "</br>")
+            }
+        }
+        $("#tags").html(value)
+    })
+}
+
+$(document).ready(updateTags("null"))

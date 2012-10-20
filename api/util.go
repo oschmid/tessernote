@@ -18,15 +18,15 @@ package api
 
 import (
 	"bytes"
+	"encoding/gob"
 	"io"
 	"log"
 	"net/http"
 	"notes"
+	"os"
 	"reflect"
 	"regexp"
 	"runtime"
-	"os"
-	"encoding/gob"
 )
 
 var notebook = *notes.NewNoteBook()
@@ -41,6 +41,7 @@ func MakePostHandler(url string, fn func(http.ResponseWriter, []byte)) (string, 
 			return
 		}
 		fn(w, post)
+		SaveNotebook()
 	}
 }
 
@@ -70,14 +71,14 @@ func LoadNotebook() {
 	fileName := "notebook"
 	file, err := os.Open(fileName)
 	if err != nil {
-		log.Println("LoadNotebook error:", err)
+		log.Println(err)
 		return
 	}
 
 	defer file.Close()
 	err = gob.NewDecoder(file).Decode(&notebook)
 	if err != nil {
-		log.Println("LoadNotebook error:", err)
+		log.Println(err)
 	}
 }
 
@@ -85,7 +86,7 @@ func SaveNotebook() {
 	fileName := "notebook"
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
-		log.Println("SaveNotebook error:", err)
+		log.Println(err)
 		return
 	}
 

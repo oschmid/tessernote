@@ -32,5 +32,4 @@ func main() {
 	http.HandleFunc(api.MakePostHandler(api.SaveNoteUrl, api.SaveNote))
 	http.Handle("/notes/", http.StripPrefix("/notes/", http.FileServer(http.Dir("web"))))
 	log.Fatal(http.ListenAndServe(":8080", nil))
-	api.SaveNotebook()
 }
