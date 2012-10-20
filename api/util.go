@@ -68,7 +68,7 @@ func MakeGetHandler(url string, fn func(http.ResponseWriter, string)) (string, f
 }
 
 func LoadNotebook() {
-	fileName := "notebook"
+	fileName := "../data/notebook"
 	file, err := os.Open(fileName)
 	if err != nil {
 		log.Println(err)
@@ -83,7 +83,7 @@ func LoadNotebook() {
 }
 
 func SaveNotebook() {
-	fileName := "notebook"
+	fileName := "../data/notebook"
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Println(err)
