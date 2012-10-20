@@ -31,8 +31,6 @@ const (
 	SaveNoteUrl   = "/note/save"
 )
 
-var notebook = *notes.NewNoteBook()
-
 // Returns a map of tags -> note count in JSON format.
 // Request can optionally specify a list of tags in JSON format in POST.
 func GetTags(w http.ResponseWriter, body []byte) {

@@ -21,11 +21,15 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"notes"
 	"reflect"
 	"regexp"
 	"runtime"
+	"os"
+	"encoding/gob"
 )
 
+var notebook = *notes.NewNoteBook()
 var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
 func MakePostHandler(url string, fn func(http.ResponseWriter, []byte)) (string, func(http.ResponseWriter, *http.Request)) {
@@ -60,4 +64,31 @@ func MakeGetHandler(url string, fn func(http.ResponseWriter, string)) (string, f
 		}
 		fn(w, get)
 	}
+}
+
+func LoadNotebook() {
+	fileName := "notebook"
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Println("LoadNotebook error:", err)
+		return
+	}
+
+	defer file.Close()
+	err = gob.NewDecoder(file).Decode(&notebook)
+	if err != nil {
+		log.Println("LoadNotebook error:", err)
+	}
+}
+
+func SaveNotebook() {
+	fileName := "notebook"
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		log.Println("SaveNotebook error:", err)
+		return
+	}
+
+	defer file.Close()
+	gob.NewEncoder(file).Encode(notebook)
 }
