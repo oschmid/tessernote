@@ -108,6 +108,7 @@ func GetTitles(w http.ResponseWriter, body []byte) {
 		return
 	}
 
+	// TODO make map[title]id
 	// convert []string -> JSON
 	titles := notebook.Titles(tags...)
 	response, err := json.Marshal(titles)

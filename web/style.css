@@ -1,0 +1,31 @@
+#navBar
+{
+    position:absolute;
+    width:100%;
+    top:0px;
+    left:0px;
+}
+
+#tagsPanel
+{
+    position:absolute;
+    width:25%;
+    top:5%;
+    left:0px;
+}
+
+#titlesPanel
+{
+    position:absolute;
+    width:25%;
+    top:5%;
+    left:25%;
+}
+
+#notePanel
+{
+    position:absolute;
+    width:50%;
+    top:5%;
+    left:50%;
+}

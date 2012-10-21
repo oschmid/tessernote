@@ -24,9 +24,8 @@ import (
 	"net/http"
 	"notes"
 	"os"
-	"reflect"
 	"regexp"
-	"runtime"
+	"string/collections/sets"
 )
 
 var notebook = *notes.NewNoteBook()
@@ -34,7 +33,6 @@ var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
 func MakePostHandler(url string, fn func(http.ResponseWriter, []byte)) (string, func(http.ResponseWriter, *http.Request)) {
 	return url, func(w http.ResponseWriter, r *http.Request) {
-		log.Println(runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name(), r.RemoteAddr) // TODO remove, slow
 		post, err := readPost(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -57,7 +55,6 @@ func readPost(r *http.Request) ([]byte, error) {
 
 func MakeGetHandler(url string, fn func(http.ResponseWriter, string)) (string, func(http.ResponseWriter, *http.Request)) {
 	return url, func(w http.ResponseWriter, r *http.Request) {
-		log.Println(runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name(), r.RemoteAddr) // TODO remove, slow
 		get := r.URL.Path[len(url):]
 		if !titleValidator.MatchString(get) {
 			http.NotFound(w, r)
@@ -80,6 +77,11 @@ func LoadNotebook() {
 	if err != nil {
 		log.Println(err)
 	}
+
+	// TODO remove prepopulate
+	notebook.Set(notes.Note{"uuid1", "title1", "body1", *sets.New("tag1", "tag2", "tag3")})
+	notebook.Set(notes.Note{"uuid2", "title2", "body2", *sets.New("tag1", "tag3", "tag4")})
+	notebook.Set(notes.Note{"uuid3", "title3", "body3", *sets.New("tag5")})
 }
 
 func SaveNotebook() {
@@ -91,5 +93,8 @@ func SaveNotebook() {
 	}
 
 	defer file.Close()
-	gob.NewEncoder(file).Encode(notebook)
+	err = gob.NewEncoder(file).Encode(notebook)
+	if err != nil {
+		log.Println(err)
+	}
 }
