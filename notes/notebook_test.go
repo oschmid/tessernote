@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"string/collections/maps"
 	"string/collections/sets"
-	"string/collections/slices"
 	"testing"
 )
 
@@ -34,18 +33,7 @@ func TestAddNote(t *testing.T) {
 	if err != nil {
 		t.Fatal("unexpected error", err)
 	}
-	if actual.Title != note.Title {
-		t.Fatalf("expected=%s actual=%s", note.Title, actual.Title)
-	}
-	if actual.Body != note.Body {
-		t.Fatalf("expected=%s actual=%s", note.Body, actual.Title)
-	}
-	if len(actual.Tags) != len(note.Tags) {
-		t.Fatalf("expected=%d actual=%d", len(note.Tags), len(actual.Tags))
-	}
-	if !sets.Equal(actual.Tags, note.Tags) {
-		t.Fatalf("expected=%v actual=%v", note.Tags, actual.Tags)
-	}
+	compareNote(note, *actual, t)
 }
 
 func TestNonExistentNote(t *testing.T) {
@@ -102,17 +90,13 @@ func TestDeleteNoteTags(t *testing.T) {
 	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag3")))
 
 	expected := map[string]int{"tag1": 2, "tag2": 1, "tag3": 1}
-	tags := *notebook.Tags()
-	if !maps.Equal(tags, expected) {
-		t.Fatalf("expected=%v actual=%v", expected, tags)
-	}
+	actual := *notebook.Tags()
+	compareMaps(expected, actual, t)
 
 	notebook.Delete(note.Id)
 	expected = map[string]int{"tag1": 1, "tag3": 1}
-	tags = *notebook.Tags()
-	if !maps.Equal(tags, expected) {
-		t.Fatalf("expected=%v actual=%v", expected, tags)
-	}
+	actual = *notebook.Tags()
+	compareMaps(expected, actual, t)
 }
 
 func TestSetBody(t *testing.T) {
@@ -191,8 +175,8 @@ func TestAllTitles(t *testing.T) {
 
 	for i := 0; i < num; i++ {
 		title := number("title", i)
-		if !slices.Contains(titles, title) {
-			t.Fatalf("%v does not contain %s", titles, title)
+		if titles[i] != title {
+			t.Fatalf("expected=%v actual=%v", title, titles[i])
 		}
 	}
 }
@@ -204,6 +188,12 @@ func TestAllTitlesOfTag(t *testing.T) {
 	titles := notebook.Titles(number("tag", 2))
 	if len(titles) != 2 {
 		t.Fatalf("expected=%d actual=%d %v", 2, len(titles), titles)
+	}
+	if titles[0] != "title1" {
+		t.Fatalf("expected=title1 actual=%v", titles[0])
+	}
+	if titles[1] != "title2" {
+		t.Fatalf("expected=title2 actual=%v", titles[1])
 	}
 }
 
@@ -267,6 +257,18 @@ func newFullNoteBook(num int) NoteBook {
 
 func number(text string, num int) string {
 	return fmt.Sprint(text, num)
+}
+
+func compareNote(expected Note, actual Note, t *testing.T) {
+	if !expected.Equal(actual) {
+		t.Fatalf("expected=%v actual=%v", expected, actual)
+	}
+}
+
+func compareMaps(expected map[string]int, actual map[string]int, t *testing.T) {
+	if !maps.Equal(expected, actual) {
+		t.Fatalf("expected=%v actual=%v", expected, actual)
+	}
 }
 
 func checkNoteTags(notebook *NoteBook, uuid string, expected map[string]bool, t *testing.T) {

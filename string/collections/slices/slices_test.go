@@ -26,7 +26,7 @@ func TestEqual(t *testing.T) {
 	}
 
 	disorder := []string{"two", "three", "one"}
-	if !Equal(original, disorder) {
+	if Equal(original, disorder) {
 		t.Fatal()
 	}
 

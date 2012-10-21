@@ -26,8 +26,8 @@ func Equal(a []string, b []string) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	for _, elem := range a {
-		if !Contains(b, elem) {
+	for i := range a {
+		if a[i] != b[i] {
 			return false
 		}
 	}
