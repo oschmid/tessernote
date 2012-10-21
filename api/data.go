@@ -17,6 +17,7 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package api
 
 import (
+	"code.google.com/p/go-uuid/uuid"
 	"encoding/json"
 	"net/http"
 	"notes"
@@ -108,8 +109,7 @@ func GetTitles(w http.ResponseWriter, body []byte) {
 		return
 	}
 
-	// TODO make map[title]id
-	// convert []string -> JSON
+	// convert [][]string -> JSON
 	titles := notebook.Titles(tags...)
 	response, err := json.Marshal(titles)
 	if err != nil {
@@ -149,6 +149,8 @@ func GetNote(w http.ResponseWriter, id string) {
 
 // Saves Note
 // Request must specify Note in JSON format in POST
+// New Notes (with empty Ids) will be given a UUID.
+// Response consists of the Note's UUID
 func SaveNote(w http.ResponseWriter, body []byte) {
 	// convert JSON -> Note
 	var note notes.Note
@@ -157,7 +159,12 @@ func SaveNote(w http.ResponseWriter, body []byte) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	// set note
+	// add UUID to new Notes
+	if note.Id == "" {
+		note.Id = uuid.New()
+	}
 	notebook.Set(note)
-	w.WriteHeader(http.StatusOK)
+
+	// write response
+	w.Write([]byte(note.Id))
 }

@@ -1,9 +1,15 @@
+body
+{
+    font-size:100%;
+}
+
 #navBar
 {
     position:absolute;
     width:100%;
     top:0px;
     left:0px;
+    font-weight:bold;
 }
 
 #tagsPanel
@@ -28,4 +34,9 @@
     width:50%;
     top:5%;
     left:50%;
+}
+
+#noteTitle
+{
+    font-weight:bold;
 }

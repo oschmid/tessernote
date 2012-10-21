@@ -23,8 +23,10 @@ import (
 	"strings"
 )
 
+// TODO store note title and body separately
 const TitleBodySeparator string = "\n"
 
+// TODO export notes and tags for gob?
 type NoteBook struct {
 	notes map[string]string          // note ID -> note title and body
 	tags  map[string]map[string]bool // tag name -> note IDs -> true if note has tag
@@ -80,15 +82,15 @@ func (n NoteBook) allUUIDsOfTag(tag string) map[string]bool {
 	return uuids
 }
 
-// Returns the titles of all notes in the subset of notes specified by "tags"
-// If no tags are specified, returns all notes
-func (n NoteBook) Titles(tags ...string) []string {
-	titles := []string{}
+// Returns the titles and IDs of all notes in the subset of notes specified by "tags"
+// If no tags are specified, returns the titles and IDs of all notes.
+func (n NoteBook) Titles(tags ...string) [][]string {
+	titles := [][]string{}
 	for id, _ := range n.UUIDs(tags...) {
 		title := strings.SplitN(n.notes[id], TitleBodySeparator, 2)[0]
-		titles = append(titles, title)
+		titles = append(titles, []string{title,id})
 	}
-	sort.Strings(titles)
+	sort.Sort(StringSliceSlice(titles))
 	return titles
 }
 

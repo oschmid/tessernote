@@ -3,9 +3,10 @@ var getTagsURL = "/tags/get"
 var getTitlesURL = "/titles"
 var getNoteURL = "/note/get/"
 
+var currentNoteId = ""
+
 function updateTags(tags) {
     $.post(baseURL+getTagsURL, tags, function(data) {
-        var value = ""
         for (var tag in data) {
             if (data.hasOwnProperty(tag)) {
                 $("#tags").append(createTag(tag), tag+" ("+data[tag]+")<br>")
@@ -24,7 +25,7 @@ function createTag(name) {
     return tag
 }
 
-function onTagClick() {
+function onTagClick(event) {
     // TODO updateTags
     // TODO updateTitles
     // TODO deselect note if no longer in titles
@@ -39,17 +40,18 @@ function updateTitles(tags) {
     }, "json")
 }
 
-function createTitle(name) {
+function createTitle(info) {
     var title = document.createElement("input")
     title.type = "button"
     title.name = "title"
-    title.value = name
+    title.value = info[0]
+    title.noteId = info[1]
     title.onclick = onTitleClick
     return title
 }
 
-function onTitleClick() {
-    // TODO get id
+function onTitleClick(event) {
+    // TODO set currentNoteId
     // TODO updateNote(id)
     alert("title clicked")
 }
@@ -60,7 +62,7 @@ function updateNote(id) {
     })
 }
 
-function onNewNoteClick() {
+function onNewNoteClick(event) {
     // TODO create new note
     // TODO makeNoteEditable()
     alert("new note clicked")

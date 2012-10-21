@@ -173,10 +173,15 @@ func TestAllTitles(t *testing.T) {
 		t.Fatalf("expected=%d actual=%d", num, len(titles))
 	}
 
-	for i := 0; i < num; i++ {
-		title := number("title", i)
-		if titles[i] != title {
-			t.Fatalf("expected=%v actual=%v", title, titles[i])
+	// verify ordered list of tuples (title, id)
+	for i, elem := range titles {
+		expectedTitle, expectedId := title(i), id(i)
+		actualTitle, actualId := elem[0], elem[1]
+		if actualTitle != expectedTitle {
+			t.Fatalf("expected=%v actual=%v", expectedTitle, actualTitle)
+		}
+		if actualId != expectedId {
+			t.Fatalf("expected=%v actual=%v", expectedId, actualId)
 		}
 	}
 }
@@ -185,15 +190,21 @@ func TestAllTitlesOfTag(t *testing.T) {
 	num := 10
 	notebook := newFullNoteBook(num)
 
-	titles := notebook.Titles(number("tag", 2))
+	titles := notebook.Titles(tag(2))
 	if len(titles) != 2 {
 		t.Fatalf("expected=%d actual=%d %v", 2, len(titles), titles)
 	}
-	if titles[0] != "title1" {
-		t.Fatalf("expected=title1 actual=%v", titles[0])
-	}
-	if titles[1] != "title2" {
-		t.Fatalf("expected=title2 actual=%v", titles[1])
+
+	// verify ordered list of tuples (title, id)
+	for i, elem := range titles {
+		expectedTitle, expectedId := title(i+1), id(i+1)
+		actualTitle, actualId := elem[0], elem[1]
+		if actualTitle != expectedTitle {
+			t.Fatalf("expected=%v actual=%v", expectedTitle, actualTitle)
+		}
+		if actualId != expectedId {
+			t.Fatalf("expected=%v actual=%v", expectedId, actualId)
+		}
 	}
 }
 
@@ -249,10 +260,22 @@ func TestDeleteTags(t *testing.T) {
 func newFullNoteBook(num int) NoteBook {
 	notebook := *NewNoteBook()
 	for i := 0; i < num; i++ {
-		tags := *sets.New(number("tag", i), number("tag", i+1))
-		notebook.Set(*NewNote(number("title", i), "body", tags))
+		tags := *sets.New(tag(i), tag(i+1))
+		notebook.Set(Note{id(i), title(i), "body", tags})
 	}
 	return notebook
+}
+
+func id(num int) string {
+	return number("id", num)
+}
+
+func title(num int) string {
+	return number("title", num)
+}
+
+func tag(num int) string {
+	return number("tag",num)
 }
 
 func number(text string, num int) string {

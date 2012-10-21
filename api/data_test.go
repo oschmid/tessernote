@@ -101,16 +101,18 @@ func TestDeleteTags(t *testing.T) {
 
 func TestGetAllTitles(t *testing.T) {
 	recorder := setUp()
-	body := marshal(*new([]string), t)
+	body := marshal(*new([][]string), t)
 	request := makePostRequest(GetTitlesUrl, body, t)
 	_, handle := MakePostHandler(GetTitlesUrl, GetTitles)
 	handle(recorder, request)
 
 	// verify response
-	expected := []string{"title1", "title2", "title3"}
-	var actual []string
+	expected := [][]string{[]string{"title1", "uuid1"}, []string{"title2", "uuid2"}, []string{"title3", "uuid3"}}
+	var actual [][]string
 	unmarshal(recorder, &actual, t)
-	compareSlices(expected, actual, t)
+	for i, _ := range expected {
+		compareSlices(expected[i], actual[i], t)
+	}
 }
 
 func TestGetSomeTitles(t *testing.T) {
@@ -121,10 +123,12 @@ func TestGetSomeTitles(t *testing.T) {
 	handle(recorder, request)
 
 	// verify response
-	expected := []string{"title1", "title2"}
-	var actual []string
+	expected := [][]string{[]string{"title1", "uuid1"}, []string{"title2", "uuid2"}}
+	var actual [][]string
 	unmarshal(recorder, &actual, t)
-	compareSlices(expected, actual, t)
+	for i, _ := range expected {
+		compareSlices(expected[i], actual[i], t)
+	}
 }
 
 func TestGetNote(t *testing.T) {
@@ -142,11 +146,20 @@ func TestGetNote(t *testing.T) {
 
 func TestNewNote(t *testing.T) {
 	recorder := setUp()
-	note := notes.NewNote("title", "body", *sets.New("tag"))
+	note := notes.Note{Title:"title", Body:"body", Tags:*sets.New("tag")}
+	if note.Id != "" {
+		t.Fatal(note)
+	}
 	body := marshal(note, t)
 	request := makePostRequest(SaveNoteUrl, body, t)
 	_, handle := MakePostHandler(SaveNoteUrl, SaveNote)
 	handle(recorder, request)
+
+	// verify response
+	if recorder.Body.String() == "" {
+		t.Fatal("new note was not assigned a UUID")
+	}
+	note.Id = recorder.Body.String()
 
 	// verify tags
 	expectedTags := map[string]int{"tag": 1, "tag1": 2, "tag2": 1, "tag3": 2, "tag4": 1, "tag5": 1}
@@ -154,7 +167,7 @@ func TestNewNote(t *testing.T) {
 	compareMaps(expectedTags, actualTags, t)
 
 	// verify note
-	compareNoteInNoteBook(*note, note.Id, t)
+	compareNoteInNoteBook(note, note.Id, t)
 }
 
 func TestEditNote(t *testing.T) {
@@ -170,7 +183,12 @@ func TestEditNote(t *testing.T) {
 	_, handle := MakePostHandler(SaveNoteUrl, SaveNote)
 	handle(recorder, request)
 
-	// verify
+	// verify response
+	if recorder.Body.String() != note.Id {
+		t.Fatalf("expected=%v actual=%v", note.Id, recorder.Body.String())
+	}
+
+	// verify note
 	compareNoteInNoteBook(*note, "uuid2", t)
 }
 
