@@ -23,7 +23,6 @@ import (
 	"strings"
 )
 
-// TODO store note title and body separately
 const TitleBodySeparator string = "\n"
 
 // TODO export notes and tags for gob?

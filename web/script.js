@@ -3,6 +3,7 @@ var getTagsURL = "/tags/get"
 var getTitlesURL = "/titles"
 var getNoteURL = "/note/get/"
 
+var currentTags = []
 var currentNoteId = ""
 
 function updateTags(tags) {
@@ -29,7 +30,7 @@ function onTagClick(event) {
     // TODO updateTags
     // TODO updateTitles
     // TODO deselect note if no longer in titles
-    alert("tag clicked")
+    alert(event.target.value+" clicked")
 }
 
 function updateTitles(tags) {
@@ -51,18 +52,19 @@ function createTitle(info) {
 }
 
 function onTitleClick(event) {
-    // TODO set currentNoteId
-    // TODO updateNote(id)
-    alert("title clicked")
+    currentNoteId = event.target.noteId
+    updateNote()
 }
 
-function updateNote(id) {
-    $.getJSON(baseURL+getTitlesURL+id, function(data) {
-        // TODO display note contents
+function updateNote() {
+    $.getJSON(baseURL+getNoteURL+currentNoteId, function(data) {
+        $("#noteTitle").html(data.Title)
+        $("#noteBody").html(data.Body)
+        // TODO parse replace hashtags with clickable links
     })
 }
 
-function onNewNoteClick(event) {
+function onNewNoteClick() {
     // TODO create new note
     // TODO makeNoteEditable()
     alert("new note clicked")
@@ -80,5 +82,5 @@ $(document).ready(function() {
     updateTags("null")
     updateTitles("null")
     $("#notePanel").click(makeNoteEditable)
-    $("[name='newNote']").click(onNewNoteClick)
+    $("#newNote").click(onNewNoteClick)
 })

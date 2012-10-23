@@ -24,6 +24,7 @@ import (
 
 const TagSeparator = ", "
 
+// TODO parse hashtags from body
 type Note struct {
 	Id    string
 	Title string
