@@ -4,7 +4,7 @@ var getTitlesURL = "/titles"
 var getNoteURL = "/note/get/"
 
 var currentTags = []
-var currentNoteId = ""
+var currentNoteId
 
 function updateTags(tags) {
     $.post(baseURL+getTagsURL, tags, function(data) {
@@ -21,22 +21,29 @@ function createTag(name) {
     tag.type = "checkbox"
     tag.name = "tag"
     tag.value = name
-    tag.checked = "true"
+    tag.checked = false
     tag.onclick = onTagClick
     return tag
 }
 
 function onTagClick(event) {
-    // TODO updateTags
-    // TODO updateTitles
-    // TODO deselect note if no longer in titles
-    alert(event.target.value+" clicked")
+    var selectedTags = []
+    $('[name="tag"]:checked').each(function(index, element) {
+        selectedTags[index] = element.value
+    })
+    // TODO colour tags differently depending on if they will further narrow the selection
+    updateTitles(JSON.stringify(selectedTags))
 }
 
 function updateTitles(tags) {
     $.post(baseURL+getTitlesURL, tags, function(data) {
+        $("#titles").empty()
         for (var i = 0; i < data.length; i++) {
             $("#titles").append(createTitle(data[i]), "<br>")
+        }
+
+        if (!noteInNotes()) {
+            updateNote()
         }
     }, "json")
 }
@@ -52,16 +59,33 @@ function createTitle(info) {
 }
 
 function onTitleClick(event) {
-    currentNoteId = event.target.noteId
-    updateNote()
+    updateNote(event.target.noteId)
 }
 
-function updateNote() {
-    $.getJSON(baseURL+getNoteURL+currentNoteId, function(data) {
-        $("#noteTitle").html(data.Title)
-        $("#noteBody").html(data.Body)
-        // TODO parse replace hashtags with clickable links
+// returns true if note being displayed is in the list of titles displayed
+function noteInNotes() {
+    var contained = false
+    $('[name="title"]').each(function(index, element) {
+        if (element.noteId == currentNoteId) {
+            contained = true
+            return
+        }
     })
+    return contained
+}
+
+function updateNote(id) {
+    currentNoteId = id
+    if (!id) {
+        $("#noteTitle").empty()
+        $("#noteBody").empty()
+    } else {
+        $.getJSON(baseURL+getNoteURL+id, function(data) {
+            $("#noteTitle").html(data.Title)
+            $("#noteBody").html(data.Body)
+            // TODO parse note and replace hashtags with clickable links
+        })
+    }
 }
 
 function onNewNoteClick() {
