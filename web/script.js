@@ -10,6 +10,7 @@ function getTags(tags, replyHandler) {
     $.post(baseURL+getTagsURL, tags, replyHandler, 'json')
 }
 
+// style narrowing tags
 function updateNarrowingTags(narrowingTags) {
     $('[name="tagCheckbox"]').each(function(index, tag) {
         if (narrowingTags[tag.value]) {
@@ -20,7 +21,9 @@ function updateNarrowingTags(narrowingTags) {
     })
 }
 
+// update listed tags
 function updateTags(tags) {
+    $('#tags').empty()
     for (var tag in tags) {
         if (tags.hasOwnProperty(tag)) {
             $('#tags').append('<div id="tag"><input type="checkbox" name="tagCheckbox" value="'+tag+'" onclick="onTagClick()">'+tag+' ('+tags[tag]+")<br></div>")
@@ -28,12 +31,13 @@ function updateTags(tags) {
     }
 }
 
-function onTagClick(event) {
+function onTagClick() {
     var selectedTags = []
     $('[name="tagCheckbox"]:checked').each(function(index, element) {
         selectedTags[index] = element.value
     })
     tags = JSON.stringify(selectedTags)
+
     getTags(tags, updateNarrowingTags)
     updateTitles(tags)
 }
@@ -42,17 +46,17 @@ function updateTitles(tags) {
     $.post(baseURL+getTitlesURL, tags, function(data) {
         $('#titles').empty()
         for (var i = 0; i < data.length; i++) {
-            $('#titles').append('<input type="button" name="title" value="'+data[i][0]+'" noteId="'+data[i][1]+'" onclick="onTitleClick()"><br>')
+            $('#titles').append('<input type="button" name="title" value="'+data[i][0]+'" noteId="'+data[i][1]+'"><br>')
         }
+
+        $('input[name="title"]').click(function() {
+            updateNote($(this).attr('noteId'))
+        })
 
         if (!noteInNotes()) {
             updateNote()
         }
     }, 'json')
-}
-
-function onTitleClick(event) {
-    updateNote(event.target.noteId)
 }
 
 // returns true if note being displayed is in the list of titles displayed
