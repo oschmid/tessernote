@@ -25,7 +25,6 @@ import (
 
 const TitleBodySeparator string = "\n"
 
-// TODO export notes and tags for gob?
 type NoteBook struct {
 	Notes map[string]string          // note ID -> note title and body
 	Tags  map[string]map[string]bool // tag name -> note IDs -> true if note has tag
