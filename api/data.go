@@ -44,7 +44,7 @@ func GetTags(w http.ResponseWriter, body []byte) {
 	}
 
 	// convert map[string]bool -> JSON
-	tagsOut := *notebook.Tags(tagsIn...)
+	tagsOut := *notebook.NarrowingTags(tagsIn...)
 	response, err := json.Marshal(tagsOut)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

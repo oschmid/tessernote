@@ -90,12 +90,12 @@ func TestDeleteNoteTags(t *testing.T) {
 	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag3")))
 
 	expected := map[string]int{"tag1": 2, "tag2": 1, "tag3": 1}
-	actual := *notebook.Tags()
+	actual := *notebook.NarrowingTags()
 	compareMaps(expected, actual, t)
 
 	notebook.Delete(note.Id)
 	expected = map[string]int{"tag1": 1, "tag3": 1}
-	actual = *notebook.Tags()
+	actual = *notebook.NarrowingTags()
 	compareMaps(expected, actual, t)
 }
 
@@ -215,7 +215,7 @@ func TestDistinguishingTagsFromTags(t *testing.T) {
 	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2", "tag3")))
 
 	expected := map[string]int{"tag1": 1, "tag2": 2, "tag3": 2}
-	actual := *notebook.Tags("tag2", "tag3")
+	actual := *notebook.NarrowingTags("tag2", "tag3")
 	if !maps.Equal(actual, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
@@ -229,7 +229,7 @@ func TestRenameTags(t *testing.T) {
 
 	notebook.RenameTag("tag1", "tag4")
 	expectedTags := map[string]int{"tag2": 2, "tag3": 1, "tag4": 3}
-	actualTags := *notebook.Tags()
+	actualTags := *notebook.NarrowingTags()
 	if !maps.Equal(expectedTags, actualTags) {
 		t.Fatalf("expected=%v actual=%v", expectedTags, actualTags)
 	}
@@ -246,7 +246,7 @@ func TestDeleteTags(t *testing.T) {
 
 	notebook.DeleteTag("tag4")
 	expectedTags := map[string]int{"tag1": 1, "tag2": 2, "tag3": 1}
-	actualTags := *notebook.Tags()
+	actualTags := *notebook.NarrowingTags()
 	if !maps.Equal(expectedTags, actualTags) {
 		t.Fatalf("expected=%v actual=%v", expectedTags, actualTags)
 	}

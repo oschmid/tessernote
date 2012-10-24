@@ -28,13 +28,13 @@ const TitleBodySeparator string = "\n"
 // TODO export notes and tags for gob?
 type NoteBook struct {
 	Notes map[string]string          // note ID -> note title and body
-	tags  map[string]map[string]bool // tag name -> note IDs -> true if note has tag
+	Tags  map[string]map[string]bool // tag name -> note IDs -> true if note has tag
 }
 
 func NewNoteBook() *NoteBook {
 	noteBook := new(NoteBook)
 	noteBook.Notes = make(map[string]string)
-	noteBook.tags = make(map[string]map[string]bool)
+	noteBook.Tags = make(map[string]map[string]bool)
 	return noteBook
 }
 
@@ -73,7 +73,7 @@ func (n NoteBook) allUUIDs() map[string]bool {
 
 func (n NoteBook) allUUIDsOfTag(tag string) map[string]bool {
 	uuids := make(map[string]bool)
-	for id, tagged := range n.tags[tag] {
+	for id, tagged := range n.Tags[tag] {
 		if tagged {
 			uuids[id] = true
 		}
@@ -105,7 +105,7 @@ func (n NoteBook) Note(id string) (*Note, error) {
 
 func (n NoteBook) TagsOfNote(id string) map[string]bool {
 	tags := make(map[string]bool)
-	for tag, notes := range n.tags {
+	for tag, notes := range n.Tags {
 		if notes[id] {
 			tags[tag] = true
 		}
@@ -116,7 +116,7 @@ func (n NoteBook) TagsOfNote(id string) map[string]bool {
 // Given a set of tags T, returns all the tags that refer to all the notes
 // referred to by T and just how many notes each tag refers to
 // If "tags" is empty, returns all tags (and how many notes each tag refers to
-func (n NoteBook) Tags(tags ...string) *map[string]int {
+func (n NoteBook) NarrowingTags(tags ...string) *map[string]int {
 	notes := n.UUIDs(tags...)
 	super := make(map[string]int)
 	for id, _ := range notes {
@@ -143,7 +143,7 @@ func (n NoteBook) Delete(id string) {
 
 	// delete note from tags
 	for tag, _ := range n.TagsOfNote(id) {
-		delete(n.tags[tag], id)
+		delete(n.Tags[tag], id)
 	}
 }
 
@@ -158,7 +158,7 @@ func (n NoteBook) Set(note Note) {
 		// remove note from tags it no longer has
 		remove := *sets.Difference(oldTags, note.Tags)
 		for tag, _ := range remove {
-			delete(n.tags[tag], note.Id)
+			delete(n.Tags[tag], note.Id)
 		}
 
 		// add note to tags it has gained
@@ -170,25 +170,25 @@ func (n NoteBook) Set(note Note) {
 }
 
 func (n NoteBook) addTag(tag string, noteId string) {
-	if n.tags[tag] == nil {
-		n.tags[tag] = make(map[string]bool)
+	if n.Tags[tag] == nil {
+		n.Tags[tag] = make(map[string]bool)
 	}
-	n.tags[tag][noteId] = true
+	n.Tags[tag][noteId] = true
 }
 
 func (n NoteBook) RenameTag(old string, new string) {
-	notes, contained := n.tags[old]
+	notes, contained := n.Tags[old]
 	if contained {
-		previous, contained := n.tags[new]
+		previous, contained := n.Tags[new]
 		if contained {
-			n.tags[new] = *sets.Union(previous, notes)
+			n.Tags[new] = *sets.Union(previous, notes)
 		} else {
-			n.tags[new] = notes
+			n.Tags[new] = notes
 		}
-		delete(n.tags, old)
+		delete(n.Tags, old)
 	}
 }
 
 func (n NoteBook) DeleteTag(tag string) {
-	delete(n.tags, tag)
+	delete(n.Tags, tag)
 }
