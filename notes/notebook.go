@@ -27,13 +27,13 @@ const TitleBodySeparator string = "\n"
 
 // TODO export notes and tags for gob?
 type NoteBook struct {
-	notes map[string]string          // note ID -> note title and body
+	Notes map[string]string          // note ID -> note title and body
 	tags  map[string]map[string]bool // tag name -> note IDs -> true if note has tag
 }
 
 func NewNoteBook() *NoteBook {
 	noteBook := new(NoteBook)
-	noteBook.notes = make(map[string]string)
+	noteBook.Notes = make(map[string]string)
 	noteBook.tags = make(map[string]map[string]bool)
 	return noteBook
 }
@@ -65,7 +65,7 @@ func (n NoteBook) UUIDs(tags ...string) map[string]bool {
 
 func (n NoteBook) allUUIDs() map[string]bool {
 	uuids := make(map[string]bool)
-	for id, _ := range n.notes {
+	for id, _ := range n.Notes {
 		uuids[id] = true
 	}
 	return uuids
@@ -86,7 +86,7 @@ func (n NoteBook) allUUIDsOfTag(tag string) map[string]bool {
 func (n NoteBook) Titles(tags ...string) [][]string {
 	titles := [][]string{}
 	for id, _ := range n.UUIDs(tags...) {
-		title := strings.SplitN(n.notes[id], TitleBodySeparator, 2)[0]
+		title := strings.SplitN(n.Notes[id], TitleBodySeparator, 2)[0]
 		titles = append(titles, []string{title, id})
 	}
 	sort.Sort(StringSliceSlice(titles))
@@ -94,7 +94,7 @@ func (n NoteBook) Titles(tags ...string) [][]string {
 }
 
 func (n NoteBook) Note(id string) (*Note, error) {
-	note := strings.SplitN(n.notes[id], TitleBodySeparator, 2)
+	note := strings.SplitN(n.Notes[id], TitleBodySeparator, 2)
 	if len(note) != 2 {
 		return nil, fmt.Errorf("note \"%s\" does not exist", id)
 	}
@@ -139,7 +139,7 @@ func union(a map[string]int, b map[string]bool) *map[string]int {
 
 func (n NoteBook) Delete(id string) {
 	// delete body
-	delete(n.notes, id)
+	delete(n.Notes, id)
 
 	// delete note from tags
 	for tag, _ := range n.TagsOfNote(id) {
@@ -150,7 +150,7 @@ func (n NoteBook) Delete(id string) {
 // Adds note if it didn't exist before, updates all information if it did.
 func (n NoteBook) Set(note Note) {
 	// set body
-	n.notes[note.Id] = note.Title + TitleBodySeparator + note.Body
+	n.Notes[note.Id] = note.Title + TitleBodySeparator + note.Body
 
 	// set tags
 	oldTags := n.TagsOfNote(note.Id)
