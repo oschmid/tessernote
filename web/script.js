@@ -11,23 +11,26 @@ function getTags(tags, replyHandler) {
 }
 
 function updateNarrowingTags(narrowingTags) {
-    $('[name="tag"]').each(function(index, tag) {
-        // TODO if narrowingTags contains element colour 'narrowing'
-        // TODO else removing colouring
+    $('[name="tagCheckbox"]').each(function(index, tag) {
+        if (narrowingTags[tag.value]) {
+            $(this).parent().addClass('narrowingTag')
+        } else {
+            $(this).parent().removeClass('narrowingTag')
+        }
     })
 }
 
 function updateTags(tags) {
     for (var tag in tags) {
         if (tags.hasOwnProperty(tag)) {
-            $('#tags').append('<input type="checkbox" name="tag" value="'+tag+'" checked="false" onclick="onTagClick">'+tag+' ('+tags[tag]+")<br>")
+            $('#tags').append('<div id="tag"><input type="checkbox" name="tagCheckbox" value="'+tag+'" onclick="onTagClick()">'+tag+' ('+tags[tag]+")<br></div>")
         }
     }
 }
 
 function onTagClick(event) {
     var selectedTags = []
-    $('[name="tag"]:checked').each(function(index, element) {
+    $('[name="tagCheckbox"]:checked').each(function(index, element) {
         selectedTags[index] = element.value
     })
     tags = JSON.stringify(selectedTags)
@@ -39,7 +42,7 @@ function updateTitles(tags) {
     $.post(baseURL+getTitlesURL, tags, function(data) {
         $('#titles').empty()
         for (var i = 0; i < data.length; i++) {
-            $('#titles').append('<input type="button" name="title" value="'+data[i][0]+'" noteId="'+data[i][1]+'" onclick="onTitleClick"><br>')
+            $('#titles').append('<input type="button" name="title" value="'+data[i][0]+'" noteId="'+data[i][1]+'" onclick="onTitleClick()"><br>')
         }
 
         if (!noteInNotes()) {
@@ -70,10 +73,10 @@ function updateNote(id) {
         $('#noteTitle').empty()
         $('#noteBody').empty()
     } else {
-        $.getJSON(baseURL+getNoteURL+id, function(data) {
-            $('#noteTitle').html(data.Title)
+        $.getJSON(baseURL+getNoteURL+id, function(note) {
+            $('#noteTitle').html(note.Title)
             // TODO parse note and replace hashtags with clickable links
-            $('#noteBody').html(data.Body)
+            $('#noteBody').html(note.Body)
         })
     }
 }
