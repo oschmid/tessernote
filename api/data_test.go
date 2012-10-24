@@ -28,17 +28,24 @@ import (
 	"testing"
 )
 
+const (
+	uuid1 = "00000000-0000-0000-0000-000000000000"
+	uuid2 = "00000000-0000-0000-0000-000000000001"
+	uuid3 = "00000000-0000-0000-0000-000000000002"
+	uuid4 = "00000000-0000-0000-0000-000000000003"
+)
+
 func setUp() *httptest.ResponseRecorder {
 	notebook = *notes.NewNoteBook()
-	notebook.Set(notes.Note{"uuid1", "title1", "body1", *sets.New("tag1", "tag2", "tag3")})
-	notebook.Set(notes.Note{"uuid2", "title2", "body2", *sets.New("tag1", "tag3", "tag4")})
-	notebook.Set(notes.Note{"uuid3", "title3", "body3", *sets.New("tag5")})
+	notebook.Set(notes.Note{uuid1, "title1", "body1", *sets.New("tag1", "tag2", "tag3")})
+	notebook.Set(notes.Note{uuid2, "title2", "body2", *sets.New("tag1", "tag3", "tag4")})
+	notebook.Set(notes.Note{uuid3, "title3", "body3", *sets.New("tag5")})
 	return httptest.NewRecorder()
 }
 
 func TestGetAllTags(t *testing.T) {
 	recorder := setUp()
-	body := marshal(*new([]string), t)
+	body := marshal(*new([]string), t) // "null"
 	request := makePostRequest(GetTagsUrl, body, t)
 	_, handle := MakePostHandler(GetTagsUrl, GetTags)
 	handle(recorder, request)
@@ -77,9 +84,9 @@ func TestRenameTags(t *testing.T) {
 	compareMaps(expected, actual, t)
 
 	// verify notes
-	checkNoteTags("uuid1", *sets.New("tag2", "tag4", "tag6"), t)
-	checkNoteTags("uuid2", *sets.New("tag4", "tag6"), t)
-	checkNoteTags("uuid3", *sets.New("tag5"), t)
+	checkNoteTags(uuid1, *sets.New("tag2", "tag4", "tag6"), t)
+	checkNoteTags(uuid2, *sets.New("tag4", "tag6"), t)
+	checkNoteTags(uuid3, *sets.New("tag5"), t)
 }
 
 func TestDeleteTags(t *testing.T) {
@@ -95,9 +102,9 @@ func TestDeleteTags(t *testing.T) {
 	compareMaps(expected, actual, t)
 
 	// verify notes
-	checkNoteTags("uuid1", *sets.New("tag1", "tag2"), t)
-	checkNoteTags("uuid2", *sets.New("tag1", "tag4"), t)
-	checkNoteTags("uuid3", *sets.New(), t)
+	checkNoteTags(uuid1, *sets.New("tag1", "tag2"), t)
+	checkNoteTags(uuid2, *sets.New("tag1", "tag4"), t)
+	checkNoteTags(uuid3, *sets.New(), t)
 }
 
 func TestGetAllTitles(t *testing.T) {
@@ -108,7 +115,7 @@ func TestGetAllTitles(t *testing.T) {
 	handle(recorder, request)
 
 	// verify response
-	expected := [][]string{[]string{"title1", "uuid1"}, []string{"title2", "uuid2"}, []string{"title3", "uuid3"}}
+	expected := [][]string{[]string{"title1", uuid1}, []string{"title2", uuid2}, []string{"title3", uuid3}}
 	var actual [][]string
 	unmarshal(recorder, &actual, t)
 	for i, _ := range expected {
@@ -124,7 +131,7 @@ func TestGetSomeTitles(t *testing.T) {
 	handle(recorder, request)
 
 	// verify response
-	expected := [][]string{[]string{"title1", "uuid1"}, []string{"title2", "uuid2"}}
+	expected := [][]string{[]string{"title1", uuid1}, []string{"title2", uuid2}}
 	var actual [][]string
 	unmarshal(recorder, &actual, t)
 	for i, _ := range expected {
@@ -134,22 +141,22 @@ func TestGetSomeTitles(t *testing.T) {
 
 func TestGetNote(t *testing.T) {
 	recorder := setUp()
-	request := makeGetRequest(GetNoteUrl, "uuid1", t)
+	request := makeGetRequest(GetNoteUrl, uuid1, t)
 	_, handle := MakeGetHandler(GetNoteUrl, GetNote)
 	handle(recorder, request)
 
 	// verify
-	expected := notes.Note{"uuid1", "title1", "body1", *sets.New("tag1", "tag2", "tag3")}
+	expected := notes.Note{uuid1, "title1", "body1", *sets.New("tag1", "tag2", "tag3")}
 	var actual notes.Note
 	unmarshal(recorder, &actual, t)
 	compareNote(expected, actual, t)
 }
 
 func TestGetTaglessNote(t *testing.T) {
-	expected := notes.Note{"uuid4", "title1", "body1", *sets.New()}
+	expected := notes.Note{uuid4, "title1", "body1", *sets.New()}
 	recorder := setUp()
 	notebook.Set(expected)
-	request := makeGetRequest(GetNoteUrl, "uuid4", t)
+	request := makeGetRequest(GetNoteUrl, uuid4, t)
 	_, handle := MakeGetHandler(GetNoteUrl, GetNote)
 	handle(recorder, request)
 
@@ -160,10 +167,10 @@ func TestGetTaglessNote(t *testing.T) {
 }
 
 func TestGetBodylessNote(t *testing.T) {
-	expected := notes.Note{"uuid4", "title1", "", *sets.New("tag1")}
+	expected := notes.Note{uuid4, "title1", "", *sets.New("tag1")}
 	recorder := setUp()
 	notebook.Set(expected)
-	request := makeGetRequest(GetNoteUrl, "uuid4", t)
+	request := makeGetRequest(GetNoteUrl, uuid4, t)
 	_, handle := MakeGetHandler(GetNoteUrl, GetNote)
 	handle(recorder, request)
 
@@ -201,9 +208,9 @@ func TestNewNote(t *testing.T) {
 
 func TestEditNote(t *testing.T) {
 	recorder := setUp()
-	note := getNote("uuid2", t)
+	note := getNote(uuid2, t)
 	note.Body = "new body"
-	check := getNote("uuid2", t)
+	check := getNote(uuid2, t)
 	if check.Body == note.Body {
 		t.Fatal("note body passed by reference")
 	}
@@ -218,7 +225,7 @@ func TestEditNote(t *testing.T) {
 	}
 
 	// verify note
-	compareNoteInNoteBook(*note, "uuid2", t)
+	compareNoteInNoteBook(*note, uuid2, t)
 }
 
 // helper functions
@@ -251,7 +258,7 @@ func unmarshal(recorder *httptest.ResponseRecorder, destination interface{}, t *
 	body := []byte(recorder.Body.String())
 	err := json.Unmarshal(body, destination)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal(err, ":", string(body))
 	}
 }
 
