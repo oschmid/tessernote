@@ -29,7 +29,7 @@ import (
 )
 
 var notebook = *notes.NewNoteBook()
-var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
+var uuidValidator = regexp.MustCompile("[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}") //"^[a-zA-Z0-9]+$")
 
 func MakePostHandler(url string, fn func(http.ResponseWriter, []byte)) (string, func(http.ResponseWriter, *http.Request)) {
 	return url, func(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +56,7 @@ func readPost(r *http.Request) ([]byte, error) {
 func MakeGetHandler(url string, fn func(http.ResponseWriter, string)) (string, func(http.ResponseWriter, *http.Request)) {
 	return url, func(w http.ResponseWriter, r *http.Request) {
 		get := r.URL.Path[len(url):]
-		if !titleValidator.MatchString(get) {
+		if !uuidValidator.MatchString(get) {
 			http.NotFound(w, r)
 			return
 		}

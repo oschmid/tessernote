@@ -157,6 +157,7 @@ func SaveNote(w http.ResponseWriter, body []byte) {
 	err := json.Unmarshal(body, &note)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	// add UUID to new Notes

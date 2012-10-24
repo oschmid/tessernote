@@ -29,6 +29,7 @@ import (
 )
 
 func setUp() *httptest.ResponseRecorder {
+	notebook = *notes.NewNoteBook()
 	notebook.Set(notes.Note{"uuid1", "title1", "body1", *sets.New("tag1", "tag2", "tag3")})
 	notebook.Set(notes.Note{"uuid2", "title2", "body2", *sets.New("tag1", "tag3", "tag4")})
 	notebook.Set(notes.Note{"uuid3", "title3", "body3", *sets.New("tag5")})
@@ -144,9 +145,37 @@ func TestGetNote(t *testing.T) {
 	compareNote(expected, actual, t)
 }
 
+func TestGetTaglessNote(t *testing.T) {
+	expected := notes.Note{"uuid4", "title1", "body1", *sets.New()}
+	recorder := setUp()
+	notebook.Set(expected)
+	request := makeGetRequest(GetNoteUrl, "uuid4", t)
+	_, handle := MakeGetHandler(GetNoteUrl, GetNote)
+	handle(recorder, request)
+
+	// verify
+	var actual notes.Note
+	unmarshal(recorder, &actual, t)
+	compareNote(expected, actual, t)
+}
+
+func TestGetBodylessNote(t *testing.T) {
+	expected := notes.Note{"uuid4", "title1", "", *sets.New("tag1")}
+	recorder := setUp()
+	notebook.Set(expected)
+	request := makeGetRequest(GetNoteUrl, "uuid4", t)
+	_, handle := MakeGetHandler(GetNoteUrl, GetNote)
+	handle(recorder, request)
+
+	// verify
+	var actual notes.Note
+	unmarshal(recorder, &actual, t)
+	compareNote(expected, actual, t)
+}
+
 func TestNewNote(t *testing.T) {
 	recorder := setUp()
-	note := notes.Note{Title:"title", Body:"body", Tags:*sets.New("tag")}
+	note := notes.Note{Title:"untitled", Tags:*sets.New()}
 	if note.Id != "" {
 		t.Fatal(note)
 	}
@@ -162,7 +191,7 @@ func TestNewNote(t *testing.T) {
 	note.Id = recorder.Body.String()
 
 	// verify tags
-	expectedTags := map[string]int{"tag": 1, "tag1": 2, "tag2": 1, "tag3": 2, "tag4": 1, "tag5": 1}
+	expectedTags := map[string]int{"tag1": 2, "tag2": 1, "tag3": 2, "tag4": 1, "tag5": 1}
 	actualTags := *notebook.Tags()
 	compareMaps(expectedTags, actualTags, t)
 

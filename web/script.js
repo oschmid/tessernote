@@ -1,13 +1,14 @@
 var baseURL = 'http://localhost:8080'
-var getTagsURL = '/tags/get'
-var getTitlesURL = '/titles'
-var getNoteURL = '/note/get/'
+var getTagsURL = baseURL+'/tags/get'
+var getTitlesURL = baseURL+'/titles'
+var getNoteURL = baseURL+'/note/get/'
+var saveNoteURL = baseURL+'/note/save'
 
 var currentTags = []
 var currentNoteId
 
 function getTags(tags, replyHandler) {
-    $.post(baseURL+getTagsURL, tags, replyHandler, 'json')
+    $.post(getTagsURL, tags, replyHandler, 'json')
 }
 
 // style narrowing tags
@@ -43,7 +44,7 @@ function onTagClick() {
 }
 
 function updateTitles(tags) {
-    $.post(baseURL+getTitlesURL, tags, function(data) {
+    $.post(getTitlesURL, tags, function(data) {
         $('#titles').empty()
         for (var i = 0; i < data.length; i++) {
             $('#titles').append('<input type="button" name="title" value="'+data[i][0]+'" noteId="'+data[i][1]+'"><br>')
@@ -77,7 +78,7 @@ function updateNote(id) {
         $('#noteTitle').empty()
         $('#noteBody').empty()
     } else {
-        $.getJSON(baseURL+getNoteURL+id, function(note) {
+        $.getJSON(getNoteURL+id, function(note) {
             $('#noteTitle').html(note.Title)
             // TODO parse note and replace hashtags with clickable links
             $('#noteBody').html(note.Body)
@@ -86,9 +87,12 @@ function updateNote(id) {
 }
 
 function onNewNoteClick() {
-    // TODO create new note
+    // TODO add current tags
+    $.post(saveNoteURL, '{"Title":"Untitled","Body":"","Tags":{}}', function(id) {
+        alert(id)
+    })
     // TODO makeNoteEditable()
-    alert('new note clicked')
+    // TODO updateTitles()
 }
 
 function makeNoteEditable() {
