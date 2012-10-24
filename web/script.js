@@ -1,29 +1,28 @@
-var baseURL = "http://localhost:8080"
-var getTagsURL = "/tags/get"
-var getTitlesURL = "/titles"
-var getNoteURL = "/note/get/"
+var baseURL = 'http://localhost:8080'
+var getTagsURL = '/tags/get'
+var getTitlesURL = '/titles'
+var getNoteURL = '/note/get/'
 
 var currentTags = []
 var currentNoteId
 
-function updateTags(tags) {
-    $.post(baseURL+getTagsURL, tags, function(data) {
-        for (var tag in data) {
-            if (data.hasOwnProperty(tag)) {
-                $("#tags").append(createTag(tag), tag+" ("+data[tag]+")<br>")
-            }
-        }
-    }, "json")
+function getTags(tags, replyHandler) {
+    $.post(baseURL+getTagsURL, tags, replyHandler, 'json')
 }
 
-function createTag(name) {
-    var tag = document.createElement("input")
-    tag.type = "checkbox"
-    tag.name = "tag"
-    tag.value = name
-    tag.checked = false
-    tag.onclick = onTagClick
-    return tag
+function updateNarrowingTags(narrowingTags) {
+    $('[name="tag"]').each(function(index, tag) {
+        // TODO if narrowingTags contains element colour 'narrowing'
+        // TODO else removing colouring
+    })
+}
+
+function updateTags(tags) {
+    for (var tag in tags) {
+        if (tags.hasOwnProperty(tag)) {
+            $('#tags').append('<input type="checkbox" name="tag" value="'+tag+'" checked="false" onclick="onTagClick">'+tag+' ('+tags[tag]+")<br>")
+        }
+    }
 }
 
 function onTagClick(event) {
@@ -31,31 +30,22 @@ function onTagClick(event) {
     $('[name="tag"]:checked').each(function(index, element) {
         selectedTags[index] = element.value
     })
-    // TODO colour tags differently depending on if they will further narrow the selection
-    updateTitles(JSON.stringify(selectedTags))
+    tags = JSON.stringify(selectedTags)
+    getTags(tags, updateNarrowingTags)
+    updateTitles(tags)
 }
 
 function updateTitles(tags) {
     $.post(baseURL+getTitlesURL, tags, function(data) {
-        $("#titles").empty()
+        $('#titles').empty()
         for (var i = 0; i < data.length; i++) {
-            $("#titles").append(createTitle(data[i]), "<br>")
+            $('#titles').append('<input type="button" name="title" value="'+data[i][0]+'" noteId="'+data[i][1]+'" onclick="onTitleClick"><br>')
         }
 
         if (!noteInNotes()) {
             updateNote()
         }
-    }, "json")
-}
-
-function createTitle(info) {
-    var title = document.createElement("input")
-    title.type = "button"
-    title.name = "title"
-    title.value = info[0]
-    title.noteId = info[1]
-    title.onclick = onTitleClick
-    return title
+    }, 'json')
 }
 
 function onTitleClick(event) {
@@ -77,13 +67,13 @@ function noteInNotes() {
 function updateNote(id) {
     currentNoteId = id
     if (!id) {
-        $("#noteTitle").empty()
-        $("#noteBody").empty()
+        $('#noteTitle').empty()
+        $('#noteBody').empty()
     } else {
         $.getJSON(baseURL+getNoteURL+id, function(data) {
-            $("#noteTitle").html(data.Title)
-            $("#noteBody").html(data.Body)
+            $('#noteTitle').html(data.Title)
             // TODO parse note and replace hashtags with clickable links
+            $('#noteBody').html(data.Body)
         })
     }
 }
@@ -91,7 +81,7 @@ function updateNote(id) {
 function onNewNoteClick() {
     // TODO create new note
     // TODO makeNoteEditable()
-    alert("new note clicked")
+    alert('new note clicked')
 }
 
 function makeNoteEditable() {
@@ -103,8 +93,8 @@ function makeNoteNonEditable() {
 }
 
 $(document).ready(function() {
-    updateTags("null")
-    updateTitles("null")
+    getTags('null', updateTags)
+    updateTitles('null')
     $("#notePanel").click(makeNoteEditable)
     $("#newNote").click(onNewNoteClick)
 })
