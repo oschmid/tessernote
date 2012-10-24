@@ -87,7 +87,7 @@ func (n NoteBook) Titles(tags ...string) [][]string {
 	titles := [][]string{}
 	for id, _ := range n.UUIDs(tags...) {
 		title := strings.SplitN(n.notes[id], TitleBodySeparator, 2)[0]
-		titles = append(titles, []string{title,id})
+		titles = append(titles, []string{title, id})
 	}
 	sort.Sort(StringSliceSlice(titles))
 	return titles

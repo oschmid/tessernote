@@ -275,7 +275,7 @@ func title(num int) string {
 }
 
 func tag(num int) string {
-	return number("tag",num)
+	return number("tag", num)
 }
 
 func number(text string, num int) string {

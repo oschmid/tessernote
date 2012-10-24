@@ -175,7 +175,7 @@ func TestGetBodylessNote(t *testing.T) {
 
 func TestNewNote(t *testing.T) {
 	recorder := setUp()
-	note := notes.Note{Title:"untitled", Tags:*sets.New()}
+	note := notes.Note{Title: "untitled", Tags: *sets.New()}
 	if note.Id != "" {
 		t.Fatal(note)
 	}

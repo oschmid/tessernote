@@ -29,7 +29,7 @@ import (
 )
 
 var notebook = *notes.NewNoteBook()
-var uuidValidator = regexp.MustCompile("[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}") //"^[a-zA-Z0-9]+$")
+var uuidValidator = regexp.MustCompile("[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}")
 
 func MakePostHandler(url string, fn func(http.ResponseWriter, []byte)) (string, func(http.ResponseWriter, *http.Request)) {
 	return url, func(w http.ResponseWriter, r *http.Request) {
