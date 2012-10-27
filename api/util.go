@@ -25,9 +25,11 @@ import (
 	"notes"
 	"os"
 	"regexp"
+	"string/collections/sets"
 )
 
 var notebook = *notes.NewNoteBook()
+var notebookFileName = "../data/notebook"
 var uuidValidator = regexp.MustCompile("[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}")
 
 func MakePostHandler(url string, fn func(http.ResponseWriter, []byte)) (string, func(http.ResponseWriter, *http.Request)) {
@@ -63,12 +65,21 @@ func MakeGetHandler(url string, fn func(http.ResponseWriter, string)) (string, f
 	}
 }
 
-func LoadNotebook() {
-	fileName := "../data/notebook"
-	file, err := os.Open(fileName)
+func PopulateNotebook() {
+	_, err := os.Create(notebookFileName)
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatal(err)
+	}
+
+	notebook.Set(*notes.NewNote("title1", "body1", *sets.New("tag1", "tag2", "tag3")))
+	notebook.Set(*notes.NewNote("title2", "body2", *sets.New("tag1", "tag3", "tag4")))
+	notebook.Set(*notes.NewNote("title3", "body3", *sets.New("tag5")))
+}
+
+func LoadNotebook() {
+	file, err := os.Open(notebookFileName)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	defer file.Close()
@@ -79,8 +90,7 @@ func LoadNotebook() {
 }
 
 func SaveNotebook() {
-	fileName := "../data/notebook"
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0600)
+	file, err := os.OpenFile(notebookFileName, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Println(err)
 		return

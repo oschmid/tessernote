@@ -18,12 +18,20 @@ package main
 
 import (
 	"api"
+	"flag"
 	"log"
 	"net/http"
 )
 
 func main() {
-	api.LoadNotebook()
+	p := flag.Bool("p", false, "if true, populates notebook with test data")
+	flag.Parse()
+	if *p {
+		api.PopulateNotebook()
+	} else {
+		api.LoadNotebook()
+	}
+
 	http.HandleFunc(api.MakePostHandler(api.GetTagsUrl, api.GetTags))
 	http.HandleFunc(api.MakePostHandler(api.RenameTagsUrl, api.RenameTags))
 	http.HandleFunc(api.MakePostHandler(api.DeleteTagsUrl, api.DeleteTags))
