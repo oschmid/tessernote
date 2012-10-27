@@ -44,13 +44,13 @@ function getTags(tags, replyHandler) {
     $.post(getTagsURL, tags, replyHandler, 'json')
 }
 
-// style narrowing tags
-function updateNarrowingTags(narrowingTags) {
+// style relevant tags
+function updateRelevantTags(relevantTags) {
     $('[name="tagCheckbox"]').each(function(index, tag) {
         if (narrowingTags[tag.value]) {
-            $(this).parent().addClass('narrowingTag')
+            $(this).parent().addClass('relevantTag')
         } else {
-            $(this).parent().removeClass('narrowingTag')
+            $(this).parent().removeClass('relevantTag')
         }
     })
 }
@@ -72,7 +72,7 @@ function onTagClick() {
     })
     tags = JSON.stringify(selectedTags)
 
-    getTags(tags, updateNarrowingTags)
+    getTags(tags, updateRelevantTags)
     updateTitles(tags)
 }
 
@@ -114,9 +114,20 @@ function updateNote(id) {
         $.getJSON(getNoteURL+id, function(note) {
             $('#noteTitle').html(note.Title)
             // TODO parse note and replace hashtags with clickable links
-            $('#noteBody').html(note.Body)
+            $('#noteBody').html(linkHashTags(note.Body))
         })
     }
+}
+
+// replaces hash tags with links to all the notes of that tag
+function linkHashTags(body) {
+    // TODO
+    return body
+}
+
+function unlinkHashTags(body) {
+    // TODO
+    return body
 }
 
 function onNewNoteClick() {
