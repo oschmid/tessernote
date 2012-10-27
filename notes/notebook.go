@@ -115,7 +115,7 @@ func (n NoteBook) TagsOfNote(id string) map[string]bool {
 // Given a set of tags T, returns all the tags that refer to all the notes
 // referred to by T and just how many notes each tag refers to
 // If "tags" is empty, returns all tags (and how many notes each tag refers to
-func (n NoteBook) NarrowingTags(tags ...string) *map[string]int {
+func (n NoteBook) RelatedTags(tags ...string) *map[string]int {
 	notes := n.UUIDs(tags...)
 	super := make(map[string]int)
 	for id, _ := range notes {

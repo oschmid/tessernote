@@ -80,7 +80,7 @@ func TestRenameTags(t *testing.T) {
 
 	// verify tags
 	expected := map[string]int{"tag2": 1, "tag4": 2, "tag5": 1, "tag6": 2}
-	actual := *notebook.NarrowingTags()
+	actual := *notebook.RelatedTags()
 	compareMaps(expected, actual, t)
 
 	// verify notes
@@ -98,7 +98,7 @@ func TestDeleteTags(t *testing.T) {
 
 	// verify tags
 	expected := map[string]int{"tag1": 2, "tag2": 1, "tag4": 1}
-	actual := *notebook.NarrowingTags()
+	actual := *notebook.RelatedTags()
 	compareMaps(expected, actual, t)
 
 	// verify notes
@@ -199,7 +199,7 @@ func TestNewNote(t *testing.T) {
 
 	// verify tags
 	expectedTags := map[string]int{"tag1": 2, "tag2": 1, "tag3": 2, "tag4": 1, "tag5": 1}
-	actualTags := *notebook.NarrowingTags()
+	actualTags := *notebook.RelatedTags()
 	compareMaps(expectedTags, actualTags, t)
 
 	// verify note

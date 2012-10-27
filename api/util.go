@@ -25,7 +25,6 @@ import (
 	"notes"
 	"os"
 	"regexp"
-	"string/collections/sets"
 )
 
 var notebook = *notes.NewNoteBook()
@@ -77,11 +76,6 @@ func LoadNotebook() {
 	if err != nil {
 		log.Println(err)
 	}
-
-	// TODO remove prepopulate
-	notebook.Set(notes.Note{"uuid1", "title1", "body1", *sets.New("tag1", "tag2", "tag3")})
-	notebook.Set(notes.Note{"uuid2", "title2", "body2", *sets.New("tag1", "tag3", "tag4")})
-	notebook.Set(notes.Note{"uuid3", "title3", "body3", *sets.New("tag5")})
 }
 
 func SaveNotebook() {

@@ -45,12 +45,12 @@ function getTags(tags, replyHandler) {
 }
 
 // style relevant tags
-function updateRelevantTags(relevantTags) {
+function updateRelatedTags(relatedTags) {
     $('[name="tagCheckbox"]').each(function(index, tag) {
-        if (narrowingTags[tag.value]) {
-            $(this).parent().addClass('relevantTag')
+        if (relatedTags[tag.value]) {
+            $(this).parent().addClass('relatedTag')
         } else {
-            $(this).parent().removeClass('relevantTag')
+            $(this).parent().removeClass('relatedTag')
         }
     })
 }
@@ -72,7 +72,7 @@ function onTagClick() {
     })
     tags = JSON.stringify(selectedTags)
 
-    getTags(tags, updateRelevantTags)
+    getTags(tags, updateRelatedTags)
     updateTitles(tags)
 }
 
@@ -106,6 +106,7 @@ function noteInNotes() {
 }
 
 function updateNote(id) {
+    // TODO if another note is open, save it
     currentNoteId = id
     if (!id) {
         $('#noteTitle').empty()
@@ -113,7 +114,6 @@ function updateNote(id) {
     } else {
         $.getJSON(getNoteURL+id, function(note) {
             $('#noteTitle').html(note.Title)
-            // TODO parse note and replace hashtags with clickable links
             $('#noteBody').html(linkHashTags(note.Body))
         })
     }
@@ -131,6 +131,7 @@ function unlinkHashTags(body) {
 }
 
 function onNewNoteClick() {
+    // TODO if another note is open, save it
     // TODO add current tags
     $.post(saveNoteURL, '{"Title":"Untitled","Body":"","Tags":{}}', function(id) {
         alert(id)
@@ -145,10 +146,12 @@ function makeNoteEditable() {
 
 function makeNoteNonEditable() {
     // TODO convert note text area into display
+
 }
 
 $(document).ready(function() {
     getTags('null', updateTags)
+    getTags('null', updateRelatedTags)
     updateTitles('null')
     $("#notePanel").click(makeNoteEditable)
     $("#newNote").click(onNewNoteClick)
