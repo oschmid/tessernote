@@ -59,12 +59,13 @@ function updateRelatedTags(relatedTags) {
 // update listed tags
 function updateTags(tags) {
     $('#tags').empty()
+    tmp = ''
     for (var tag in tags) {
         if (tags.hasOwnProperty(tag)) {
-            // TODO create using jQuery
-            $('#tags').append('<div id="tag"><input type="checkbox" name="tagCheckbox" value="'+tag+'" onclick="onTagClick()">'+tag+' ('+tags[tag]+")<br></div>")
+            tmp += '<div id="tag"><input type="checkbox" name="tagCheckbox" value="'+tag+'">'+tag+' ('+tags[tag]+')<br></div>'
         }
     }
+    $('#tags').append(tmp)
 }
 
 // gets selected tags as JSON array
@@ -87,25 +88,25 @@ function updateTitles(tags) {
     $.post(getTitlesURL, tags, function(data) {
         includesCurrentNote = false
         $('#titles').empty()
+        tmp = ''
         for (var i = 0; i < data.length; i++) {
-            // TODO create using jQuery
-            $('#titles').append('<input type="button" name="title" value="'+data[i][0]+'" noteId="'+data[i][1]+'"><br>')
+            tmp += '<input type="button" name="title" value="'+data[i][0]+'" noteId="'+data[i][1]+'"><br>'
             if (data[i][1]==currentNoteId) {
                 includesCurrentNote = true
             }
         }
-
-        $('input[name="title"]').click(function() {
-            id = $(this).attr('noteId')
-            if (id != currentNoteId) {
-                showNote(id)
-            }
-        })
-
+        $('#titles').append(tmp)
         if (!includesCurrentNote) {
             hideNote()
         }
     }, 'json')
+}
+
+function onTitleClick() {
+    id = $(this).attr('noteId')
+    if (id != currentNoteId) {
+        showNote(id)
+    }
 }
 
 function showNote(id) {
@@ -172,8 +173,8 @@ function startEditing() {
     body = unlinkHashTags($('#noteBody').text())
     // TODO create using jQuery
     $('#noteEditor').append('<textarea id="noteTextArea">'+title+'\n'+body+'</textarea>')
-    $('#noteTitle').empty()
-    $('#noteBody').empty()
+    $('#noteTitle').empty().off('click')
+    $('#noteBody').empty().off('click')
 
     // setup end of edit
     $('#noteTextArea').blur(stopEditing).focus()
@@ -186,17 +187,18 @@ function stopEditing() {
     tags = '' // TODO parse tags?
     // TODO don't save if focus was lost because delete was clicked
     $.post(saveNoteURL, '{"Id":"'+currentNoteId+'","Title":"'+title+'","Body":"'+body+'","Tags":{'+tags+'}}', function(id) {
-        $('#noteTitle').html(title)
-        $('#noteBody').html(body)
+        $('#noteTitle').html(title).click(startEditing)
+        $('#noteBody').html(body).click(startEditing)
         $('#noteEditor').empty()
-        $('#notePanel').click(startEditing)
-        updateTitles(JSON.stringify(getSelectedTags()))
+        updateTitles(JSON.stringify(getSelectedTags())) // TODO update titles without a server call
     })
 }
 
 $(document).ready(function() {
+    $('#tags').on('click', 'input', onTagClick)
     getTags('null', updateTags)
     getTags('null', updateRelatedTags)
+    $('#titles').on('click', 'input', onTitleClick)
     updateTitles('null')
     $('#noteTitle').click(startEditing)
     $('#noteBody').click(startEditing)
