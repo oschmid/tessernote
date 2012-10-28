@@ -40,6 +40,8 @@ var validHashTag = "(^|[^&" + hashTagAlphaNumericChars + "])(#|\uFF03)(" + hashT
 
 var currentTags = []
 var currentNoteId
+var addClicked = false
+var deleteClicked = false
 
 function getTags(tags, replyHandler) {
     $.post(getTagsURL, tags, replyHandler, 'json')
@@ -134,6 +136,7 @@ function hideNote() {
     $('#deleteNote').hide()
     $('#noteTitle').empty()
     $('#noteBody').empty()
+    $('#noteEditor').empty()
 }
 
 // replaces hash tags with links to all the notes of that tag
@@ -147,9 +150,13 @@ function unlinkHashTags(body) {
     return body
 }
 
+// TODO fix add when another note is being displayed
 function onNewNoteClick() {
+    addClicked = true
+    currentNoteId = null
     $('#deleteNote').attr('value', 'Cancel').show()
     $('#noteTitle').html('Untitled')
+    $('#noteBody').empty()
     addSelectedHashTagsToNote()
     startEditing()
 }
@@ -166,6 +173,7 @@ function addSelectedHashTagsToNote() {
 }
 
 function onDeleteNoteClick() {
+    deleteClicked = true
     if (currentNoteId) {
         $.get(deleteNoteURL+currentNoteId, function() {
             selectedTags = getSelectedTags()
@@ -197,23 +205,29 @@ function startEditing() {
     $('#noteBody').empty().off('click')
 
     // setup end of edit
-    $('#noteTextArea').blur(stopEditing).focus()
+    $('#noteTextArea').blur(function() {
+        addClicked = false
+        deleteClicked = false
+        window.setTimeout(stopEditing, 100)
+    }).focus()
 }
 
-// TODO fix for new notes
+// TODO save new notes
 function stopEditing() {
-    text = $('#noteTextArea').val().split('\n', 2)
-    title = text[0]
-    body = text[1]
-    tags = '' // TODO parse tags?
-    // TODO don't save if focus was lost because delete was clicked
-    $.post(saveNoteURL, '{"Id":"'+currentNoteId+'","Title":"'+title+'","Body":"'+body+'","Tags":{'+tags+'}}', function(id) {
-        $('#noteTitle').html(title).click(startEditing)
-        $('#noteBody').html(body).click(startEditing)
-        $('#noteEditor').empty()
-        updateTitles(JSON.stringify(getSelectedTags())) // TODO update titles without a server call
-        // TODO update tags
-    })
+    if (!deleteClicked && !addClicked) {
+        text = $('#noteTextArea').val().split('\n', 2)
+        title = text[0]
+        body = text[1]
+        tags = '' // TODO parse tags?
+        $.post(saveNoteURL, '{"Id":"'+currentNoteId+'","Title":"'+title+'","Body":"'+body+'","Tags":{'+tags+'}}', function(id) {
+            $('#noteTitle').html(title).click(startEditing)
+            $('#noteBody').html(body).click(startEditing)
+            $('#noteEditor').empty()
+            updateTitles(JSON.stringify(getSelectedTags())) // TODO update titles without a server call
+            // TODO update tags
+        })
+    }
+    // TODO if add clicked, save note then display new note
 }
 
 $(document).ready(function() {
