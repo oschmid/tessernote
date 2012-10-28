@@ -136,23 +136,43 @@ function onNewNoteClick() {
     $.post(saveNoteURL, '{"Title":"Untitled","Body":"","Tags":{}}', function(id) {
         alert(id)
     })
-    // TODO makeNoteEditable()
+    // TODO editNote()
     // TODO updateTitles()
 }
 
-function makeNoteEditable() {
-    // TODO convert note display into text area
+function editNote() {
+    // remove click handler
+    $("#notePanel").off('click')
+
+    // change to textarea
+    title = $('#noteTitle').text()
+    body = unlinkHashTags($('#noteBody').text())
+    $('#noteEditor').append('<textarea id="noteTextArea">'+title+'\n'+body+'</textarea>')
+    $('#noteTitle').empty()
+    $('#noteBody').empty()
+
+    // setup end of edit
+    $('#noteTextArea').blur(saveNote)
+    $('#noteTextArea').focus()
 }
 
-function makeNoteNonEditable() {
-    // TODO convert note text area into display
-
+function saveNote() {
+    text = $('#noteTextArea').val().split('\n', 2)
+    title = text[0]
+    body = text[1]
+    tags = '' // TODO parse tags?
+    $.post(saveNoteURL, '{"Id":"'+currentNoteId+'","Title":"'+title+'","Body":"'+body+'","Tags":{'+tags+'}}', function(id) {
+        $('#noteTitle').html(title)
+        $('#noteBody').html(body)
+        $('#noteEditor').empty()
+        $('notePanel').click(editNote)
+    })
 }
 
 $(document).ready(function() {
     getTags('null', updateTags)
     getTags('null', updateRelatedTags)
     updateTitles('null')
-    $("#notePanel").click(makeNoteEditable)
-    $("#newNote").click(onNewNoteClick)
+    $('#notePanel').click(editNote)
+    $('#newNote').click(onNewNoteClick)
 })
