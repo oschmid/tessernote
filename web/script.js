@@ -38,7 +38,7 @@ var hashTagAlpha = "[" + hashTagAlphaChars + "]"
 var validHashTag = "(^|[^&" + hashTagAlphaNumericChars + "])(#|\uFF03)(" + hashTagAlphaNumeric + "*" + hashTagAlpha + hashTagAlphaNumeric + "*)"
 
 var currentTags = []
-var currentNoteId
+var currentNoteId // TODO make attribute of notePanel
 
 function getTags(tags, replyHandler) {
     $.post(getTagsURL, tags, replyHandler, 'json')
@@ -65,13 +65,16 @@ function updateTags(tags) {
     }
 }
 
-function onTagClick() {
+function getSelectedTags() {
     var selectedTags = []
     $('[name="tagCheckbox"]:checked').each(function(index, element) {
         selectedTags[index] = element.value
     })
-    tags = JSON.stringify(selectedTags)
+    return JSON.stringify(selectedTags)
+}
 
+function onTagClick() {
+    tags = getSelectedTags()
     getTags(tags, updateRelatedTags)
     updateTitles(tags)
 }
@@ -106,7 +109,6 @@ function noteInNotes() {
 }
 
 function updateNote(id) {
-    // TODO if another note is open, save it
     currentNoteId = id
     if (!id) {
         $('#noteTitle').empty()
@@ -131,16 +133,15 @@ function unlinkHashTags(body) {
 }
 
 function onNewNoteClick() {
-    // TODO if another note is open, save it
-    // TODO add current tags
-    $.post(saveNoteURL, '{"Title":"Untitled","Body":"","Tags":{}}', function(id) {
+    tags = getSelectedTags()
+    $.post(saveNoteURL, '{"Title":"Untitled","Body":"","Tags":'+tags+'}', function(id) {
         alert(id)
     })
-    // TODO editNote()
-    // TODO updateTitles()
+    updateTitles(tags)
+    startEditing()
 }
 
-function editNote() {
+function startEditing() {
     // remove click handler
     $("#notePanel").off('click')
 
@@ -152,11 +153,11 @@ function editNote() {
     $('#noteBody').empty()
 
     // setup end of edit
-    $('#noteTextArea').blur(saveNote)
+    $('#noteTextArea').blur(stopEditing)
     $('#noteTextArea').focus()
 }
 
-function saveNote() {
+function stopEditing() {
     text = $('#noteTextArea').val().split('\n', 2)
     title = text[0]
     body = text[1]
@@ -165,7 +166,7 @@ function saveNote() {
         $('#noteTitle').html(title)
         $('#noteBody').html(body)
         $('#noteEditor').empty()
-        $('notePanel').click(editNote)
+        $('#notePanel').click(startEditing)
     })
 }
 
@@ -173,6 +174,6 @@ $(document).ready(function() {
     getTags('null', updateTags)
     getTags('null', updateRelatedTags)
     updateTitles('null')
-    $('#notePanel').click(editNote)
+    $('#notePanel').click(startEditing)
     $('#newNote').click(onNewNoteClick)
 })
