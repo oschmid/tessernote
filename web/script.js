@@ -171,7 +171,6 @@ function startEditing() {
     // change to textarea
     title = $('#noteTitle').text()
     body = unlinkHashTags($('#noteBody').text())
-    // TODO create using jQuery
     $('#noteEditor').append('<textarea id="noteTextArea">'+title+'\n'+body+'</textarea>')
     $('#noteTitle').empty().off('click')
     $('#noteBody').empty().off('click')
