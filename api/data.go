@@ -19,6 +19,7 @@ package api
 import (
 	"code.google.com/p/go-uuid/uuid"
 	"encoding/json"
+	"log"
 	"net/http"
 	"notes"
 )
@@ -30,6 +31,7 @@ const (
 	GetTitlesUrl  = "/titles"
 	GetNoteUrl    = "/note/get/"
 	SaveNoteUrl   = "/note/save"
+	DeleteNoteUrl = "/note/delete/"
 )
 
 // Returns a map of tags -> note count in JSON format.
@@ -39,6 +41,7 @@ func GetTags(w http.ResponseWriter, body []byte) {
 	var tagsIn []string
 	err := json.Unmarshal(body, &tagsIn)
 	if err != nil {
+		log.Println("GetTags", err.Error(), string(body))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -168,4 +171,9 @@ func SaveNote(w http.ResponseWriter, body []byte) {
 
 	// write response
 	w.Write([]byte(note.Id))
+}
+
+func DeleteNote(w http.ResponseWriter, id string) {
+	notebook.Delete(id)
+	w.WriteHeader(http.StatusOK)
 }

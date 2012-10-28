@@ -36,7 +36,7 @@ func TestAddNote(t *testing.T) {
 	compareNote(note, *actual, t)
 }
 
-func TestNonExistentNote(t *testing.T) {
+func TestGetNonExistentNote(t *testing.T) {
 	notebook := NewNoteBook()
 	note, err := notebook.Note("this uuid doesn't refer to anything")
 	if note != nil {
@@ -99,7 +99,7 @@ func TestDeleteNoteTags(t *testing.T) {
 	compareMaps(expected, actual, t)
 }
 
-func TestSetBody(t *testing.T) {
+func TestSetNoteBody(t *testing.T) {
 	tags := *sets.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
@@ -124,7 +124,7 @@ func TestSetBody(t *testing.T) {
 	}
 }
 
-func TestSetTags(t *testing.T) {
+func TestSetNoteTags(t *testing.T) {
 	tags := *sets.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
@@ -149,7 +149,7 @@ func TestSetTags(t *testing.T) {
 	}
 }
 
-func TestSetNew(t *testing.T) {
+func TestSetNewNote(t *testing.T) {
 	tags := *sets.New("tag1", "tag2")
 	note := *NewNote("title", "body", tags)
 	notebook := NewNoteBook()
@@ -164,7 +164,7 @@ func TestSetNew(t *testing.T) {
 	}
 }
 
-func TestAllTitles(t *testing.T) {
+func TestGetAllTitles(t *testing.T) {
 	num := 10
 	notebook := newFullNoteBook(num)
 
@@ -186,7 +186,7 @@ func TestAllTitles(t *testing.T) {
 	}
 }
 
-func TestAllTitlesOfTag(t *testing.T) {
+func TestGetTitlesOfNotesWithTags(t *testing.T) {
 	num := 10
 	notebook := newFullNoteBook(num)
 
@@ -208,7 +208,33 @@ func TestAllTitlesOfTag(t *testing.T) {
 	}
 }
 
-func TestDistinguishingTagsFromTags(t *testing.T) {
+func TestGetTitlesOfNotesWithMissingTags(t *testing.T) {
+	notebook := NewNoteBook()
+	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2")))
+	notebook.Set(*NewNote("title", "body", *sets.New("tag2", "tag3")))
+	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2", "tag3")))
+
+	expected := map[string]int{"tag1": 1, "tag2": 2, "tag3": 2}
+	actual := *notebook.RelatedTags("not a tag", "tag3", "also not a tag")
+	if !maps.Equal(actual, expected) {
+		t.Fatalf("expected=%v actual=%v", expected, actual)
+	}
+}
+
+func TestGetAllTags(t *testing.T) {
+	notebook := NewNoteBook()
+	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2")))
+	notebook.Set(*NewNote("title", "body", *sets.New("tag2", "tag3")))
+	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2", "tag3")))
+
+	expected := map[string]int{"tag1": 2, "tag2": 3, "tag3": 2}
+	actual := *notebook.RelatedTags()
+	if !maps.Equal(actual, expected) {
+		t.Fatalf("expected=%v actual=%v", expected, actual)
+	}
+}
+
+func TestGetRelatedTags(t *testing.T) {
 	notebook := NewNoteBook()
 	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2")))
 	notebook.Set(*NewNote("title", "body", *sets.New("tag2", "tag3")))
@@ -216,6 +242,19 @@ func TestDistinguishingTagsFromTags(t *testing.T) {
 
 	expected := map[string]int{"tag1": 1, "tag2": 2, "tag3": 2}
 	actual := *notebook.RelatedTags("tag2", "tag3")
+	if !maps.Equal(actual, expected) {
+		t.Fatalf("expected=%v actual=%v", expected, actual)
+	}
+}
+
+func TestGetRelatedTagsWithSomeMissing(t *testing.T) {
+	notebook := NewNoteBook()
+	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2")))
+	notebook.Set(*NewNote("title", "body", *sets.New("tag2", "tag3")))
+	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2", "tag3")))
+
+	expected := map[string]int{"tag1": 1, "tag2": 2, "tag3": 2}
+	actual := *notebook.RelatedTags("not a tag", "tag2", "also not a tag", "tag3", "again not a tag")
 	if !maps.Equal(actual, expected) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}

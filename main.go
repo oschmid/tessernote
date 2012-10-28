@@ -38,6 +38,7 @@ func main() {
 	http.HandleFunc(api.MakePostHandler(api.GetTitlesUrl, api.GetTitles))
 	http.HandleFunc(api.MakeGetHandler(api.GetNoteUrl, api.GetNote))
 	http.HandleFunc(api.MakePostHandler(api.SaveNoteUrl, api.SaveNote))
+	http.HandleFunc(api.MakeGetHandler(api.DeleteNoteUrl, api.DeleteNote))
 	http.Handle("/notes/", http.StripPrefix("/notes/", http.FileServer(http.Dir("web"))))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

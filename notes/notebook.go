@@ -44,6 +44,19 @@ func (n NoteBook) UUIDs(tags ...string) map[string]bool {
 		return n.allUUIDs()
 	}
 
+	// strip non-existent tags
+	strippedTags := *new([]string)
+	for _, tag := range tags {
+		_, contained := n.Tags[tag]
+		if contained {
+			strippedTags = append(strippedTags, tag)
+		}
+	}
+	tags = strippedTags
+	if len(tags) == 0 {
+		return n.allUUIDs()
+	}
+
 	// get the note UUIDs associated with the first tag
 	uuids := n.allUUIDsOfTag(tags[0])
 	if len(uuids) == 0 {
