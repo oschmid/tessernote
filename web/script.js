@@ -150,9 +150,19 @@ function unlinkHashTags(body) {
 function onNewNoteClick() {
     $('#deleteNote').attr('value', 'Cancel').show()
     $('#noteTitle').html('Untitled')
-    $('#noteBody').html('')
-    // TODO add getSelectedTags() to note
+    addSelectedHashTagsToNote()
     startEditing()
+}
+
+function addSelectedHashTagsToNote() {
+    tags = getSelectedTags()
+    if (tags.length > 0) {
+        hashTags = ''
+        for (i = 0; i < tags.length; i++) {
+            hashTags += '#' + tags[i]
+        }
+        $('#noteBody').html(hashTags)
+    }
 }
 
 function onDeleteNoteClick() {
@@ -190,6 +200,7 @@ function startEditing() {
     $('#noteTextArea').blur(stopEditing).focus()
 }
 
+// TODO fix for new notes
 function stopEditing() {
     text = $('#noteTextArea').val().split('\n', 2)
     title = text[0]
