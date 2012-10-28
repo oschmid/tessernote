@@ -3,6 +3,7 @@ var getTagsURL = baseURL+'/tags/get'
 var getTitlesURL = baseURL+'/titles'
 var getNoteURL = baseURL+'/note/get/'
 var saveNoteURL = baseURL+'/note/save'
+var deleteNoteURL = baseURL+'/note/delete/'
 
 // hashtag regexp pattern from https://github.com/twitter/twitter-text-java/blob/master/src/com/twitter/Regex.java
 var latinAccentsChars = "\\u00c0-\\u00d6\\u00d8-\\u00f6\\u00f8-\\u00ff" + // Latin-1
@@ -46,7 +47,7 @@ function getTags(tags, replyHandler) {
 
 // style relevant tags
 function updateRelatedTags(relatedTags) {
-    $('[name="tagCheckbox"]').each(function(index, tag) {
+    $('input[name="tagCheckbox"]').each(function(index, tag) {
         if (relatedTags[tag.value]) {
             $(this).parent().addClass('relatedTag')
         } else {
@@ -60,6 +61,7 @@ function updateTags(tags) {
     $('#tags').empty()
     for (var tag in tags) {
         if (tags.hasOwnProperty(tag)) {
+            // TODO create using jQuery
             $('#tags').append('<div id="tag"><input type="checkbox" name="tagCheckbox" value="'+tag+'" onclick="onTagClick()">'+tag+' ('+tags[tag]+")<br></div>")
         }
     }
@@ -67,15 +69,15 @@ function updateTags(tags) {
 
 // gets selected tags as JSON array
 function getSelectedTags() {
-    var selectedTags = []
-    $('[name="tagCheckbox"]:checked').each(function(index, element) {
-        selectedTags[index] = element.value
-    })
-    return JSON.stringify(selectedTags)
+    return $('input[name="tagCheckbox"]:checked').map(function() {
+        return $(this).attr('value')
+    }).toArray()
 }
 
+// TODO trigger when clicking label
 function onTagClick() {
-    tags = getSelectedTags()
+    // TODO clicking an unrelated tag should clear all other selections
+    tags = JSON.stringify(getSelectedTags())
     getTags(tags, updateRelatedTags)
     updateTitles(tags)
 }
@@ -86,6 +88,7 @@ function updateTitles(tags) {
         includesCurrentNote = false
         $('#titles').empty()
         for (var i = 0; i < data.length; i++) {
+            // TODO create using jQuery
             $('#titles').append('<input type="button" name="title" value="'+data[i][0]+'" noteId="'+data[i][1]+'"><br>')
             if (data[i][1]==currentNoteId) {
                 includesCurrentNote = true
@@ -93,7 +96,10 @@ function updateTitles(tags) {
         }
 
         $('input[name="title"]').click(function() {
-            showNote($(this).attr('noteId'))
+            id = $(this).attr('noteId')
+            if (id != currentNoteId) {
+                showNote(id)
+            }
         })
 
         if (!includesCurrentNote) {
@@ -105,15 +111,14 @@ function updateTitles(tags) {
 function showNote(id) {
     currentNoteId = id
     $.getJSON(getNoteURL+id, function(note) {
-        $('#deleteNote').value = 'Delete'
-        $('#deleteNote').show()
+        $('#deleteNote').attr('value', 'Delete').show()
         $('#noteTitle').html(note.Title)
         $('#noteBody').html(linkHashTags(note.Body))
     })
 }
 
 function hideNote() {
-    currentNoteId = ""
+    currentNoteId = null
     $('#deleteNote').hide()
     $('#noteTitle').empty()
     $('#noteBody').empty()
@@ -131,17 +136,31 @@ function unlinkHashTags(body) {
 }
 
 function onNewNoteClick() {
-    $('#deleteNote').value = 'Cancel'
-    $('#deleteNote').show()
+    $('#deleteNote').attr('value', 'Cancel').show()
     $('#noteTitle').html('Untitled')
     $('#noteBody').html('')
     // TODO add getSelectedTags() to note
-    // TODO add to titles
     startEditing()
 }
 
 function onDeleteNoteClick() {
-    // TODO don't save new note, or delete saved note
+    if (currentNoteId) {
+        $.get(deleteNoteURL+currentNoteId, function() {
+            selectedTags = getSelectedTags()
+            getTags('null', function(allTags) {
+                updateTags(allTags)
+                $('input[name="tagCheckbox"]').each(function(index, element) {
+                    if ($.inArray(element.value, selectedTags) >= 0) {
+                        element.checked = true
+                    }
+                })
+                selectedTags = JSON.stringify(selectedTags)
+                getTags(selectedTags, updateRelatedTags)
+                updateTitles(selectedTags)
+            })
+        })
+    }
+    hideNote()
 }
 
 function startEditing() {
@@ -151,13 +170,13 @@ function startEditing() {
     // change to textarea
     title = $('#noteTitle').text()
     body = unlinkHashTags($('#noteBody').text())
+    // TODO create using jQuery
     $('#noteEditor').append('<textarea id="noteTextArea">'+title+'\n'+body+'</textarea>')
     $('#noteTitle').empty()
     $('#noteBody').empty()
 
     // setup end of edit
-    $('#noteTextArea').blur(stopEditing)
-    $('#noteTextArea').focus()
+    $('#noteTextArea').blur(stopEditing).focus()
 }
 
 function stopEditing() {
@@ -165,11 +184,13 @@ function stopEditing() {
     title = text[0]
     body = text[1]
     tags = '' // TODO parse tags?
+    // TODO don't save if focus was lost because delete was clicked
     $.post(saveNoteURL, '{"Id":"'+currentNoteId+'","Title":"'+title+'","Body":"'+body+'","Tags":{'+tags+'}}', function(id) {
         $('#noteTitle').html(title)
         $('#noteBody').html(body)
         $('#noteEditor').empty()
         $('#notePanel').click(startEditing)
+        updateTitles(JSON.stringify(getSelectedTags()))
     })
 }
 
