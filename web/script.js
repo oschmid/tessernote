@@ -77,10 +77,21 @@ function getSelectedTags() {
 
 // TODO trigger when clicking label
 function onTagClick() {
-    // TODO clicking an unrelated tag should clear all other selections
+    // clicking an unrelated tag should clear all other selections
+    if (!$(this).parent().hasClass('relatedTag')) {
+        deselectUnrelated($(this).attr('value'))
+    }
     tags = JSON.stringify(getSelectedTags())
     getTags(tags, updateRelatedTags)
     updateTitles(tags)
+}
+
+function deselectUnrelated(selected) {
+    $('input[name="tagCheckbox"]:checked').each(function(index, tag) {
+        if (tag.value != selected) {
+            tag.checked = false
+        }
+    })
 }
 
 // updates list of titles
@@ -190,6 +201,7 @@ function stopEditing() {
         $('#noteBody').html(body).click(startEditing)
         $('#noteEditor').empty()
         updateTitles(JSON.stringify(getSelectedTags())) // TODO update titles without a server call
+        // TODO update tags
     })
 }
 
