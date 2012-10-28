@@ -81,31 +81,23 @@ function onTagClick() {
 
 function updateTitles(tags) {
     $.post(getTitlesURL, tags, function(data) {
+        includesCurrentNote = false
         $('#titles').empty()
         for (var i = 0; i < data.length; i++) {
             $('#titles').append('<input type="button" name="title" value="'+data[i][0]+'" noteId="'+data[i][1]+'"><br>')
+            if (data[i][1]==currentNoteId) {
+                includesCurrentNote = true
+            }
         }
 
         $('input[name="title"]').click(function() {
             updateNote($(this).attr('noteId'))
         })
 
-        if (!noteInNotes()) {
+        if (!includesCurrentNote) {
             updateNote()
         }
     }, 'json')
-}
-
-// returns true if note being displayed is in the list of titles displayed
-function noteInNotes() {
-    var contained = false
-    $('[name="title"]').each(function(index, element) {
-        if (element.noteId == currentNoteId) {
-            contained = true
-            return
-        }
-    })
-    return contained
 }
 
 function updateNote(id) {
