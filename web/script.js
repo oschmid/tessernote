@@ -38,7 +38,7 @@ var hashTagAlpha = "[" + hashTagAlphaChars + "]"
 var validHashTag = "(^|[^&" + hashTagAlphaNumericChars + "])(#|\uFF03)(" + hashTagAlphaNumeric + "*" + hashTagAlpha + hashTagAlphaNumeric + "*)"
 
 var currentTags = []
-var currentNoteId // TODO make attribute of notePanel
+var currentNoteId
 
 function getTags(tags, replyHandler) {
     $.post(getTagsURL, tags, replyHandler, 'json')
@@ -65,6 +65,7 @@ function updateTags(tags) {
     }
 }
 
+// gets selected tags as JSON array
 function getSelectedTags() {
     var selectedTags = []
     $('[name="tagCheckbox"]:checked').each(function(index, element) {
@@ -79,6 +80,7 @@ function onTagClick() {
     updateTitles(tags)
 }
 
+// updates list of titles
 function updateTitles(tags) {
     $.post(getTitlesURL, tags, function(data) {
         includesCurrentNote = false
@@ -91,26 +93,30 @@ function updateTitles(tags) {
         }
 
         $('input[name="title"]').click(function() {
-            updateNote($(this).attr('noteId'))
+            showNote($(this).attr('noteId'))
         })
 
         if (!includesCurrentNote) {
-            updateNote()
+            hideNote()
         }
     }, 'json')
 }
 
-function updateNote(id) {
+function showNote(id) {
     currentNoteId = id
-    if (!id) {
-        $('#noteTitle').empty()
-        $('#noteBody').empty()
-    } else {
-        $.getJSON(getNoteURL+id, function(note) {
-            $('#noteTitle').html(note.Title)
-            $('#noteBody').html(linkHashTags(note.Body))
-        })
-    }
+    $.getJSON(getNoteURL+id, function(note) {
+        $('#deleteNote').value = 'Delete'
+        $('#deleteNote').show()
+        $('#noteTitle').html(note.Title)
+        $('#noteBody').html(linkHashTags(note.Body))
+    })
+}
+
+function hideNote() {
+    currentNoteId = ""
+    $('#deleteNote').hide()
+    $('#noteTitle').empty()
+    $('#noteBody').empty()
 }
 
 // replaces hash tags with links to all the notes of that tag
@@ -125,12 +131,17 @@ function unlinkHashTags(body) {
 }
 
 function onNewNoteClick() {
-    tags = getSelectedTags()
-    $.post(saveNoteURL, '{"Title":"Untitled","Body":"","Tags":'+tags+'}', function(id) {
-        alert(id)
-    })
-    updateTitles(tags)
+    $('#deleteNote').value = 'Cancel'
+    $('#deleteNote').show()
+    $('#noteTitle').html('Untitled')
+    $('#noteBody').html('')
+    // TODO add getSelectedTags() to note
+    // TODO add to titles
     startEditing()
+}
+
+function onDeleteNoteClick() {
+    // TODO don't save new note, or delete saved note
 }
 
 function startEditing() {
@@ -166,6 +177,8 @@ $(document).ready(function() {
     getTags('null', updateTags)
     getTags('null', updateRelatedTags)
     updateTitles('null')
-    $('#notePanel').click(startEditing)
+    $('#noteTitle').click(startEditing)
+    $('#noteBody').click(startEditing)
     $('#newNote').click(onNewNoteClick)
+    $('#deleteNote').click(onDeleteNoteClick)
 })

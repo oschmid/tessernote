@@ -36,6 +36,12 @@ body
     left:50%;
 }
 
+#deleteNote
+{
+    display:none;
+    float:right;
+}
+
 #noteTitle
 {
     font-weight:bold;
