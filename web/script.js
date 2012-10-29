@@ -150,13 +150,18 @@ function hideNote() {
 
 // replaces hash tags with links to all the notes of that tag
 function linkHashTags(body) {
-    // TODO
+    // TODO implement
     return body
 }
 
 function unlinkHashTags(body) {
-    // TODO
+    // TODO implement
     return body
+}
+
+function parseTags(body) {
+    // TODO implement
+    return '{}'
 }
 
 function onNewNoteClick() {
@@ -165,8 +170,7 @@ function onNewNoteClick() {
         text = $('#noteTextArea').val().split('\n', 2)
         title = text[0]
         body = text[1]
-        tags = '' // TODO parse tags?
-        saveNote(title, body, tags, readyNewNote)
+        saveNote(title, body, parseTags(body), readyNewNote)
     } else {
         readyNewNote()
     }
@@ -183,7 +187,7 @@ function readyNewNote() {
 }
 
 function saveNote(title, body, tags, reply) {
-    $.post(saveNoteURL, '{"Id":"'+currentNoteId+'","Title":"'+title+'","Body":"'+body+'","Tags":{'+tags+'}}', reply)
+    $.post(saveNoteURL, '{"Id":"'+currentNoteId+'","Title":"'+title+'","Body":"'+body+'","Tags":'+tags+'}', reply)
 }
 
 function addSelectedHashTagsToNote() {
@@ -200,18 +204,21 @@ function addSelectedHashTagsToNote() {
 function onDeleteNoteClick() {
     deleteClicked = true
     if (currentNoteId) {
-        $.get(deleteNoteURL+currentNoteId, function() {
-            selectedTags = getSelectedTags()
-            getTags('null', function(allTags) {
-                updateListedTags(allTags)
-                setSelectedTags(selectedTags)
-                selectedTags = JSON.stringify(selectedTags)
-                getTags(selectedTags, updateRelatedTags)
-                updateTitles(selectedTags)
-            })
-        })
+        $.get(deleteNoteURL+currentNoteId, updateTagsAndTitles)
     }
     hideNote()
+}
+
+// TODO fix: when save removes selected tags, all tags should be related
+function updateTagsAndTitles() {
+    selectedTags = getSelectedTags()
+    getTags('null', function(allTags) {
+        updateListedTags(allTags)
+        setSelectedTags(selectedTags)
+        selectedTags = JSON.stringify(selectedTags)
+        getTags(selectedTags, updateRelatedTags)
+        updateTitles(selectedTags)
+    })
 }
 
 function startEditing() {
@@ -240,16 +247,13 @@ function stopEditing() {
         text = $('#noteTextArea').val().split('\n', 2)
         title = text[0]
         body = text[1]
-        tags = '' // TODO parse tags
-        saveNote(title, body, tags, function(id) {
+        saveNote(title, body, parseTags(body), function(id) {
             currentNoteId = id
             $('#deleteNote').attr('value', 'Delete')
             $('#noteTitle').html(title).click(startEditing)
             $('#noteBody').html(body).click(startEditing)
             $('#noteEditor').empty()
-            selectedTags = JSON.stringify(getSelectedTags())
-            updateTitles(selectedTags) // TODO update titles without a server call
-            // TODO update all and related tags
+            updateTagsAndTitles() // TODO update without server call, already have necessary information
         })
     }
 }
