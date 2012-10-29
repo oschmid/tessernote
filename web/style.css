@@ -1,45 +1,57 @@
 body
 {
     font-size:100%;
+    margin:0;
+    padding:0;
 }
 
 #navBar
 {
-    position:absolute;
-    width:100%;
-    top:0px;
-    left:0px;
     font-weight:bold;
+    left:0px;
+    position:absolute;
+    top:0px;
+    width:100%;
+}
+
+#settings
+{
+    float:right;
 }
 
 #tagsPanel
 {
-    position:absolute;
-    width:25%;
-    top:5%;
     left:0px;
+    position:absolute;
+    top:5%;
+    width:25%;
+}
+
+.relatedTag
+{
+    font-weight:bold;
 }
 
 #titlesPanel
 {
-    position:absolute;
-    width:25%;
-    top:5%;
     left:25%;
+    position:absolute;
+    top:5%;
+    width:25%;
 }
 
 #notePanel
 {
-    position:absolute;
-    width:50%;
-    top:5%;
     left:50%;
+    position:absolute;
+    top:5%;
+    width:50%;
 }
 
 #deleteNote
 {
-    display:none;
     float:right;
+    display:none;
 }
 
 #noteTitle
@@ -47,7 +59,11 @@ body
     font-weight:bold;
 }
 
-.relatedTag
+#noteTextArea
 {
-    font-weight:bold;
+    height:100%;
+    width:100%;
+    -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+    -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+    box-sizing: border-box;         /* Opera/IE 8+ */
 }
