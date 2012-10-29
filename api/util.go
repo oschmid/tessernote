@@ -71,9 +71,9 @@ func PopulateNotebook() {
 		log.Fatal(err)
 	}
 
-	notebook.Set(*notes.NewNote("title1", "body1", *sets.New("tag1", "tag2", "tag3")))
-	notebook.Set(*notes.NewNote("title2", "body2", *sets.New("tag1", "tag3", "tag4")))
-	notebook.Set(*notes.NewNote("title3", "body3", *sets.New("tag5")))
+	notebook.Set(*notes.NewNote("title1", "body1\n#tag1 #tag2 #tag3", *sets.New("tag1", "tag2", "tag3")))
+	notebook.Set(*notes.NewNote("title2", "body2\n#tag1 #tag3 #tag4", *sets.New("tag1", "tag3", "tag4")))
+	notebook.Set(*notes.NewNote("title3", "body3\n#tag5", *sets.New("tag5")))
 }
 
 func LoadNotebook() {
