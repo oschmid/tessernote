@@ -40,6 +40,7 @@ var validHashTag = "(^|[^&" + hashTagAlphaNumericChars + "])(#|\uFF03)(" + hashT
 
 var currentTags = []
 var currentNoteId
+var isEditing = false
 var addClicked = false
 var deleteClicked = false
 
@@ -59,7 +60,7 @@ function updateRelatedTags(relatedTags) {
 }
 
 // update listed tags
-function updateTags(tags) {
+function updateListedTags(tags) {
     $('#tags').empty()
     tmp = ''
     for (var tag in tags) {
@@ -75,6 +76,14 @@ function getSelectedTags() {
     return $('input[name="tagCheckbox"]:checked').map(function() {
         return $(this).attr('value')
     }).toArray()
+}
+
+function setSelectedTags(tags) {
+    $('input[name="tagCheckbox"]').each(function(index, element) {
+        if ($.inArray(element.value, selectedTags) >= 0) {
+            element.checked = true
+        }
+    })
 }
 
 // TODO trigger when clicking label
@@ -150,15 +159,31 @@ function unlinkHashTags(body) {
     return body
 }
 
-// TODO fix add when another note is being displayed
 function onNewNoteClick() {
     addClicked = true
+    if (isEditing) {
+        text = $('#noteTextArea').val().split('\n', 2)
+        title = text[0]
+        body = text[1]
+        tags = '' // TODO parse tags?
+        saveNote(title, body, tags, readyNewNote)
+    } else {
+        readyNewNote()
+    }
+}
+
+function readyNewNote() {
     currentNoteId = null
-    $('#deleteNote').attr('value', 'Cancel').show()
+    $('#deleteNote').attr('value', 'Cancel')
     $('#noteTitle').html('Untitled')
     $('#noteBody').empty()
+    $('#noteEditor').empty()
     addSelectedHashTagsToNote()
     startEditing()
+}
+
+function saveNote(title, body, tags, reply) {
+    $.post(saveNoteURL, '{"Id":"'+currentNoteId+'","Title":"'+title+'","Body":"'+body+'","Tags":{'+tags+'}}', reply)
 }
 
 function addSelectedHashTagsToNote() {
@@ -178,12 +203,8 @@ function onDeleteNoteClick() {
         $.get(deleteNoteURL+currentNoteId, function() {
             selectedTags = getSelectedTags()
             getTags('null', function(allTags) {
-                updateTags(allTags)
-                $('input[name="tagCheckbox"]').each(function(index, element) {
-                    if ($.inArray(element.value, selectedTags) >= 0) {
-                        element.checked = true
-                    }
-                })
+                updateListedTags(allTags)
+                setSelectedTags(selectedTags)
                 selectedTags = JSON.stringify(selectedTags)
                 getTags(selectedTags, updateRelatedTags)
                 updateTitles(selectedTags)
@@ -194,7 +215,7 @@ function onDeleteNoteClick() {
 }
 
 function startEditing() {
-    // remove click handler
+    isEditing = true
     $("#notePanel").off('click')
 
     // change to textarea
@@ -214,25 +235,28 @@ function startEditing() {
 
 // TODO save new notes
 function stopEditing() {
+    isEditing = false
     if (!deleteClicked && !addClicked) {
         text = $('#noteTextArea').val().split('\n', 2)
         title = text[0]
         body = text[1]
-        tags = '' // TODO parse tags?
-        $.post(saveNoteURL, '{"Id":"'+currentNoteId+'","Title":"'+title+'","Body":"'+body+'","Tags":{'+tags+'}}', function(id) {
+        tags = '' // TODO parse tags
+        saveNote(title, body, tags, function(id) {
+            currentNoteId = id
+            $('#deleteNote').attr('value', 'Delete')
             $('#noteTitle').html(title).click(startEditing)
             $('#noteBody').html(body).click(startEditing)
             $('#noteEditor').empty()
-            updateTitles(JSON.stringify(getSelectedTags())) // TODO update titles without a server call
-            // TODO update tags
+            selectedTags = JSON.stringify(getSelectedTags())
+            updateTitles(selectedTags) // TODO update titles without a server call
+            // TODO update all and related tags
         })
     }
-    // TODO if add clicked, save note then display new note
 }
 
 $(document).ready(function() {
     $('#tags').on('click', 'input', onTagClick)
-    getTags('null', updateTags)
+    getTags('null', updateListedTags) // TODO combine into one server call
     getTags('null', updateRelatedTags)
     $('#titles').on('click', 'input', onTitleClick)
     updateTitles('null')
