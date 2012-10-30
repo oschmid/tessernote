@@ -162,7 +162,7 @@ function hideNote() {
 }
 
 // replaces hash tags with links to all the notes of that tag
-// replace new lines with <pre>
+// adds line breaks
 function format(body) {
     // TODO implement
     return body
@@ -176,7 +176,7 @@ function unformat(body) {
 // pull out an array of hash tags from a body of text
 function parseTags(body) {
     // TODO implement
-    return '{}'
+    return []
 }
 
 function onNewNoteClick() {
@@ -202,6 +202,7 @@ function readyNewNote() {
 }
 
 function saveNote(title, body, tags, reply) {
+    tags = JSON.stringify(tags)
     $.post(saveNoteURL, '{"Id":"'+currentNoteId+'","Title":"'+title+'","Body":"'+body+'","Tags":'+tags+'}', reply)
 }
 
