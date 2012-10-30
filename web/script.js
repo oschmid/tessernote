@@ -39,7 +39,7 @@ var hashTagAlpha = "[" + hashTagAlphaChars + "]"
 var validHashTag = "(^|[^&" + hashTagAlphaNumericChars + "])(#|\uFF03)(" + hashTagAlphaNumeric + "*" + hashTagAlpha + hashTagAlphaNumeric + "*)"
 
 var currentTags = []
-var currentNoteId
+var currentNoteId = ""
 var isEditing = false
 var addClicked = false
 var deleteClicked = false
@@ -154,7 +154,7 @@ function showNote(id) {
 }
 
 function hideNote() {
-    currentNoteId = null
+    currentNoteId = ""
     $('#deleteNote').hide()
     $('#noteTitle').empty()
     $('#noteBody').empty()
@@ -176,7 +176,7 @@ function unformat(body) {
 // pull out an array of hash tags from a body of text
 function parseTags(body) {
     // TODO implement
-    return []
+    return {}
 }
 
 function onNewNoteClick() {
@@ -192,7 +192,7 @@ function onNewNoteClick() {
 }
 
 function readyNewNote() {
-    currentNoteId = null
+    currentNoteId = ""
     $('#deleteNote').attr('value', 'Cancel')
     $('#noteTitle').html('Untitled')
     $('#noteBody').empty()
@@ -219,7 +219,7 @@ function addSelectedHashTagsToNote() {
 
 function onDeleteNoteClick() {
     deleteClicked = true
-    if (currentNoteId) {
+    if (currentNoteId != "") {
         $.get(deleteNoteURL+currentNoteId, updateTagsAndTitles)
     }
     hideNote()
@@ -254,7 +254,6 @@ function startEditing() {
     }).focus()
 }
 
-// TODO save new notes
 function stopEditing() {
     isEditing = false
     if (!deleteClicked && !addClicked) {

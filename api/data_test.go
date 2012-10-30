@@ -193,7 +193,7 @@ func TestNewNote(t *testing.T) {
 	handle(recorder, request)
 
 	// verify response
-	if recorder.Body.String() == "" {
+	if !uuidValidator.MatchString(recorder.Body.String()) {
 		t.Fatal("new note was not assigned a UUID")
 	}
 	note.Id = recorder.Body.String()
