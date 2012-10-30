@@ -45,7 +45,7 @@ var addClicked = false
 var deleteClicked = false
 
 function getTags(tags, replyHandler) {
-    $.post(getTagsURL, tags, replyHandler, 'json')
+    $.post(getTagsURL, JSON.stringify(tags), replyHandler, 'json')
 }
 
 // style relevant tags
@@ -92,7 +92,7 @@ function onTagClick() {
     if (!$(this).parent().hasClass('relatedTag')) {
         deselectUnrelated($(this).attr('value'))
     }
-    tags = JSON.stringify(getSelectedTags())
+    tags = getSelectedTags()
     getTags(tags, updateRelatedTags)
     updateTitles(tags)
 }
@@ -107,7 +107,7 @@ function deselectUnrelated(selected) {
 
 // updates list of titles
 function updateTitles(tags) {
-    $.post(getTitlesURL, tags, function(data) {
+    $.post(getTitlesURL, JSON.stringify(tags), function(data) {
         includesCurrentNote = false
         $('#titles').empty()
         tmp = ''
@@ -136,7 +136,7 @@ function showNote(id) {
     $.getJSON(getNoteURL+id, function(note) {
         $('#deleteNote').attr('value', 'Delete').show()
         $('#noteTitle').html(note.Title)
-        $('#noteBody').html(linkHashTags(note.Body))
+        $('#noteBody').html(format(note.Body))
     })
 }
 
@@ -149,16 +149,18 @@ function hideNote() {
 }
 
 // replaces hash tags with links to all the notes of that tag
-function linkHashTags(body) {
+// replace new lines with <pre>
+function format(body) {
     // TODO implement
     return body
 }
 
-function unlinkHashTags(body) {
+function unformat(body) {
     // TODO implement
     return body
 }
 
+// pull out an array of hash tags from a body of text
 function parseTags(body) {
     // TODO implement
     return '{}'
@@ -212,10 +214,9 @@ function onDeleteNoteClick() {
 // TODO fix: when save removes selected tags, all tags should be related
 function updateTagsAndTitles() {
     selectedTags = getSelectedTags()
-    getTags('null', function(allTags) {
+    getTags(null, function(allTags) {
         updateListedTags(allTags)
         setSelectedTags(selectedTags)
-        selectedTags = JSON.stringify(selectedTags)
         getTags(selectedTags, updateRelatedTags)
         updateTitles(selectedTags)
     })
@@ -227,7 +228,7 @@ function startEditing() {
 
     // change to textarea
     title = $('#noteTitle').text()
-    body = unlinkHashTags($('#noteBody').text())
+    body = unformat($('#noteBody').text())
     $('#noteEditor').append('<textarea id="noteTextArea">'+title+'\n'+body+'</textarea>')
     $('#noteTitle').empty().off('click')
     $('#noteBody').empty().off('click')
@@ -260,10 +261,10 @@ function stopEditing() {
 
 $(document).ready(function() {
     $('#tags').on('click', 'input', onTagClick)
-    getTags('null', updateListedTags) // TODO combine into one server call
-    getTags('null', updateRelatedTags)
+    getTags(null, updateListedTags) // TODO combine into one server call
+    getTags(null, updateRelatedTags)
     $('#titles').on('click', 'input', onTitleClick)
-    updateTitles('null')
+    updateTitles(null)
     $('#noteTitle').click(startEditing)
     $('#noteBody').click(startEditing)
     $('#newNote').click(onNewNoteClick)
