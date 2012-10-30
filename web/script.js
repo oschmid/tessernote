@@ -50,22 +50,35 @@ function getTags(tags, replyHandler) {
 
 // style relevant tags
 function updateRelatedTags(relatedTags) {
-    $('input[name="tagCheckbox"]').each(function(index, tag) {
+    count = 0
+    $tagCheckboxes = $('input[name="tagCheckbox"]')
+    $tagCheckboxes.each(function(index, tag) {
         if (relatedTags[tag.value]) {
             $(this).parent().addClass('relatedTag')
+            count++
         } else {
             $(this).parent().removeClass('relatedTag')
         }
     })
+    // no related tags means all tags are related
+    if (count == 0) {
+        $tagCheckboxes.each(function(index, tag) {
+            $(this).parent().addClass('relatedTag')
+        })
+    }
 }
 
 // update listed tags
-function updateListedTags(tags) {
+function updateListedTags(tags, allRelated) {
     $('#tags').empty()
     tmp = ''
     for (var tag in tags) {
         if (tags.hasOwnProperty(tag)) {
-            tmp += '<div id="tag"><input type="checkbox" name="tagCheckbox" value="'+tag+'">'+tag+' ('+tags[tag]+')<br></div>'
+            tmp += '<div id="tag"'
+            if (allRelated) {
+                tmp += ' class="relatedTag"'
+            }
+            tmp += '><input type="checkbox" name="tagCheckbox" value="'+tag+'">'+tag+' ('+tags[tag]+')<br></div>'
         }
     }
     $('#tags').append(tmp)
@@ -211,7 +224,6 @@ function onDeleteNoteClick() {
     hideNote()
 }
 
-// TODO fix: when save removes selected tags, all tags should be related
 function updateTagsAndTitles() {
     selectedTags = getSelectedTags()
     getTags(null, function(allTags) {
@@ -254,15 +266,14 @@ function stopEditing() {
             $('#noteTitle').html(title).click(startEditing)
             $('#noteBody').html(body).click(startEditing)
             $('#noteEditor').empty()
-            updateTagsAndTitles() // TODO update without server call, already have necessary information
+            updateTagsAndTitles() // TODO update without server call (already have necessary information)
         })
     }
 }
 
 $(document).ready(function() {
     $('#tags').on('click', 'input', onTagClick)
-    getTags(null, updateListedTags) // TODO combine into one server call
-    getTags(null, updateRelatedTags)
+    getTags(null, function(tags) { updateListedTags(tags, true); })
     $('#titles').on('click', 'input', onTitleClick)
     updateTitles(null)
     $('#noteTitle').click(startEditing)
