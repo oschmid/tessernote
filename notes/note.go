@@ -20,6 +20,8 @@ import (
 	"code.google.com/p/go-uuid/uuid"
 	"sort"
 	"string/collections/sets"
+	"strings"
+	"unicode"
 )
 
 const TagSeparator = ", "
@@ -61,6 +63,20 @@ func (note Note) TagString() string {
 	}
 
 	return tagString[:len(tagString)-len(TagSeparator)]
+}
+
+// parses hashtags from note.Body
+func (n Note) parseTags() []string {
+	tags := Hashtag.FindAllString(n.Body, len(n.Body))
+	for i, tag := range tags {
+		tags[i] = strings.TrimFunc(tag, func(r rune) bool {
+				if r == '#' {
+					return true
+				}
+				return unicode.IsSpace(r)
+			})
+	}
+	return tags
 }
 
 func (n Note) Equal(note Note) bool {
