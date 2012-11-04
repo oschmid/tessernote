@@ -18,26 +18,14 @@ package notes
 
 import (
 	"string/collections/sets"
-	"string/collections/slices"
 	"testing"
 )
 
-func TestTagString(t *testing.T) {
-	tag1, tag2 := "tag1", "tag2"
-	tags := *sets.New(tag1, tag2)
-	note := NewNote("title", "body", tags)
-	tagString := note.TagString()
-	expected := tag1 + TagSeparator + tag2
-	if tagString != expected {
-		t.Fatalf("expected=%v actual=%v", expected, tagString)
-	}
-}
-
 func TestParseTags(t *testing.T) {
-	note := NewNote("title", "body #these #are not all #tags", *sets.New())
-	expected := []string{"these","are","tags"}
-	actual := note.parseTags()
-	if !slices.Equal(expected, actual) {
+	note := NewNote("title", "body #these #are not all #tags")
+	expected := *sets.New("these", "are", "tags")
+	actual := note.Tags()
+	if !sets.Equal(expected, actual) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 }

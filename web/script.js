@@ -115,7 +115,7 @@ function showNote(id) {
     $.getJSON(getNoteURL+id, function(note) {
         $('#deleteNote').attr('value', 'Delete').show()
         $('#noteTitle').html(note.Title)
-        $('#noteBody').html(format(note.Body))
+        $('#noteBody').html(formatJsonToDisplay(note.Body))
     })
 }
 
@@ -127,31 +127,13 @@ function hideNote() {
     $('#noteEditor').empty()
 }
 
-// replaces hash tags with links to all the notes of that tag
-// adds line breaks
-function format(body) {
-    // TODO implement
-    return body
-}
-
-function unformat(body) {
-    // TODO implement
-    return body
-}
-
-// pull out an set of hash tags from a body of text
-function parseTags(body) {
-    // TODO implement
-    return {}
-}
-
 function onNewNoteClick() {
     addClicked = true
     if (isEditing) {
-        text = $('#noteTextArea').val().split('\n', 2)
+        text = $('#noteTextArea').val().split('\n')
         title = text[0]
-        body = text[1]
-        saveNote(title, body, parseTags(body), readyNewNote)
+        body = text.slice(1).join('\n')
+        saveNote(title, body, readyNewNote)
     } else {
         readyNewNote()
     }
@@ -167,9 +149,8 @@ function readyNewNote() {
     startEditing()
 }
 
-function saveNote(title, body, tags, reply) {
-    tags = JSON.stringify(tags)
-    $.post(saveNoteURL, '{"Id":"'+currentNoteId+'","Title":"'+title+'","Body":"'+body+'","Tags":'+tags+'}', reply)
+function saveNote(title, body, reply) {
+    $.post(saveNoteURL, '{"Id":"'+currentNoteId+'","Title":"'+title+'","Body":"'+formatEditToJson(body)+'"}', reply)
 }
 
 function addSelectedHashTagsToNote() {
@@ -177,7 +158,7 @@ function addSelectedHashTagsToNote() {
     if (tags.length > 0) {
         hashTags = ''
         for (i = 0; i < tags.length; i++) {
-            hashTags += '#' + tags[i]
+            hashTags += ' #' + tags[i]
         }
         $('#noteBody').html(hashTags)
     }
@@ -207,8 +188,8 @@ function startEditing() {
 
     // change to textarea
     title = $('#noteTitle').text()
-    body = unformat($('#noteBody').text())
-    $('#noteEditor').append('<textarea id="noteTextArea">'+title+'\n'+body+'</textarea>')
+    body = $('#noteBody').html()
+    $('#noteEditor').append('<textarea id="noteTextArea">'+title+'\n'+formatDisplayToEdit(body)+'</textarea>')
     $('#noteTitle').empty().off('click')
     $('#noteBody').empty().off('click')
 
@@ -223,18 +204,40 @@ function startEditing() {
 function stopEditing() {
     isEditing = false
     if (!deleteClicked && !addClicked) {
-        text = $('#noteTextArea').val().split('\n', 2)
+        text = $('#noteTextArea').val().split('\n')
         title = text[0]
-        body = text[1]
-        saveNote(title, body, parseTags(body), function(id) {
+        body = text.slice(1).join('\n')
+        saveNote(title, body, function(id) {
             currentNoteId = id
             $('#deleteNote').attr('value', 'Delete')
             $('#noteTitle').html(title).click(startEditing)
-            $('#noteBody').html(body).click(startEditing)
+            $('#noteBody').html(formatEditToDisplay(body)).click(startEditing)
             $('#noteEditor').empty()
             updateTagsAndTitles() // TODO update without server call (already have necessary information)
         })
     }
+}
+
+// TODO handle other JSON formatting exceptions
+
+// replace escaped newlines with <br> etc.
+function formatJsonToDisplay(body) {
+    return body.replace(/\n/g, '<br>')
+}
+
+// replace <br> with newlines etc.
+function formatDisplayToEdit(body) {
+    return body.replace(/<br>/g, '\n')
+}
+
+// replace newlines with <br> etc.
+function formatEditToDisplay(body) {
+    return body.replace(/\n/g, '<br>')
+}
+
+// replace newlines with escaped newlines
+function formatEditToJson(body) {
+    return body.replace(/\n/g, '\\n')
 }
 
 $(document).ready(function() {

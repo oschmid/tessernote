@@ -36,9 +36,9 @@ const (
 
 func setUp() *httptest.ResponseRecorder {
 	notebook = *notes.NewNoteBook()
-	notebook.Set(notes.Note{uuid1, "title1", "body1", *sets.New("tag1", "tag2", "tag3")})
-	notebook.Set(notes.Note{uuid2, "title2", "body2", *sets.New("tag1", "tag3", "tag4")})
-	notebook.Set(notes.Note{uuid3, "title3", "body3", *sets.New("tag5")})
+	notebook.Set(notes.Note{Id: uuid1, Title: "title1", Body: "body1 #tag1 #tag2 #tag3"})
+	notebook.Set(notes.Note{Id: uuid2, Title: "title2", Body: "body2 #tag1 #tag3 #tag4"})
+	notebook.Set(notes.Note{Id: uuid3, Title: "title3", Body: "body3 #tag5"})
 	return httptest.NewRecorder()
 }
 
@@ -175,7 +175,7 @@ func TestGetNote(t *testing.T) {
 	handle(recorder, request)
 
 	// verify
-	expected := notes.Note{uuid1, "title1", "body1", *sets.New("tag1", "tag2", "tag3")}
+	expected := notes.Note{Id: uuid1, Title: "title1", Body: "body1 #tag1 #tag2 #tag3"}
 	var actual notes.Note
 	unmarshal(recorder, &actual, t)
 	compareNote(expected, actual, t)
@@ -183,7 +183,7 @@ func TestGetNote(t *testing.T) {
 
 func TestNewNote(t *testing.T) {
 	recorder := setUp()
-	note := notes.Note{Title: "untitled", Tags: *sets.New()}
+	note := notes.Note{Title: "untitled"}
 	if note.Id != "" {
 		t.Fatal(note)
 	}
@@ -296,7 +296,7 @@ func compareNoteInNoteBook(note notes.Note, id string, t *testing.T) {
 
 func checkNoteTags(id string, expected map[string]bool, t *testing.T) {
 	note := getNote(id, t)
-	actual := note.Tags
+	actual := note.Tags()
 	if !sets.Equal(expected, actual) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}

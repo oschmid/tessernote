@@ -115,6 +115,7 @@ func (n NoteBook) Note(id string) (*Note, error) {
 	return &Note{id, title, body, tags}, nil
 }
 
+// TODO remove as hashtags are parsed from body
 func (n NoteBook) TagsOfNote(id string) map[string]bool {
 	tags := make(map[string]bool)
 	for tag, notes := range n.Tags {
@@ -166,15 +167,15 @@ func (n NoteBook) Set(note Note) {
 
 	// set tags
 	oldTags := n.TagsOfNote(note.Id)
-	if !sets.Equal(oldTags, note.Tags) {
+	if !sets.Equal(oldTags, note.Tags()) {
 		// remove note from tags it no longer has
-		remove := *sets.Difference(oldTags, note.Tags)
+		remove := *sets.Difference(oldTags, note.Tags())
 		for tag, _ := range remove {
 			delete(n.Tags[tag], note.Id)
 		}
 
 		// add note to tags it has gained
-		add := *sets.Difference(note.Tags, oldTags)
+		add := *sets.Difference(note.Tags(), oldTags)
 		for tag, _ := range add {
 			n.addTag(tag, note.Id)
 		}

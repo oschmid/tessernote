@@ -159,6 +159,7 @@ func SaveNote(w http.ResponseWriter, body []byte) {
 	var note notes.Note
 	err := json.Unmarshal(body, &note)
 	if err != nil {
+		log.Println("SaveNote cannot unmarshal:", err, "\n", string(body))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

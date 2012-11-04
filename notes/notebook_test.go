@@ -24,8 +24,7 @@ import (
 )
 
 func TestAddNote(t *testing.T) {
-	tags := *sets.New("tag1", "tag2")
-	note := *NewNote("title", "body", tags)
+	note := *NewNote("title", "body #tag1 #tag2")
 	notebook := NewNoteBook()
 	notebook.Set(note)
 
@@ -48,8 +47,7 @@ func TestGetNonExistentNote(t *testing.T) {
 }
 
 func TestDeleteNote(t *testing.T) {
-	tags := *sets.New("tag1", "tag2")
-	note := *NewNote("title", "body", tags)
+	note := *NewNote("title", "body #tag1 #tag2")
 	notebook := NewNoteBook()
 	notebook.Set(note)
 	titles := notebook.Titles()
@@ -66,12 +64,11 @@ func TestDeleteNote(t *testing.T) {
 
 func TestDeleteNonExistentNote(t *testing.T) {
 	title := "title"
-	tags := *sets.New("tag1", "tag2")
-	note := *NewNote(title, "body", tags)
+	note := *NewNote("title", "body #tag1 #tag2")
 	notebook := NewNoteBook()
 	notebook.Set(note)
 
-	note2 := *NewNote(title, "body", tags)
+	note2 := *NewNote(title, "body #tag1 #tag2")
 	if note2.Id == note.Id {
 		t.Fatalf("note IDs are not unique")
 	}
@@ -84,10 +81,10 @@ func TestDeleteNonExistentNote(t *testing.T) {
 }
 
 func TestDeleteNoteTags(t *testing.T) {
-	note := *NewNote("title", "body", *sets.New("tag1", "tag2"))
+	note := *NewNote("title", "body #tag1 #tag2")
 	notebook := NewNoteBook()
 	notebook.Set(note)
-	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag3")))
+	notebook.Set(*NewNote("title", "body #tag1 #tag3"))
 
 	expected := map[string]int{"tag1": 2, "tag2": 1, "tag3": 1}
 	actual := *notebook.RelatedTags()
@@ -100,8 +97,7 @@ func TestDeleteNoteTags(t *testing.T) {
 }
 
 func TestSetNoteBody(t *testing.T) {
-	tags := *sets.New("tag1", "tag2")
-	note := *NewNote("title", "body", tags)
+	note := *NewNote("title", "body #tag1 #tag2")
 	notebook := NewNoteBook()
 	notebook.Set(note)
 
@@ -124,34 +120,8 @@ func TestSetNoteBody(t *testing.T) {
 	}
 }
 
-func TestSetNoteTags(t *testing.T) {
-	tags := *sets.New("tag1", "tag2")
-	note := *NewNote("title", "body", tags)
-	notebook := NewNoteBook()
-	notebook.Set(note)
-
-	note.Tags = *sets.New("tag3", "tag4", "tag5")
-	actual, err := notebook.Note(note.Id)
-	if err != nil {
-		t.Fatal("unexpected error", err)
-	}
-	if sets.Equal(actual.Tags, note.Tags) {
-		t.Fatal("NoteBook storage updated before call to update")
-	}
-
-	notebook.Set(note)
-	actual, err = notebook.Note(note.Id)
-	if err != nil {
-		t.Fatal("unexpected error", err)
-	}
-	if !sets.Equal(actual.Tags, note.Tags) {
-		t.Fatal("expected=%v actual=%v", note.Tags, actual.Tags)
-	}
-}
-
 func TestSetNewNote(t *testing.T) {
-	tags := *sets.New("tag1", "tag2")
-	note := *NewNote("title", "body", tags)
+	note := *NewNote("title", "body #tag1 #tag2")
 	notebook := NewNoteBook()
 	notebook.Set(note)
 
@@ -210,9 +180,9 @@ func TestGetTitlesOfNotesWithTags(t *testing.T) {
 
 func TestGetTitlesOfNotesWithMissingTags(t *testing.T) {
 	notebook := NewNoteBook()
-	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2")))
-	notebook.Set(*NewNote("title", "body", *sets.New("tag2", "tag3")))
-	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2", "tag3")))
+	notebook.Set(*NewNote("title", "body #tag1 #tag2"))
+	notebook.Set(*NewNote("title", "body #tag2 #tag3"))
+	notebook.Set(*NewNote("title", "body #tag1 #tag2 #tag3"))
 
 	expected := map[string]int{"tag1": 1, "tag2": 2, "tag3": 2}
 	actual := *notebook.RelatedTags("not a tag", "tag3", "also not a tag")
@@ -223,9 +193,9 @@ func TestGetTitlesOfNotesWithMissingTags(t *testing.T) {
 
 func TestGetAllTags(t *testing.T) {
 	notebook := NewNoteBook()
-	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2")))
-	notebook.Set(*NewNote("title", "body", *sets.New("tag2", "tag3")))
-	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2", "tag3")))
+	notebook.Set(*NewNote("title", "body #tag1 #tag2"))
+	notebook.Set(*NewNote("title", "body #tag2 #tag3"))
+	notebook.Set(*NewNote("title", "body #tag1 #tag2 #tag3"))
 
 	expected := map[string]int{"tag1": 2, "tag2": 3, "tag3": 2}
 	actual := *notebook.RelatedTags()
@@ -236,9 +206,9 @@ func TestGetAllTags(t *testing.T) {
 
 func TestGetRelatedTags(t *testing.T) {
 	notebook := NewNoteBook()
-	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2")))
-	notebook.Set(*NewNote("title", "body", *sets.New("tag2", "tag3")))
-	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2", "tag3")))
+	notebook.Set(*NewNote("title", "body #tag1 #tag2"))
+	notebook.Set(*NewNote("title", "body #tag2 #tag3"))
+	notebook.Set(*NewNote("title", "body #tag1 #tag2 #tag3"))
 
 	expected := map[string]int{"tag1": 1, "tag2": 2, "tag3": 2}
 	actual := *notebook.RelatedTags("tag2", "tag3")
@@ -249,9 +219,9 @@ func TestGetRelatedTags(t *testing.T) {
 
 func TestGetRelatedTagsWithSomeMissing(t *testing.T) {
 	notebook := NewNoteBook()
-	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2")))
-	notebook.Set(*NewNote("title", "body", *sets.New("tag2", "tag3")))
-	notebook.Set(*NewNote("title", "body", *sets.New("tag1", "tag2", "tag3")))
+	notebook.Set(*NewNote("title", "body #tag1 #tag2"))
+	notebook.Set(*NewNote("title", "body #tag2 #tag3"))
+	notebook.Set(*NewNote("title", "body #tag1 #tag2 #tag3"))
 
 	expected := map[string]int{"tag1": 1, "tag2": 2, "tag3": 2}
 	actual := *notebook.RelatedTags("not a tag", "tag2", "also not a tag", "tag3", "again not a tag")
@@ -262,9 +232,9 @@ func TestGetRelatedTagsWithSomeMissing(t *testing.T) {
 
 func TestRenameTags(t *testing.T) {
 	notebook := NewNoteBook()
-	notebook.Set(Note{"uuid1", "title1", "body1", *sets.New("tag1", "tag2")})
-	notebook.Set(Note{"uuid2", "title2", "body2", *sets.New("tag2", "tag3", "tag4")})
-	notebook.Set(Note{"uuid3", "title3", "body3", *sets.New("tag1", "tag4")})
+	notebook.Set(Note{Id:"uuid1", Title:"title1", Body:"body1 #tag1 #tag2"})
+	notebook.Set(Note{Id:"uuid2", Title:"title2", Body:"body2 #tag2 #tag3 #tag4"})
+	notebook.Set(Note{Id:"uuid3", Title:"title3", Body:"body3 #tag1 #tag4"})
 
 	notebook.RenameTag("tag1", "tag4")
 	expectedTags := map[string]int{"tag2": 2, "tag3": 1, "tag4": 3}
@@ -279,9 +249,9 @@ func TestRenameTags(t *testing.T) {
 
 func TestDeleteTags(t *testing.T) {
 	notebook := NewNoteBook()
-	notebook.Set(Note{"uuid1", "title1", "body1", *sets.New("tag1", "tag2")})
-	notebook.Set(Note{"uuid2", "title2", "body2", *sets.New("tag2", "tag3", "tag4")})
-	notebook.Set(Note{"uuid3", "title3", "body3", *sets.New("tag4")})
+	notebook.Set(Note{Id:"uuid1", Title:"title1", Body:"body1 #tag1 #tag2"})
+	notebook.Set(Note{Id:"uuid2", Title:"title2", Body:"body2 #tag2 #tag3 #tag4"})
+	notebook.Set(Note{Id:"uuid3", Title:"title3", Body:"body3 #tag4"})
 
 	notebook.DeleteTag("tag4")
 	expectedTags := map[string]int{"tag1": 1, "tag2": 2, "tag3": 1}
@@ -299,8 +269,7 @@ func TestDeleteTags(t *testing.T) {
 func newFullNoteBook(num int) NoteBook {
 	notebook := *NewNoteBook()
 	for i := 0; i < num; i++ {
-		tags := *sets.New(tag(i), tag(i+1))
-		notebook.Set(Note{id(i), title(i), "body", tags})
+		notebook.Set(Note{Id:id(i), Title:title(i), Body:"body #"+tag(i)+" #"+tag(i+1)})
 	}
 	return notebook
 }
@@ -340,7 +309,7 @@ func checkNoteTags(notebook *NoteBook, uuid string, expected map[string]bool, t 
 		return
 	}
 
-	actual := note.Tags
+	actual := note.Tags()
 	if !sets.Equal(expected, actual) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}

@@ -25,7 +25,6 @@ import (
 	"notes"
 	"os"
 	"regexp"
-	"string/collections/sets"
 )
 
 var notebook = *notes.NewNoteBook()
@@ -36,6 +35,7 @@ func MakePostHandler(url string, fn func(http.ResponseWriter, []byte)) (string, 
 	return url, func(w http.ResponseWriter, r *http.Request) {
 		post, err := readPost(r)
 		if err != nil {
+			log.Println("error reading post.", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -58,6 +58,7 @@ func MakeGetHandler(url string, fn func(http.ResponseWriter, string)) (string, f
 	return url, func(w http.ResponseWriter, r *http.Request) {
 		get := r.URL.Path[len(url):]
 		if !uuidValidator.MatchString(get) {
+			log.Println("id not uuid", get)
 			http.NotFound(w, r)
 			return
 		}
@@ -71,9 +72,9 @@ func PopulateNotebook() {
 		log.Fatal(err)
 	}
 
-	notebook.Set(*notes.NewNote("title1", "body1\n#tag1 #tag2 #tag3", *sets.New("tag1", "tag2", "tag3")))
-	notebook.Set(*notes.NewNote("title2", "body2\n#tag1 #tag3 #tag4", *sets.New("tag1", "tag3", "tag4")))
-	notebook.Set(*notes.NewNote("title3", "body3\n#tag5", *sets.New("tag5")))
+	notebook.Set(*notes.NewNote("title1", "body1\n #tag1 #tag2 #tag3"))
+	notebook.Set(*notes.NewNote("title2", "body2\n #tag1 #tag3 #tag4"))
+	notebook.Set(*notes.NewNote("title3", "body3\n #tag5"))
 }
 
 func LoadNotebook() {
