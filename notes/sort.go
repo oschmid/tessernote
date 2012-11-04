@@ -17,16 +17,16 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 
 package notes
 
-type StringSliceSlice [][]string
+type stringSliceSlice [][]string
 
-func (p StringSliceSlice) Len() int {
+func (p stringSliceSlice) Len() int {
 	return len(p)
 }
 
-func (p StringSliceSlice) Less(i, j int) bool {
+func (p stringSliceSlice) Less(i, j int) bool {
 	return p[i][0] < p[j][0]
 }
 
-func (p StringSliceSlice) Swap(i, j int) {
+func (p stringSliceSlice) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }

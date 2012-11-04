@@ -99,7 +99,7 @@ func (n NoteBook) Titles(tags ...string) [][]string {
 		title := n.Notes[id].Title
 		titles = append(titles, []string{title, id})
 	}
-	sort.Sort(StringSliceSlice(titles))
+	sort.Sort(stringSliceSlice(titles))
 	return titles
 }
 
