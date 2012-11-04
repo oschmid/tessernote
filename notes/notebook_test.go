@@ -28,22 +28,8 @@ func TestAddNote(t *testing.T) {
 	notebook := NewNoteBook()
 	notebook.SetNote(note)
 
-	actual, err := notebook.Note(note.Id)
-	if err != nil {
-		t.Fatal("unexpected error", err)
-	}
-	compareNote(note, *actual, t)
-}
-
-func TestGetNonExistentNote(t *testing.T) {
-	notebook := NewNoteBook()
-	note, err := notebook.Note("this uuid doesn't refer to anything")
-	if note != nil {
-		t.Fatal("note should be nil")
-	}
-	if err == nil {
-		t.Fatal("fetching a non-existent note should result in error")
-	}
+	actual := notebook.Notes[note.Id]
+	compareNote(note, actual, t)
 }
 
 func TestDeleteNote(t *testing.T) {
@@ -102,19 +88,13 @@ func TestSetNoteBody(t *testing.T) {
 	notebook.SetNote(note)
 
 	note.Body = "body2"
-	actual, err := notebook.Note(note.Id)
-	if err != nil {
-		t.Fatal("unexpected error", err)
-	}
+	actual := notebook.Notes[note.Id]
 	if actual.Body == note.Body {
 		t.Fatal("NoteBook storage updated before call to update")
 	}
 
 	notebook.SetNote(note)
-	actual, err = notebook.Note(note.Id)
-	if err != nil {
-		t.Fatal("unexpected error", err)
-	}
+	actual = notebook.Notes[note.Id]
 	if actual.Body != note.Body {
 		t.Fatalf("expected=%s actual=%s", note.Body, actual.Body)
 	}
@@ -125,12 +105,9 @@ func TestSetNewNote(t *testing.T) {
 	notebook := NewNoteBook()
 	notebook.SetNote(note)
 
-	actual, err := notebook.Note(note.Id)
-	if actual == nil {
-		t.Fatal("note was not added")
-	}
-	if err != nil {
-		t.Fatal("note was not added")
+	actual, contained := notebook.Notes[note.Id]
+	if !contained {
+		t.Fatalf("note not added %v", actual)
 	}
 }
 
@@ -303,12 +280,7 @@ func compareMaps(expected map[string]int, actual map[string]int, t *testing.T) {
 }
 
 func checkNoteTags(notebook *NoteBook, uuid string, expected map[string]bool, t *testing.T) {
-	note, err := notebook.Note(uuid)
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-
+	note := notebook.Notes[uuid]
 	actual := note.Tags()
 	if !sets.Equal(expected, actual) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)

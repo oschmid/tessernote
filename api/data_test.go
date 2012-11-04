@@ -209,9 +209,9 @@ func TestNewNote(t *testing.T) {
 
 func TestEditNote(t *testing.T) {
 	recorder := setUp()
-	note := getNote(uuid2, t)
-	note.Body = "new body"
-	check := getNote(uuid2, t)
+	note := notebook.Notes[uuid2]
+	note.SetBody("new body")
+	check := notebook.Notes[uuid2]
 	if check.Body == note.Body {
 		t.Fatal("note body passed by reference")
 	}
@@ -226,7 +226,7 @@ func TestEditNote(t *testing.T) {
 	}
 
 	// verify note
-	compareNoteInNoteBook(*note, uuid2, t)
+	compareNoteInNoteBook(note, uuid2, t)
 }
 
 // helper functions
@@ -263,14 +263,6 @@ func unmarshal(recorder *httptest.ResponseRecorder, destination interface{}, t *
 	}
 }
 
-func getNote(id string, t *testing.T) *notes.Note {
-	note, err := notebook.Note(id)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return note
-}
-
 func compareMaps(expected map[string]int, actual map[string]int, t *testing.T) {
 	if !maps.Equal(expected, actual) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
@@ -290,12 +282,12 @@ func compareNote(expected notes.Note, actual notes.Note, t *testing.T) {
 }
 
 func compareNoteInNoteBook(note notes.Note, id string, t *testing.T) {
-	actual := getNote(id, t)
-	compareNote(note, *actual, t)
+	actual := notebook.Notes[id]
+	compareNote(note, actual, t)
 }
 
 func checkNoteTags(id string, expected map[string]bool, t *testing.T) {
-	note := getNote(id, t)
+	note := notebook.Notes[id]
 	actual := note.Tags()
 	if !sets.Equal(expected, actual) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)

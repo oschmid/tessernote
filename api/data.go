@@ -130,9 +130,9 @@ func GetTitles(w http.ResponseWriter, body []byte) {
 // Returns Note in JSON format.
 // Request must specify Note.Id in URL
 func GetNote(w http.ResponseWriter, id string) {
-	note, err := notebook.Note(id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	note, contained := notebook.Notes[id]
+	if !contained {
+		http.Error(w, "note with id="+id+" exists in notebook", http.StatusBadRequest)
 		return
 	}
 

@@ -17,23 +17,19 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package notes
 
 import (
-	"fmt"
 	"sort"
 	"string/collections/sets"
 	"strings"
 )
 
-const TitleBodySeparator string = "\n"
-
-// TODO NoteBook.Notes should be of type map[string]Note
 type NoteBook struct {
-	Notes map[string]string          // note ID -> note title and body
+	Notes map[string]Note            // note ID -> Note
 	Tags  map[string]map[string]bool // tag name -> note IDs -> true if note has tag
 }
 
 func NewNoteBook() *NoteBook {
 	noteBook := new(NoteBook)
-	noteBook.Notes = make(map[string]string)
+	noteBook.Notes = make(map[string]Note)
 	noteBook.Tags = make(map[string]map[string]bool)
 	return noteBook
 }
@@ -99,20 +95,11 @@ func (n NoteBook) allUUIDsOfTag(tag string) map[string]bool {
 func (n NoteBook) Titles(tags ...string) [][]string {
 	titles := [][]string{}
 	for id, _ := range n.UUIDs(tags...) {
-		title := strings.SplitN(n.Notes[id], TitleBodySeparator, 2)[0]
+		title := n.Notes[id].Title
 		titles = append(titles, []string{title, id})
 	}
 	sort.Sort(StringSliceSlice(titles))
 	return titles
-}
-
-func (n NoteBook) Note(id string) (*Note, error) {
-	note := strings.SplitN(n.Notes[id], TitleBodySeparator, 2)
-	if len(note) != 2 {
-		return nil, fmt.Errorf("note \"%s\" does not exist", id)
-	}
-	title, body := note[0], note[1]
-	return &Note{Id: id, Title: title, Body: body}, nil
 }
 
 // Given a set of tags T, returns all the tags that refer to all the notes
@@ -122,10 +109,8 @@ func (n NoteBook) RelatedTags(tags ...string) *map[string]int {
 	notes := n.UUIDs(tags...)
 	super := make(map[string]int)
 	for id, _ := range notes {
-		note, err := n.Note(id)
-		if err == nil {
-			super = *union(super, note.Tags())
-		}
+		note := n.Notes[id]
+		super = *union(super, note.Tags())
 	}
 	return &super
 }
@@ -143,24 +128,22 @@ func (n *NoteBook) Delete(id string) {
 	delete(n.Notes, id)
 
 	// delete note from tags
-	note, err := n.Note(id)
-	if err == nil {
-		for tag, _ := range note.Tags() {
-			delete(n.Tags[tag], id)
-		}
+	note := n.Notes[id]
+	for tag, _ := range note.Tags() {
+		delete(n.Tags[tag], id)
 	}
 }
 
 // Adds note if it didn't exist before, updates all information if it did.
 func (n *NoteBook) SetNote(note Note) {
+	oldNote, contained := n.Notes[note.Id]
 	oldTags := *sets.New()
-	oldNote, err := n.Note(note.Id)
-	if err == nil {
+	if contained {
 		oldTags = oldNote.Tags()
 	}
 
 	// set body
-	n.Notes[note.Id] = note.Title + TitleBodySeparator + note.Body
+	n.Notes[note.Id] = note
 
 	// set tags
 	if !sets.Equal(oldTags, note.Tags()) {
@@ -189,12 +172,12 @@ func (n *NoteBook) RenameTag(old string, new string) {
 	// replace tag in note bodies
 	notes := n.Tags[old]
 	for id, _ := range notes {
-		note, err := n.Note(id)
-		if err == nil {
+		note, contained := n.Notes[id]
+		if contained {
 			body := strings.Replace(note.Body, "#"+old+" ", "#"+new+" ", -1)
 			body = strings.Replace(body, "#"+old, "#"+new, -1)
 			note.SetBody(body)
-			n.SetNote(*note)
+			n.SetNote(note)
 		}
 	}
 
@@ -206,12 +189,12 @@ func (n *NoteBook) DeleteTag(tag string) {
 	// remove tag from note bodies
 	notes := n.Tags[tag]
 	for id, _ := range notes {
-		note, err := n.Note(id)
-		if err == nil {
+		note, contained := n.Notes[id]
+		if contained {
 			body := strings.Replace(note.Body, "#"+tag+" ", "", -1)
 			body = strings.Replace(body, "#"+tag, "", -1)
 			note.SetBody(body)
-			n.SetNote(*note)
+			n.SetNote(note)
 		}
 	}
 
