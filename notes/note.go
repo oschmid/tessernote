@@ -22,6 +22,7 @@ import (
 	"unicode"
 )
 
+// TODO merge Title and Body
 type Note struct {
 	Id    string
 	Title string
@@ -35,22 +36,21 @@ func NewNote(title string, body string) *Note {
 	return note
 }
 
-func (n Note) SetBody(body string) {
+func (n *Note) SetBody(body string) {
 	n.Body = body
 	n.tags = nil
 }
 
-func (n Note) Tags() map[string]bool {
+func (n *Note) Tags() map[string]bool {
 	if n.tags == nil {
-		n.tags = n.parseTags()
+		n.tags = parseTags(n.Body)
 	}
 	return n.tags
 }
 
-// parses hashtags from note.Body
-func (n Note) parseTags() map[string]bool {
+func parseTags(body string) map[string]bool {
 	tags := make(map[string]bool)
-	matches := Hashtag.FindAllString(n.Body, len(n.Body))
+	matches := Hashtag.FindAllString(body, len(body))
 	for _, tag := range matches {
 		tags[strings.TrimFunc(tag, isHashtagDecoration)] = true
 	}

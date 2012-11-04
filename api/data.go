@@ -168,7 +168,7 @@ func SaveNote(w http.ResponseWriter, body []byte) {
 	if note.Id == "" {
 		note.Id = uuid.New()
 	}
-	notebook.Set(note)
+	notebook.SetNote(note)
 
 	// write response
 	w.Write([]byte(note.Id))

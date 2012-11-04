@@ -29,3 +29,25 @@ func TestParseTags(t *testing.T) {
 		t.Fatalf("expected=%v actual=%v", expected, actual)
 	}
 }
+
+func TestSetBody(t *testing.T) {
+	note := NewNote("title", "body #these #are not all #tags")
+	expected := *sets.New("these", "are", "tags")
+	old := note.Tags()
+	if !sets.Equal(expected, old) {
+		t.Fatalf("tags not initialized. expected=%v actual=%v", expected, old)
+	}
+
+	expectedBody := "body with #some but not all #new #tags"
+	note.SetBody(expectedBody)
+	actualBody := note.Body
+	if expectedBody != actualBody {
+		t.Fatalf("body not updated. expected=%v actual=%v", expectedBody, actualBody)
+	}
+
+	expected = *sets.New("some", "new", "tags")
+	actual := note.Tags()
+	if !sets.Equal(expected, actual) {
+		t.Fatalf("tags not updated. expected=%v actual=%v", expected, actual)
+	}
+}

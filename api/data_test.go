@@ -36,9 +36,9 @@ const (
 
 func setUp() *httptest.ResponseRecorder {
 	notebook = *notes.NewNoteBook()
-	notebook.Set(notes.Note{Id: uuid1, Title: "title1", Body: "body1 #tag1 #tag2 #tag3"})
-	notebook.Set(notes.Note{Id: uuid2, Title: "title2", Body: "body2 #tag1 #tag3 #tag4"})
-	notebook.Set(notes.Note{Id: uuid3, Title: "title3", Body: "body3 #tag5"})
+	notebook.SetNote(notes.Note{Id: uuid1, Title: "title1", Body: "body1 #tag1 #tag2 #tag3"})
+	notebook.SetNote(notes.Note{Id: uuid2, Title: "title2", Body: "body2 #tag1 #tag3 #tag4"})
+	notebook.SetNote(notes.Note{Id: uuid3, Title: "title3", Body: "body3 #tag5"})
 	return httptest.NewRecorder()
 }
 

@@ -111,19 +111,7 @@ func (n NoteBook) Note(id string) (*Note, error) {
 		return nil, fmt.Errorf("note \"%s\" does not exist", id)
 	}
 	title, body := note[0], note[1]
-	tags := n.TagsOfNote(id)
-	return &Note{id, title, body, tags}, nil
-}
-
-// TODO remove as hashtags are parsed from body
-func (n NoteBook) TagsOfNote(id string) map[string]bool {
-	tags := make(map[string]bool)
-	for tag, notes := range n.Tags {
-		if notes[id] {
-			tags[tag] = true
-		}
-	}
-	return tags
+	return &Note{Id: id, Title: title, Body: body}, nil
 }
 
 // Given a set of tags T, returns all the tags that refer to all the notes
@@ -133,7 +121,10 @@ func (n NoteBook) RelatedTags(tags ...string) *map[string]int {
 	notes := n.UUIDs(tags...)
 	super := make(map[string]int)
 	for id, _ := range notes {
-		super = *union(super, n.TagsOfNote(id))
+		note, err := n.Note(id)
+		if err == nil {
+			super = *union(super, note.Tags())
+		}
 	}
 	return &super
 }
@@ -150,23 +141,31 @@ func union(a map[string]int, b map[string]bool) *map[string]int {
 	return &a
 }
 
-func (n NoteBook) Delete(id string) {
+func (n *NoteBook) Delete(id string) {
 	// delete body
 	delete(n.Notes, id)
 
 	// delete note from tags
-	for tag, _ := range n.TagsOfNote(id) {
-		delete(n.Tags[tag], id)
+	note, err := n.Note(id)
+	if err == nil {
+		for tag, _ := range note.Tags() {
+			delete(n.Tags[tag], id)
+		}
 	}
 }
 
 // Adds note if it didn't exist before, updates all information if it did.
-func (n NoteBook) Set(note Note) {
+func (n *NoteBook) SetNote(note Note) {
+	oldTags := *sets.New()
+	oldNote, err := n.Note(note.Id)
+	if err == nil {
+		oldTags = oldNote.Tags()
+	}
+
 	// set body
 	n.Notes[note.Id] = note.Title + TitleBodySeparator + note.Body
 
 	// set tags
-	oldTags := n.TagsOfNote(note.Id)
 	if !sets.Equal(oldTags, note.Tags()) {
 		// remove note from tags it no longer has
 		remove := *sets.Difference(oldTags, note.Tags())
@@ -182,26 +181,17 @@ func (n NoteBook) Set(note Note) {
 	}
 }
 
-func (n NoteBook) addTag(tag string, noteId string) {
+func (n *NoteBook) addTag(tag string, noteId string) {
 	if n.Tags[tag] == nil {
 		n.Tags[tag] = make(map[string]bool)
 	}
 	n.Tags[tag][noteId] = true
 }
 
-func (n NoteBook) RenameTag(old string, new string) {
-	notes, contained := n.Tags[old]
-	if contained {
-		previous, contained := n.Tags[new]
-		if contained {
-			n.Tags[new] = *sets.Union(previous, notes)
-		} else {
-			n.Tags[new] = notes
-		}
-		delete(n.Tags, old)
-	}
+func (n *NoteBook) RenameTag(old string, new string) {
+	// TODO string replace
 }
 
-func (n NoteBook) DeleteTag(tag string) {
-	delete(n.Tags, tag)
+func (n *NoteBook) DeleteTag(tag string) {
+	// TODO string replace
 }
