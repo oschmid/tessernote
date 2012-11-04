@@ -230,7 +230,7 @@ func TestGetRelatedTagsWithSomeMissing(t *testing.T) {
 	}
 }
 
-func TestRenameTags(t *testing.T) {
+func TestRenameTag(t *testing.T) {
 	notebook := NewNoteBook()
 	notebook.SetNote(Note{Id: "uuid1", Title: "title1", Body: "body1 #tag1 #tag2"})
 	notebook.SetNote(Note{Id: "uuid2", Title: "title2", Body: "body2 #tag2 #tag3 #tag4"})
@@ -247,7 +247,7 @@ func TestRenameTags(t *testing.T) {
 	checkNoteTags(notebook, "uuid3", *sets.New("tag4"), t)
 }
 
-func TestDeleteTags(t *testing.T) {
+func TestDeleteTag(t *testing.T) {
 	notebook := NewNoteBook()
 	notebook.SetNote(Note{Id: "uuid1", Title: "title1", Body: "body1 #tag1 #tag2"})
 	notebook.SetNote(Note{Id: "uuid2", Title: "title2", Body: "body2 #tag2 #tag3 #tag4"})

@@ -25,6 +25,7 @@ import (
 
 const TitleBodySeparator string = "\n"
 
+// TODO NoteBook.Notes should be of type map[string]Note
 type NoteBook struct {
 	Notes map[string]string          // note ID -> note title and body
 	Tags  map[string]map[string]bool // tag name -> note IDs -> true if note has tag
@@ -131,12 +132,8 @@ func (n NoteBook) RelatedTags(tags ...string) *map[string]int {
 
 func union(a map[string]int, b map[string]bool) *map[string]int {
 	for tag, _ := range b {
-		count, contained := a[tag]
-		if contained {
-			a[tag] = count + 1
-		} else {
-			a[tag] = 1
-		}
+		count, _ := a[tag]
+		a[tag] = count + 1
 	}
 	return &a
 }
@@ -189,9 +186,34 @@ func (n *NoteBook) addTag(tag string, noteId string) {
 }
 
 func (n *NoteBook) RenameTag(old string, new string) {
-	// TODO string replace
+	// replace tag in note bodies
+	notes := n.Tags[old]
+	for id, _ := range notes {
+		note, err := n.Note(id)
+		if err == nil {
+			body := strings.Replace(note.Body, "#"+old+" ", "#"+new+" ", -1)
+			body = strings.Replace(body, "#"+old, "#"+new, -1)
+			note.SetBody(body)
+			n.SetNote(*note)
+		}
+	}
+
+	delete(n.Tags, old)
+	n.Tags[new] = notes
 }
 
 func (n *NoteBook) DeleteTag(tag string) {
-	// TODO string replace
+	// remove tag from note bodies
+	notes := n.Tags[tag]
+	for id, _ := range notes {
+		note, err := n.Note(id)
+		if err == nil {
+			body := strings.Replace(note.Body, "#"+tag+" ", "", -1)
+			body = strings.Replace(body, "#"+tag, "", -1)
+			note.SetBody(body)
+			n.SetNote(*note)
+		}
+	}
+
+	delete(n.Tags, tag)
 }
