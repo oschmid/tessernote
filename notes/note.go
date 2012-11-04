@@ -22,7 +22,6 @@ import (
 	"unicode"
 )
 
-// TODO merge Title and Body
 type Note struct {
 	Id    string
 	Title string
