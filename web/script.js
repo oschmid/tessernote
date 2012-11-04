@@ -201,6 +201,7 @@ function startEditing() {
     }).focus()
 }
 
+// TODO save periodically rather than on loss of focus (so that user can start edit, browse another tab, continue edit)
 function stopEditing() {
     isEditing = false
     if (!deleteClicked && !addClicked) {
