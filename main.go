@@ -27,10 +27,14 @@ import (
 func main() {
 	p := flag.Bool("p", false, "if true, populates notebook with test data")
 	flag.Parse()
+	file := "notebook"
+	if len(flag.Args()) > 0 {
+		file = flag.Arg(0)
+	}
 	if *p {
-		api.PopulateNotebook()
+		api.PopulateNotebook(file)
 	} else {
-		api.LoadNotebook()
+		api.LoadNotebook(file)
 	}
 
 	http.HandleFunc(api.MakePostHandler(api.GetTagsUrl, api.GetTags))

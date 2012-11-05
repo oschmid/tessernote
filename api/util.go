@@ -29,7 +29,7 @@ import (
 )
 
 var notebook = *notes.NewNoteBook()
-var notebookFileName = "../data/notebook"
+var notebookFileName string
 var uuidValidator = regexp.MustCompile("[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}")
 
 func MakePostHandler(url string, fn func(http.ResponseWriter, []byte)) (string, func(http.ResponseWriter, *http.Request)) {
@@ -67,7 +67,8 @@ func MakeGetHandler(url string, fn func(http.ResponseWriter, string)) (string, f
 	}
 }
 
-func PopulateNotebook() {
+func PopulateNotebook(filename string) {
+	notebookFileName = filename
 	_, err := os.Create(notebookFileName)
 	if err != nil {
 		log.Fatal(err)
@@ -78,8 +79,9 @@ func PopulateNotebook() {
 	notebook.SetNote(*notes.NewNote("title3", "body3\n #tag5"))
 }
 
-func LoadNotebook() {
-	file, err := os.Open(notebookFileName)
+func LoadNotebook(filename string) {
+	notebookFileName = filename
+	file, err := os.OpenFile(notebookFileName, os.O_CREATE, 0600)
 	if err != nil {
 		log.Fatal(err)
 	}
