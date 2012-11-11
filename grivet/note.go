@@ -25,16 +25,23 @@ type Note struct {
 	Body     string `datastore:",noindex"`
 	UserKeys []*datastore.Key
 	TagKeys  []*datastore.Key
+	context  appengine.Context `datastore:",noindex"`
 }
 
-func (n Note) Users(c appengine.Context) []User {
+func (n Note) Users() []User {
 	var users []User
-	datastore.GetMulti(c, n.UserKeys, users)
+	datastore.GetMulti(n.context, n.UserKeys, users)
+	for _, u := range users {
+		u.context = n.context
+	}
 	return users
 }
 
-func (n Note) Tags(c appengine.Context) []Tag {
+func (n Note) Tags() []Tag {
 	var tags []Tag
-	datastore.GetMulti(c, n.TagKeys, tags)
+	datastore.GetMulti(n.context, n.TagKeys, tags)
+	for _, t := range tags {
+		t.context = n.context
+	}
 	return tags
 }

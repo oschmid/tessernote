@@ -27,28 +27,39 @@ type Tag struct {
 	NoteKeys  []*datastore.Key
 	ParentKey *datastore.Key
 	ChildKeys []*datastore.Key
+	context   appengine.Context
 }
 
-func (t Tag) Users(c appengine.Context) []User {
+func (t Tag) Users() []User {
 	var users []User
-	datastore.GetMulti(c, t.UserKeys, users)
+	datastore.GetMulti(t.context, t.UserKeys, users)
+	for _, u := range users {
+		u.context = t.context
+	}
 	return users
 }
 
-func (t Tag) Notes(c appengine.Context) []Note {
+func (t Tag) Notes() []Note {
 	var notes []Note
-	datastore.GetMulti(c, t.NoteKeys, notes)
+	datastore.GetMulti(t.context, t.NoteKeys, notes)
+	for _, n := range notes {
+		n.context = t.context
+	}
 	return notes
 }
 
-func (t Tag) Parent(c appengine.Context) Tag {
+func (t Tag) Parent() Tag {
 	var parent Tag
-	datastore.Get(c, t.ParentKey, parent)
+	datastore.Get(t.context, t.ParentKey, parent)
+	parent.context = t.context
 	return parent
 }
 
-func (t Tag) Children(c appengine.Context) []Tag {
+func (t Tag) Children() []Tag {
 	var children []Tag
-	datastore.GetMulti(c, t.ChildKeys, children)
+	datastore.GetMulti(t.context, t.ChildKeys, children)
+	for _, tag := range children {
+		tag.context = t.context
+	}
 	return children
 }

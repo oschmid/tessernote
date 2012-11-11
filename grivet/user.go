@@ -25,32 +25,41 @@ type User struct {
 	Id       string
 	TagKeys  []*datastore.Key
 	NoteKeys []*datastore.Key
+	context  appengine.Context `datastore:",noindex"`
 }
 
-func (u User) Tags(c appengine.Context) []Tag {
+func (u User) Tags() []Tag {
 	var tags []Tag
-	datastore.GetMulti(c, u.TagKeys, tags)
+	datastore.GetMulti(u.context, u.TagKeys, tags)
+	for _, t := range tags {
+		t.context = u.context
+	}
 	return tags
 }
 
-func (u User) Notes(c appengine.Context) []Note {
+func (u User) Notes() []Note {
 	var notes []Note
-	datastore.GetMulti(c, u.NoteKeys, notes)
+	datastore.GetMulti(u.context, u.NoteKeys, notes)
+	for _, n := range notes {
+		n.context = u.context
+	}
 	return notes
 }
 
-func GetUser(c appengine.Context, u user.User) *User {
-	k := datastore.NewKey(c, "User", u.FederatedIdentity, 0, nil)
+func GetUser(c appengine.Context) *User {
 	g := new(User)
+	u := user.Current(c)
+	k := datastore.NewKey(c, "User", u.FederatedIdentity, 0, nil)
 	if err := datastore.Get(c, k, u); err != nil {
 		// TODO create new user
 	}
+	g.context = c
 	return g
 }
 
-func PutUser(c appengine.Context, u User) {
-	k := datastore.NewKey(c, "User", u.Id, 0, nil)
-	if _, err := datastore.Put(c, k, &u); err != nil {
+func PutUser(u User) {
+	k := datastore.NewKey(u.context, "User", u.Id, 0, nil)
+	if _, err := datastore.Put(u.context, k, &u); err != nil {
 		// TODO handle failed put
 	}
 }
