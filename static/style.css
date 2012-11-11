@@ -1,0 +1,30 @@
+body
+{
+    font-size:100%;
+    margin:0;
+    padding:0;
+}
+
+#tagsPanel
+{
+    left:0px;
+    position:absolute;
+    top:5%;
+    width:25%;
+}
+
+#titlesPanel
+{
+    left:25%;
+    position:absolute;
+    top:5%;
+    width:25%;
+}
+
+#notePanel
+{
+    left:50%;
+    position:absolute;
+    top:5%;
+    width:50%;
+}
