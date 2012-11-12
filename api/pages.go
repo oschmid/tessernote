@@ -2,7 +2,7 @@ package api
 
 import (
 	"appengine"
-	"appengine/user"
+	"grivet"
 	"html/template"
 	"net/http"
 	"regexp"
@@ -32,9 +32,9 @@ func init() {
 func handle(w http.ResponseWriter, r *http.Request) {
 	if validURL.MatchString(r.URL.Path) {
 		c := appengine.NewContext(r)
-		u := user.Current(c)
+		u := grivet.GetUser(c)
 		if u == nil {
-			// TODO store temp notebook based on IP address
+			// TODO use user
 		}
 		matchedTags := strings.Split(tagsRegexp.FindString(r.URL.Path), ",")
 		matchedId := uuidRegexp.FindString(r.URL.Path)

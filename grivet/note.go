@@ -13,7 +13,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 package grivet
 
 import (
@@ -21,7 +21,9 @@ import (
 	"appengine/datastore"
 )
 
+// TODO use datastore.Key.Encode() instead of UUID
 type Note struct {
+	Title    string
 	Body     string `datastore:",noindex"`
 	UserKeys []*datastore.Key
 	TagKeys  []*datastore.Key

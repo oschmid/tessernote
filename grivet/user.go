@@ -13,7 +13,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 package grivet
 
 import (
@@ -21,6 +21,7 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 )
+
 type User struct {
 	Id       string
 	TagKeys  []*datastore.Key
@@ -44,6 +45,25 @@ func (u User) Notes() []Note {
 		n.context = u.context
 	}
 	return notes
+}
+
+func (u User) RelatedTags(tags []Tag) []Tag {
+	relatedNoteKeys := make(map[string]datastore.Key)
+	for _, tag := range tags {
+		for _, key := range tag.NoteKeys {
+			relatedNoteKeys[key.Encode()] = *key
+		}
+	}
+	tags = *new([]Tag)
+	for _, tag := range u.Tags() {
+		for _, key := range tag.NoteKeys {
+			if _, contained := relatedNoteKeys[key.Encode()]; contained {
+				tags = append(tags, tag)
+				break
+			}
+		}
+	}
+	return tags
 }
 
 func GetUser(c appengine.Context) *User {
