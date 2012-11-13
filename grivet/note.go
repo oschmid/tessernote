@@ -26,7 +26,7 @@ type Note struct {
 	Title    string
 	Body     string `datastore:",noindex"`
 	UserKeys []*datastore.Key
-	TagKeys  []*datastore.Key
+	TagKeys  []*datastore.Key  // sorted by Tag.Name
 	context  appengine.Context `datastore:",noindex"`
 }
 

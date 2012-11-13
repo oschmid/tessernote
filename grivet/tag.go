@@ -22,7 +22,7 @@ import (
 )
 
 type Tag struct {
-	Name      string
+	Name      string // unique per user
 	UserKeys  []*datastore.Key
 	NoteKeys  []*datastore.Key
 	ParentKey *datastore.Key
@@ -62,4 +62,12 @@ func (t Tag) Children() []Tag {
 		tag.context = t.context
 	}
 	return children
+}
+
+func TagNames(tags []Tag) []string {
+	names := *new([]string)
+	for _, tag := range tags {
+		names = append(names, tag.Name)
+	}
+	return names
 }

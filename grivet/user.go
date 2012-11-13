@@ -20,11 +20,14 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
+	"errors"
+	"sort"
 )
 
 type User struct {
-	Id       string
-	TagKeys  []*datastore.Key
+	ID       string // user.User.ID
+	Name     string
+	TagKeys  []*datastore.Key // sorted by Tag.Name
 	NoteKeys []*datastore.Key
 	context  appengine.Context `datastore:",noindex"`
 }
@@ -47,6 +50,47 @@ func (u User) Notes() []Note {
 	return notes
 }
 
+// returns a subset of a user's tags by name
+// missing tags result in errors
+func (u User) TagsFrom(names []string) ([]Tag, error) {
+	tags := *new([]Tag)
+	if len(names) == 0 {
+		return tags, nil
+	}
+	sort.Strings(names)
+	allTags := u.Tags()
+	tagsIndex := 0
+	namesIndex := 0
+	for tagsIndex < len(allTags) && namesIndex < len(names) {
+		tag := allTags[tagsIndex]
+		name := names[namesIndex]
+		if tag.Name == name {
+			tags = append(tags, tag)
+			namesIndex++
+		} else if tag.Name > name {
+			namesIndex++
+		}
+		tagsIndex++
+	}
+	if len(tags) != len(names) {
+		return tags, errors.New("user missing tag(s)")
+	}
+	return tags, nil
+}
+
+// returns a user's note by ID, missing note will be skipped
+func (u User) Note(id string) (Note, error) {
+	// TODO binary search
+	var note Note
+	for _, key := range u.NoteKeys {
+		if key.Encode() == id {
+			datastore.Get(u.context, key, note)
+			return note, nil
+		}
+	}
+	return note, errors.New("note does not exist")
+}
+
 func (u User) RelatedTags(tags []Tag) []Tag {
 	relatedNoteKeys := make(map[string]datastore.Key)
 	for _, tag := range tags {
@@ -66,19 +110,21 @@ func (u User) RelatedTags(tags []Tag) []Tag {
 	return tags
 }
 
-func GetUser(c appengine.Context) *User {
+func CurrentUser(c appengine.Context) *User {
 	g := new(User)
 	u := user.Current(c)
-	k := datastore.NewKey(c, "User", u.FederatedIdentity, 0, nil)
+	k := datastore.NewKey(c, "User", u.ID, 0, nil)
 	if err := datastore.Get(c, k, u); err != nil {
-		// TODO create new user
+		// store new user
+		g.Name = u.Email
+		k, err = datastore.Put(c, k, g)
 	}
 	g.context = c
 	return g
 }
 
 func PutUser(u User) {
-	k := datastore.NewKey(u.context, "User", u.Id, 0, nil)
+	k := datastore.NewKey(u.context, "User", u.ID, 0, nil)
 	if _, err := datastore.Put(u.context, k, &u); err != nil {
 		// TODO handle failed put
 	}

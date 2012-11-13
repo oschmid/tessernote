@@ -16,20 +16,24 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 */
 package api
 
-import "html/template"
+import (
+	"grivet"
+	"html/template"
+)
 
 type Page struct {
-	Tags     []string
-	Titles   []string
-	Edit     bool
-	NoteBody string
+	Tags        []grivet.Tag
+	RelatedTags []grivet.Tag
+	Notes       []grivet.Note
+	Note        grivet.Note
+	Edit        bool
 }
 
 // format tags as html
 func (p Page) HtmlTags() template.HTML {
 	html := ""
 	for _, tag := range p.Tags {
-		html += tag + "<br>"
+		html += tag.Name + "<br>"
 	}
 	return template.HTML(html)
 }
@@ -37,8 +41,8 @@ func (p Page) HtmlTags() template.HTML {
 // format titles as html
 func (p Page) HtmlTitles() template.HTML {
 	html := ""
-	for _, title := range p.Titles {
-		html += title + "<br>"
+	for _, note := range p.Notes {
+		html += note.Title + "<br>"
 	}
 	return template.HTML(html)
 }
