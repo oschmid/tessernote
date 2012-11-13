@@ -19,15 +19,18 @@ package grivet
 import (
 	"appengine"
 	"appengine/datastore"
+	"time"
 )
 
 // TODO use datastore.Key.Encode() instead of UUID
 type Note struct {
-	Title    string
-	Body     string `datastore:",noindex"`
-	UserKeys []*datastore.Key
-	TagKeys  []*datastore.Key  // sorted by Tag.Name
-	context  appengine.Context `datastore:",noindex"`
+	Title        string
+	Body         string `datastore:",noindex"`
+	Created      time.Time
+	LastModified time.Time
+	UserKeys     []*datastore.Key
+	TagKeys      []*datastore.Key  // sorted by Tag.Name
+	context      appengine.Context `datastore:",noindex"`
 }
 
 func (n Note) Users() []User {
