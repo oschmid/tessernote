@@ -126,6 +126,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		note, err := u.Note(noteID)
 		if err != nil {
 			http.Redirect(w, r, "/"+tagString+"/", http.StatusFound)
+			return
 		}
 		page.Note = note
 		page.Edit = true
