@@ -25,7 +25,6 @@ type Tag struct {
 	Name      string // unique per user
 	UserKeys  []*datastore.Key
 	NoteKeys  []*datastore.Key
-	ParentKey *datastore.Key
 	ChildKeys []*datastore.Key
 	context   appengine.Context
 }
@@ -46,13 +45,6 @@ func (t Tag) Notes() []Note {
 		n.context = t.context
 	}
 	return notes
-}
-
-func (t Tag) Parent() Tag {
-	var parent Tag
-	datastore.Get(t.context, t.ParentKey, parent)
-	parent.context = t.context
-	return parent
 }
 
 func (t Tag) Children() []Tag {

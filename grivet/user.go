@@ -110,7 +110,7 @@ func (u User) RelatedTags(tags []Tag) []Tag {
 	return tags
 }
 
-func CurrentUser(c appengine.Context) *User {
+func GetUser(c appengine.Context) *User {
 	g := new(User)
 	u := user.Current(c)
 	k := datastore.NewKey(c, "User", u.ID, 0, nil)

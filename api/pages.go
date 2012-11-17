@@ -2,6 +2,7 @@ package api
 
 import (
 	"appengine"
+	"appengine/user"
 	"grivet"
 	"html/template"
 	"log"
@@ -29,33 +30,40 @@ func init() {
 }
 
 func serve(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	u := user.Current(c)
+	if u == nil {
+		url, err := user.LoginURL(c, r.URL.String())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Location", url)
+		w.WriteHeader(http.StatusFound)
+		return
+	}
+
+	g := grivet.GetUser(c)
 	page := new(Page)
+	page.Tags = g.Tags()
+
 	if r.URL.Path == "/" {
-		c := appengine.NewContext(r)
-		u := grivet.CurrentUser(c)
-		page.Tags = u.Tags()
-		page.Notes = u.Notes()
+		page.Notes = g.Notes()
 	} else if displayNoteURL.MatchString(r.URL.Path) {
-		c := appengine.NewContext(r)
-		u := grivet.CurrentUser(c)
-		page.Tags = u.Tags()
-		page.Notes = u.Notes()
+		page.Notes = g.Notes()
 		urlSplit := strings.Split(r.URL.Path, "/")
 		noteID := urlSplit[1]
-		note, err := u.Note(noteID)
+		note, err := g.Note(noteID)
 		if err != nil {
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}
 		page.Note = note
 	} else if editNoteURL.MatchString(r.URL.Path) {
-		c := appengine.NewContext(r)
-		u := grivet.CurrentUser(c)
-		page.Tags = u.Tags()
-		page.Notes = u.Notes()
+		page.Notes = g.Notes()
 		urlSplit := strings.Split(r.URL.Path, "/")
 		noteID := urlSplit[1]
-		note, err := u.Note(noteID)
+		note, err := g.Note(noteID)
 		if err != nil {
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
@@ -63,12 +71,9 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		page.Note = note
 		page.Edit = true
 	} else if selectTagsURL.MatchString(r.URL.Path) {
-		c := appengine.NewContext(r)
-		u := grivet.CurrentUser(c)
-		page.Tags = u.Tags()
 		urlSplit := strings.Split(r.URL.Path, "/")
 		tagString := urlSplit[1]
-		tags, err := u.TagsFrom(strings.Split(tagString, tagSeparator))
+		tags, err := g.TagsFrom(strings.Split(tagString, tagSeparator))
 		if err != nil {
 			if len(tags) > 0 {
 				names := grivet.TagNames(tags)
@@ -81,13 +86,10 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		}
 		page.RelatedTags = tags
 	} else if selectTagsAndDisplayNoteURL.MatchString(r.URL.Path) {
-		c := appengine.NewContext(r)
-		u := grivet.CurrentUser(c)
-		page.Tags = u.Tags()
 		urlSplit := strings.Split(r.URL.Path, "/")
 		tagString := urlSplit[1]
 		noteID := urlSplit[2]
-		tags, err := u.TagsFrom(strings.Split(tagString, tagSeparator))
+		tags, err := g.TagsFrom(strings.Split(tagString, tagSeparator))
 		if err != nil {
 			if len(tags) > 0 {
 				names := grivet.TagNames(tags)
@@ -99,19 +101,16 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		page.RelatedTags = tags
-		note, err := u.Note(noteID)
+		note, err := g.Note(noteID)
 		if err != nil {
 			http.Redirect(w, r, "/"+tagString+"/", http.StatusFound)
 		}
 		page.Note = note
 	} else if selectTagsAndEditNoteURL.MatchString(r.URL.Path) {
-		c := appengine.NewContext(r)
-		u := grivet.CurrentUser(c)
-		page.Tags = u.Tags()
 		urlSplit := strings.Split(r.URL.Path, "/")
 		tagString := urlSplit[1]
 		noteID := urlSplit[2]
-		tags, err := u.TagsFrom(strings.Split(tagString, tagSeparator))
+		tags, err := g.TagsFrom(strings.Split(tagString, tagSeparator))
 		if err != nil {
 			if len(tags) > 0 {
 				names := grivet.TagNames(tags)
@@ -123,7 +122,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		page.RelatedTags = tags
-		note, err := u.Note(noteID)
+		note, err := g.Note(noteID)
 		if err != nil {
 			http.Redirect(w, r, "/"+tagString+"/", http.StatusFound)
 			return
