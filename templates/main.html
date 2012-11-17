@@ -4,10 +4,14 @@
 <head>
     <title>Grivet</title>
     <meta charset="utf-8"/>
+    <meta name="viewport" content="user-scalable=no, width=device-width" />
     <link type="text/css" rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
-<div id="topBar"></div>
+<div id="header">
+    <div id="home" class="button" onclick="location.href='/'">Grivet</div>
+    <div id="login" class="button" onclick="alert('click')">Login</div>
+</div>
 <div id="tagsPanel">
     <b>Tags</b><br>
     {{.HtmlTags}}
@@ -16,7 +20,8 @@
     <b>Titles</b><br>
     {{.HtmlTitles}}
 </div>
-<div id="notesPanel">
+<div id="notePanel">
+    <b>Note</b><br>
     {{.HtmlNote}}
 </div>
 </body>
