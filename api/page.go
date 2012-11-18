@@ -49,10 +49,11 @@ func (p Page) HtmlTitles() template.HTML {
 
 // format note
 func (p Page) HtmlNote() template.HTML {
+	html := ""
 	if p.Edit {
-
+		html = "<div id='save' class='button'>Save</div><div class='textwrap'><textarea id='noteTextArea'>"+p.Note.Title+"\n"+p.Note.Body+"</textarea></div>"
 	} else {
-
+		html = "<b>"+p.Note.Title+"</b><br>"+p.Note.Body
 	}
-	return template.HTML("")
+	return template.HTML(html)
 }

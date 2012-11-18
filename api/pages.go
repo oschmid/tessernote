@@ -49,6 +49,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path == "/" {
 		page.Notes = g.Notes()
+		page.Edit = true
 	} else if displayNoteURL.MatchString(r.URL.Path) {
 		page.Notes = g.Notes()
 		urlSplit := strings.Split(r.URL.Path, "/")
