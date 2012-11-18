@@ -22,6 +22,8 @@ import (
 	"appengine/user"
 	"errors"
 	"sort"
+	"strings"
+	"time"
 )
 
 type User struct {
@@ -78,19 +80,6 @@ func (u User) TagsFrom(names []string) ([]Tag, error) {
 	return tags, nil
 }
 
-// returns a user's note by ID, missing note will be skipped
-func (u User) Note(id string) (Note, error) {
-	// TODO binary search
-	var note Note
-	for _, key := range u.NoteKeys {
-		if key.Encode() == id {
-			datastore.Get(u.context, key, note)
-			return note, nil
-		}
-	}
-	return note, errors.New("note does not exist")
-}
-
 func (u User) RelatedTags(tags []Tag) []Tag {
 	relatedNoteKeys := make(map[string]datastore.Key)
 	for _, tag := range tags {
@@ -108,6 +97,37 @@ func (u User) RelatedTags(tags []Tag) []Tag {
 		}
 	}
 	return tags
+}
+
+// returns a user's note by ID, missing note will be skipped
+func (u User) Note(id string) (Note, error) {
+	// TODO binary search
+	var note Note
+	for _, key := range u.NoteKeys {
+		if key.Encode() == id {
+			datastore.Get(u.context, key, note)
+			return note, nil
+		}
+	}
+	return note, errors.New("note does not exist")
+}
+
+func (u User) NewNote(text string) (*Note, error) {
+	k := datastore.NewIncompleteKey(u.context, "Note", nil)
+	note := new(Note)
+	note.Id = k
+	splitText := strings.SplitN(text, "\n", 2)
+	note.Title = splitText[0]
+	note.Body = splitText[1]
+	note.Created = time.Now()
+	note.LastModified = time.Now()
+	// TODO set note.UserKeys
+	// TODO set note.TagKeys
+	note.context = u.context
+	if _, err := datastore.Put(u.context, k, note); err != nil {
+		return new(Note), err
+	}
+	return note, nil
 }
 
 func GetUser(c appengine.Context) *User {

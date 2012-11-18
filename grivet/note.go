@@ -22,8 +22,8 @@ import (
 	"time"
 )
 
-// TODO use datastore.Key.Encode() instead of UUID
 type Note struct {
+	Id           *datastore.Key `datastore:",noindex"`
 	Title        string
 	Body         string `datastore:",noindex"`
 	Created      time.Time

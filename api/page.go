@@ -19,14 +19,16 @@ package api
 import (
 	"grivet"
 	"html/template"
+	"strings"
 )
 
 type Page struct {
-	Tags        []grivet.Tag
-	RelatedTags []grivet.Tag
-	Notes       []grivet.Note
-	Note        grivet.Note
-	Edit        bool
+	Tags         []grivet.Tag
+	RelatedTags  []grivet.Tag
+	SelectedTags []grivet.Tag
+	Notes        []grivet.Note
+	Note         grivet.Note
+	Edit         bool
 }
 
 // format tags as html
@@ -51,9 +53,18 @@ func (p Page) HtmlTitles() template.HTML {
 func (p Page) HtmlNote() template.HTML {
 	html := ""
 	if p.Edit {
-		html = "<div id='save' class='button'>Save</div><div class='textwrap'><textarea id='noteTextArea'>"+p.Note.Title+"\n"+p.Note.Body+"</textarea></div>"
+		html = "<form action='"
+		if len(p.SelectedTags) > 0 {
+			names := grivet.TagNames(p.SelectedTags)
+			tagString := strings.Join(names, tagSeparator)
+			html += "/" + tagString
+		}
+		if p.Note.Id != nil {
+			html += "/" + p.Note.Id.Encode()
+		}
+		html += saveSuffix + "' method='POST'><input type='submit' value='Save'><div class='textwrap'><textarea id='noteTextArea' name='note'>" + p.Note.Title + "\n" + p.Note.Body + "</textarea></div>"
 	} else {
-		html = "<b>"+p.Note.Title+"</b><br>"+p.Note.Body
+		html = "<b>" + p.Note.Title + "</b><br>" + p.Note.Body
 	}
 	return template.HTML(html)
 }
