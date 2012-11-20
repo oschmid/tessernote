@@ -23,14 +23,14 @@ import (
 )
 
 type Note struct {
-	Id           *datastore.Key `datastore:",noindex"`
+	ID           *datastore.Key `datastore:"-"`
 	Title        string
-	Body         string `datastore:",noindex"`
+	Body         string
 	Created      time.Time
 	LastModified time.Time
 	UserKeys     []*datastore.Key
 	TagKeys      []*datastore.Key  // sorted by Tag.Name
-	context      appengine.Context `datastore:",noindex"`
+	context      appengine.Context `datastore:"-"`
 }
 
 func (n Note) Users() []User {

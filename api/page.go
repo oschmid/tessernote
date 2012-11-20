@@ -59,8 +59,8 @@ func (p Page) HtmlNote() template.HTML {
 			tagString := strings.Join(names, tagSeparator)
 			html += "/" + tagString
 		}
-		if p.Note.Id != nil {
-			html += "/" + p.Note.Id.Encode()
+		if p.Note.ID != nil {
+			html += "/" + p.Note.ID.Encode()
 		}
 		html += saveSuffix + "' method='POST'><input type='submit' value='Save'><div class='textwrap'><textarea id='noteTextArea' name='note'>" + p.Note.Title + "\n" + p.Note.Body + "</textarea></div>"
 	} else {

@@ -19,7 +19,6 @@ var (
 	newSuffix                   = "/new"
 	editSuffix                  = "/edit"
 	saveSuffix                  = "/save"
-	newNoteURL                  = regexp.MustCompile("^" + newSuffix)
 	displayNoteURL              = regexp.MustCompile("^/" + idPattern + "$")
 	editNoteURL                 = regexp.MustCompile("^/" + idPattern + editSuffix + "$")
 	saveNoteURL                 = regexp.MustCompile("^/" + idPattern + saveSuffix + "$")
@@ -49,28 +48,33 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	g := grivet.GetUser(c)
+	g, err := grivet.GetUser(c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	page := new(Page)
 	page.Tags = g.Tags()
 
 	if r.URL.Path == "/" {
 		page.Notes = g.Notes()
+	} else if r.URL.Path == newSuffix {
+		page.Notes = g.Notes()
+		page.Edit = true
 	} else if r.URL.Path == saveSuffix {
 		text := r.FormValue("note")
 		note, err := g.NewNote(text)
 		if err != nil {
-			// TODO handle error
+			log.Println(err)
 		}
-		http.Redirect(w, r, "/"+note.Id.Encode(), http.StatusFound)
-	} else if newNoteURL.MatchString(r.URL.Path) {
-		page.Notes = g.Notes()
-		page.Edit = true
+		http.Redirect(w, r, "/"+note.ID.Encode(), http.StatusFound)
 	} else if displayNoteURL.MatchString(r.URL.Path) {
 		page.Notes = g.Notes()
 		urlSplit := strings.Split(r.URL.Path, "/")
 		noteID := urlSplit[1]
 		note, err := g.Note(noteID)
 		if err != nil {
+			log.Println(err)
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}
@@ -81,6 +85,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		noteID := urlSplit[1]
 		note, err := g.Note(noteID)
 		if err != nil {
+			log.Println(err)
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}
@@ -96,6 +101,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		tagString := urlSplit[1]
 		tags, err := g.TagsFrom(strings.Split(tagString, tagSeparator))
 		if err != nil {
+			log.Println(err)
 			if len(tags) > 0 {
 				names := grivet.TagNames(tags)
 				tagString := strings.Join(names, tagSeparator)
@@ -113,6 +119,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		tagString := urlSplit[1]
 		tags, err := g.TagsFrom(strings.Split(tagString, tagSeparator))
 		if err != nil {
+			log.Println(err)
 			if len(tags) > 0 {
 				names := grivet.TagNames(tags)
 				tagString := strings.Join(names, tagSeparator)
@@ -131,6 +138,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		noteID := urlSplit[2]
 		tags, err := g.TagsFrom(strings.Split(tagString, tagSeparator))
 		if err != nil {
+			log.Println(err)
 			if len(tags) > 0 {
 				names := grivet.TagNames(tags)
 				tagString = strings.Join(names, tagSeparator)
@@ -154,6 +162,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		noteID := urlSplit[2]
 		tags, err := g.TagsFrom(strings.Split(tagString, tagSeparator))
 		if err != nil {
+			log.Println(err)
 			if len(tags) > 0 {
 				names := grivet.TagNames(tags)
 				tagString = strings.Join(names, tagSeparator)
@@ -168,6 +177,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		// TODO get related notes
 		note, err := g.Note(noteID)
 		if err != nil {
+			log.Println(err)
 			http.Redirect(w, r, "/"+tagString+"/", http.StatusFound)
 			return
 		}
@@ -179,6 +189,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		noteID := urlSplit[2]
 		tags, err := g.TagsFrom(strings.Split(tagString, tagSeparator))
 		if err != nil {
+			log.Println(err)
 			if len(tags) > 0 {
 				names := grivet.TagNames(tags)
 				tagString = strings.Join(names, tagSeparator)
@@ -195,9 +206,9 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := templates.ExecuteTemplate(w, "main.html", page)
+	err = templates.ExecuteTemplate(w, "main.html", page)
 	if err != nil {
+		log.Println("template error:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println("error executing template", err, page)
 	}
 }

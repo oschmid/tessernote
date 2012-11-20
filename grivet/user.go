@@ -21,6 +21,7 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 	"errors"
+	"log"
 	"sort"
 	"strings"
 	"time"
@@ -46,7 +47,8 @@ func (u User) Tags() []Tag {
 func (u User) Notes() []Note {
 	var notes []Note
 	datastore.GetMulti(u.context, u.NoteKeys, notes)
-	for _, n := range notes {
+	for i, n := range notes {
+		n.ID = u.NoteKeys[i]
 		n.context = u.context
 	}
 	return notes
@@ -105,47 +107,59 @@ func (u User) Note(id string) (Note, error) {
 	var note Note
 	for _, key := range u.NoteKeys {
 		if key.Encode() == id {
-			datastore.Get(u.context, key, note)
+			if err := datastore.Get(u.context, key, &note); err != nil {
+				return note, err
+			}
+			note.ID = key
+			note.context = u.context
 			return note, nil
 		}
 	}
 	return note, errors.New("note does not exist")
 }
 
-func (u User) NewNote(text string) (*Note, error) {
-	k := datastore.NewIncompleteKey(u.context, "Note", nil)
-	note := new(Note)
-	note.Id = k
+func (u *User) NewNote(text string) (*Note, error) {
 	splitText := strings.SplitN(text, "\n", 2)
-	note.Title = splitText[0]
-	note.Body = splitText[1]
-	note.Created = time.Now()
-	note.LastModified = time.Now()
-	// TODO set note.UserKeys
+
+	k := datastore.NewIncompleteKey(u.context, "Note", nil)
+	note := &Note{
+		Title:        splitText[0],
+		Body:         splitText[1],
+		Created:      time.Now(),
+		LastModified: time.Now(),
+		UserKeys:     []*datastore.Key{u.Key()}}
 	// TODO set note.TagKeys
-	note.context = u.context
-	if _, err := datastore.Put(u.context, k, note); err != nil {
+	k, err := datastore.Put(u.context, k, note)
+	if err != nil {
 		return new(Note), err
 	}
-	return note, nil
+
+	note.ID = k
+	note.context = u.context
+
+	u.NoteKeys = append(u.NoteKeys, k)
+	return note, u.Save()
 }
 
-func GetUser(c appengine.Context) *User {
-	g := new(User)
+func (u User) Key() *datastore.Key {
+	return datastore.NewKey(u.context, "User", u.ID, 0, nil)
+}
+
+func (u User) Save() error {
+	_, err := datastore.Put(u.context, u.Key(), &u)
+	return err
+}
+
+func GetUser(c appengine.Context) (*User, error) {
 	u := user.Current(c)
-	k := datastore.NewKey(c, "User", u.ID, 0, nil)
-	if err := datastore.Get(c, k, u); err != nil {
+	g := &User{ID: u.ID, context: c}
+	k := g.Key()
+	err := datastore.Get(c, k, g)
+	if err != nil {
 		// store new user
 		g.Name = u.Email
 		k, err = datastore.Put(c, k, g)
 	}
 	g.context = c
-	return g
-}
-
-func PutUser(u User) {
-	k := datastore.NewKey(u.context, "User", u.ID, 0, nil)
-	if _, err := datastore.Put(u.context, k, &u); err != nil {
-		// TODO handle failed put
-	}
+	return g, err
 }

@@ -41,7 +41,8 @@ func (t Tag) Users() []User {
 func (t Tag) Notes() []Note {
 	var notes []Note
 	datastore.GetMulti(t.context, t.NoteKeys, notes)
-	for _, n := range notes {
+	for i, n := range notes {
+		n.ID = t.NoteKeys[i]
 		n.context = t.context
 	}
 	return notes
