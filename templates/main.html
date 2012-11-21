@@ -6,21 +6,20 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="user-scalable=no, width=device-width" />
     <link type="text/css" rel="stylesheet" href="/static/style.css"/>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/jquery.autosize-min.js"></script>
+    <script type="text/javascript" src="/static/script.js"></script>
 </head>
 <body>
-<div id="header">
-    <div id="home" class="button" onclick="location.href='/'">Grivet</div>
-</div>
-<div id="tagsPanel">
-    <b>Tags</b><br>
+<noscript>Grivet cannot function without Javascript. Please enable Javascript in your browser, and then reload this page.</noscript>
+<div id="tags">
     {{.HtmlTags}}
 </div>
-<div id="titlesPanel">
-    <b>Titles</b><br>
-    {{.HtmlTitles}}
-</div>
-<div id="notePanel">
-    {{.HtmlNote}}
+<div id="notes">
+    <div id="new" class="note">
+        <textarea name="note" class="resize"></textarea>
+    </div>
+    {{.HtmlNotes}}
 </div>
 </body>
 </html>

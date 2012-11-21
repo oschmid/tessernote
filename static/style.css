@@ -13,87 +13,39 @@ body
     font-size:100%;
 }
 
-.button
+#tags
 {
-    height:30px;
-    width:60px;
-    border-width:1px 1px 1px 1px;
+    position:absolute;
+    top:2em;
+    left:10%;
+    right:70%;
+}
+
+#notes
+{
+    position:absolute;
+    top:2em;
+    left:30%;
+    right:10%;
+}
+
+#new
+{
+    border-width:thin;
     border-style:solid;
     border-color:#CCC;
-    background-color:#FFF;
-    color:#AAA;
-    font-weight:bold;
-    text-align:center;
-    line-height:28px;
 }
 
-#header
+.note
 {
-    height:34px;
+    margin-bottom:.5em;
+    padding:10px;
 }
 
-#home
+#notes textarea
 {
-    position:absolute;
-    width:100px;
-    top:2px;
-    left:2px;
-    border-color:#FFF;
-}
-
-#save
-{
-    position: absolute;
-    width:65px;
-    right:4px;
-}
-
-#tagsPanel
-{
-    position:absolute;
-    top:50px;
-    bottom:0px;
-    width:25%;
-}
-
-#titlesPanel
-{
-    position:absolute;
-    left:25%;
-    top:50px;
-    bottom:0px;
-    width:25%;
-}
-
-#notePanel
-{
-    position:absolute;
-    left:50%;
-    top:50px;
-    bottom:0px;
-    width:50%;
-}
-
-#noteTextArea
-{
-    position:absolute;
-    height:100%;
     width:100%;
-    border-width:thin;
-    border-color:#CCC;
-}
-
-.textwrap
-{
-    position:absolute;
-    left:0px;
-    top:34px;
-    right:10px;
-    bottom:30px;
-}
-
-b
-{
-    position:absolute;
-    left:10px;
+    border:0;
+    outline:none;
+    resize:none;
 }

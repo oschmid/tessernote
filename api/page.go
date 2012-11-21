@@ -19,7 +19,6 @@ package api
 import (
 	"grivet"
 	"html/template"
-	"strings"
 )
 
 type Page struct {
@@ -40,42 +39,9 @@ func (p Page) HtmlTags() template.HTML {
 	return template.HTML(html)
 }
 
-// format titles as html
-func (p Page) HtmlTitles() template.HTML {
+// format notes as html
+func (p Page) HtmlNotes() template.HTML {
 	html := ""
-	for _, note := range p.Notes {
-		html += note.Title + "<br>"
-	}
+	// TODO
 	return template.HTML(html)
-}
-
-// format note
-func (p Page) HtmlNote() template.HTML {
-	html := ""
-	if p.Edit {
-		html = "<form action='" + p.url(saveSuffix) + "' method='POST'><input type='submit' value='Save' class='button'><div class='textwrap'><textarea id='noteTextArea' name='note'>" + p.Note.Title + "\n" + p.Note.Body + "</textarea></div></form>"
-	} else {
-		if p.Note.ID == nil {
-			html = "<form action='" + p.url(newSuffix) + "' method='POST'><input type='submit' value='New' class='button'></form>"
-		} else {
-			html = "<form action='" + p.url(editSuffix) + "' method='POST'><input type='submit' value='Edit' class='button'></form><b>" + p.Note.Title + "</b><br>" + p.Note.Body
-		}
-	}
-	return template.HTML(html)
-}
-
-func (p Page) url(suffix string) string {
-	url := ""
-	if len(p.SelectedTags) > 0 {
-		url += "/" + p.tagString()
-	}
-	if p.Note.ID != nil {
-		url += "/" + p.Note.ID.Encode()
-	}
-	return url + suffix
-}
-
-func (p Page) tagString() string {
-	names := grivet.TagNames(p.SelectedTags)
-	return strings.Join(names, tagSeparator)
 }

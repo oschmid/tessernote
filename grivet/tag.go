@@ -56,11 +56,3 @@ func (t Tag) Children() []Tag {
 	}
 	return children
 }
-
-func TagNames(tags []Tag) []string {
-	names := *new([]string)
-	for _, tag := range tags {
-		names = append(names, tag.Name)
-	}
-	return names
-}

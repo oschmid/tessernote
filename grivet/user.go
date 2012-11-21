@@ -116,17 +116,13 @@ func (u User) Note(id string) (Note, error) {
 	return note, errors.New("note does not exist")
 }
 
-func (u *User) NewNote(text string) (*Note, error) {
-	title, body := titleAndBodyFrom(text)
-
+func (u *User) NewNote(body string) (*Note, error) {
 	k := datastore.NewIncompleteKey(u.context, "Note", nil)
 	note := &Note{
-		Title:        title,
 		Body:         body,
 		Created:      time.Now(),
 		LastModified: time.Now(),
 		UserKeys:     []*datastore.Key{u.Key()}}
-	// TODO set note.TagKeys
 	k, err := datastore.Put(u.context, k, note)
 	if err != nil {
 		return new(Note), err

@@ -20,17 +20,14 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"time"
-	"strings"
 )
 
 type Note struct {
 	ID           *datastore.Key `datastore:"-"`
-	Title        string
 	Body         string
 	Created      time.Time
 	LastModified time.Time
 	UserKeys     []*datastore.Key
-	TagKeys      []*datastore.Key  // sorted by Tag.Name
 	context      appengine.Context `datastore:"-"`
 }
 
@@ -43,23 +40,11 @@ func (n Note) Users() []User {
 	return users
 }
 
-func (n Note) Tags() []Tag {
-	var tags []Tag
-	datastore.GetMulti(n.context, n.TagKeys, tags)
-	for _, t := range tags {
-		t.context = n.context
-	}
-	return tags
-}
+// TODO get tags by parsing body for hashtags
 
-func (n *Note) Update(text string) error {
-	n.Title, n.Body = titleAndBodyFrom(text)
+func (n *Note) SetBody(body string) error {
+	n.Body = body
 	n.LastModified = time.Now()
 	_, err := datastore.Put(n.context, n.ID, n)
 	return err
-}
-
-func titleAndBodyFrom(text string) (title, body string) {
-	split := strings.SplitN(text, "\n", 2)
-	return split[0], split[1]
 }
