@@ -53,18 +53,29 @@ func (p Page) HtmlTitles() template.HTML {
 func (p Page) HtmlNote() template.HTML {
 	html := ""
 	if p.Edit {
-		html = "<form action='"
-		if len(p.SelectedTags) > 0 {
-			names := grivet.TagNames(p.SelectedTags)
-			tagString := strings.Join(names, tagSeparator)
-			html += "/" + tagString
-		}
-		if p.Note.ID != nil {
-			html += "/" + p.Note.ID.Encode()
-		}
-		html += saveSuffix + "' method='POST'><input type='submit' value='Save'><div class='textwrap'><textarea id='noteTextArea' name='note'>" + p.Note.Title + "\n" + p.Note.Body + "</textarea></div>"
+		html = "<form action='" + p.url(saveSuffix) + "' method='POST'><input type='submit' value='Save' class='button'><div class='textwrap'><textarea id='noteTextArea' name='note'>" + p.Note.Title + "\n" + p.Note.Body + "</textarea></div></form>"
 	} else {
-		html = "<b>" + p.Note.Title + "</b><br>" + p.Note.Body
+		if p.Note.ID == nil {
+			html = "<form action='" + p.url(newSuffix) + "' method='POST'><input type='submit' value='New' class='button'></form>"
+		} else {
+			html = "<form action='" + p.url(editSuffix) + "' method='POST'><input type='submit' value='Edit' class='button'></form><b>" + p.Note.Title + "</b><br>" + p.Note.Body
+		}
 	}
 	return template.HTML(html)
+}
+
+func (p Page) url(suffix string) string {
+	url := ""
+	if len(p.SelectedTags) > 0 {
+		url += "/" + p.tagString()
+	}
+	if p.Note.ID != nil {
+		url += "/" + p.Note.ID.Encode()
+	}
+	return url + suffix
+}
+
+func (p Page) tagString() string {
+	names := grivet.TagNames(p.SelectedTags)
+	return strings.Join(names, tagSeparator)
 }

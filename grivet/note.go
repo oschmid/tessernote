@@ -20,6 +20,7 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"time"
+	"strings"
 )
 
 type Note struct {
@@ -49,4 +50,16 @@ func (n Note) Tags() []Tag {
 		t.context = n.context
 	}
 	return tags
+}
+
+func (n *Note) Update(text string) error {
+	n.Title, n.Body = titleAndBodyFrom(text)
+	n.LastModified = time.Now()
+	_, err := datastore.Put(n.context, n.ID, n)
+	return err
+}
+
+func titleAndBodyFrom(text string) (title, body string) {
+	split := strings.SplitN(text, "\n", 2)
+	return split[0], split[1]
 }

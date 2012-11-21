@@ -16,12 +16,15 @@ body
 .button
 {
     height:30px;
+    width:60px;
     border-width:1px 1px 1px 1px;
     border-style:solid;
     border-color:#CCC;
+    background-color:#FFF;
+    color:#AAA;
     font-weight:bold;
     text-align:center;
-    line-height:30px;
+    line-height:28px;
 }
 
 #header

@@ -21,9 +21,7 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 	"errors"
-	"log"
 	"sort"
-	"strings"
 	"time"
 )
 
@@ -119,12 +117,12 @@ func (u User) Note(id string) (Note, error) {
 }
 
 func (u *User) NewNote(text string) (*Note, error) {
-	splitText := strings.SplitN(text, "\n", 2)
+	title, body := titleAndBodyFrom(text)
 
 	k := datastore.NewIncompleteKey(u.context, "Note", nil)
 	note := &Note{
-		Title:        splitText[0],
-		Body:         splitText[1],
+		Title:        title,
+		Body:         body,
 		Created:      time.Now(),
 		LastModified: time.Now(),
 		UserKeys:     []*datastore.Key{u.Key()}}

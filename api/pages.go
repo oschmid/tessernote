@@ -53,8 +53,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	page := new(Page)
-	page.Tags = g.Tags()
+	page := &Page{Tags: g.Tags()}
 
 	if r.URL.Path == "/" {
 		page.Notes = g.Notes()
@@ -94,7 +93,19 @@ func serve(w http.ResponseWriter, r *http.Request) {
 	} else if saveNoteURL.MatchString(r.URL.Path) {
 		urlSplit := strings.Split(r.URL.Path, "/")
 		noteID := urlSplit[1]
-		// TODO save note
+		note, err := g.Note(noteID)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		text := r.FormValue("note")
+		err = note.Update(text)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		http.Redirect(w, r, "/"+noteID, http.StatusFound)
 	} else if selectTagsURL.MatchString(r.URL.Path) {
 		urlSplit := strings.Split(r.URL.Path, "/")
@@ -199,7 +210,19 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-		// TODO save note
+		note, err := g.Note(noteID)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		text := r.FormValue("note")
+		err = note.Update(text)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		http.Redirect(w, r, "/"+tagString+"/"+noteID, http.StatusFound)
 	} else {
 		http.NotFound(w, r)
