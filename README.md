@@ -1,5 +1,5 @@
 Grivet
-=====
+======
 
 I'm teaching myself how to web programming by making a note taking application.
 Not a very original idea but while I'm at it I may as well make an interesting app.
@@ -10,6 +10,6 @@ Grivet is:
 
 
 Fetchnotes
-===
+__________
 It turns out my idea of organizing notes by hashtag isn't as original as I thought. So if you want a note taking app
-that works this way right now give [Fetchnotes](http://www.fetchnotes.com/ "Fetchnotes") a try.
+that works this way right now give [Fetchnotes](http://www.fetchnotes.com/) a try.
