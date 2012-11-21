@@ -2,8 +2,8 @@
 I'm teaching myself how to web programming by making a note taking app.
 
 Grivet is:
--minimal: notes are just text, organization is done with tags, and the interface is equally simple
--organized on-the-fly: tagging is done by writing hashtags in notes
+- minimal: notes are just text, organization is done with tags, and the interface is equally simple
+- organized on-the-fly: tagging is done by writing hashtags in notes
 
 
 ###Fetchnotes
