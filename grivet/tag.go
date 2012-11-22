@@ -23,15 +23,15 @@ import (
 
 type Tag struct {
 	Name      string // unique per user
-	UserKeys  []*datastore.Key
+	NotebookKeys  []*datastore.Key
 	NoteKeys  []*datastore.Key
 	ChildKeys []*datastore.Key
 	context   appengine.Context
 }
 
-func (t Tag) Users() []User {
-	var users []User
-	datastore.GetMulti(t.context, t.UserKeys, users)
+func (t Tag) Notebooks() []Notebook {
+	var users []Notebook
+	datastore.GetMulti(t.context, t.NotebookKeys, users)
 	for _, u := range users {
 		u.context = t.context
 	}

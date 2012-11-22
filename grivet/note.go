@@ -27,13 +27,13 @@ type Note struct {
 	Body         string
 	Created      time.Time
 	LastModified time.Time
-	UserKeys     []*datastore.Key
+	NotebookKeys     []*datastore.Key
 	context      appengine.Context `datastore:"-"`
 }
 
-func (n Note) Users() []User {
-	var users []User
-	datastore.GetMulti(n.context, n.UserKeys, users)
+func (n Note) Notebooks() []Notebook {
+	var users []Notebook
+	datastore.GetMulti(n.context, n.NotebookKeys, users)
 	for _, u := range users {
 		u.context = n.context
 	}

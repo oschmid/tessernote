@@ -25,7 +25,7 @@ import (
 	"time"
 )
 
-type User struct {
+type Notebook struct {
 	ID       string // user.User.ID
 	Name     string
 	TagKeys  []*datastore.Key // sorted by Tag.Name
@@ -33,7 +33,7 @@ type User struct {
 	context  appengine.Context `datastore:",noindex"`
 }
 
-func (u User) Tags() []Tag {
+func (u Notebook) Tags() []Tag {
 	var tags []Tag
 	datastore.GetMulti(u.context, u.TagKeys, tags)
 	for _, t := range tags {
@@ -42,7 +42,7 @@ func (u User) Tags() []Tag {
 	return tags
 }
 
-func (u User) Notes() []Note {
+func (u Notebook) Notes() []Note {
 	var notes []Note
 	datastore.GetMulti(u.context, u.NoteKeys, notes)
 	for i, n := range notes {
@@ -54,7 +54,7 @@ func (u User) Notes() []Note {
 
 // returns a subset of a user's tags by name
 // missing tags result in errors
-func (u User) TagsFrom(names []string) ([]Tag, error) {
+func (u Notebook) TagsFrom(names []string) ([]Tag, error) {
 	tags := *new([]Tag)
 	if len(names) == 0 {
 		return tags, nil
@@ -80,7 +80,7 @@ func (u User) TagsFrom(names []string) ([]Tag, error) {
 	return tags, nil
 }
 
-func (u User) RelatedTags(tags []Tag) []Tag {
+func (u Notebook) RelatedTags(tags []Tag) []Tag {
 	relatedNoteKeys := make(map[string]datastore.Key)
 	for _, tag := range tags {
 		for _, key := range tag.NoteKeys {
@@ -100,7 +100,7 @@ func (u User) RelatedTags(tags []Tag) []Tag {
 }
 
 // returns a user's note by ID, missing note will be skipped
-func (u User) Note(id string) (Note, error) {
+func (u Notebook) Note(id string) (Note, error) {
 	// TODO binary search
 	var note Note
 	for _, key := range u.NoteKeys {
@@ -116,13 +116,13 @@ func (u User) Note(id string) (Note, error) {
 	return note, errors.New("note does not exist")
 }
 
-func (u *User) NewNote(body string) (*Note, error) {
+func (u *Notebook) NewNote(body string) (*Note, error) {
 	k := datastore.NewIncompleteKey(u.context, "Note", nil)
 	note := &Note{
 		Body:         body,
 		Created:      time.Now(),
 		LastModified: time.Now(),
-		UserKeys:     []*datastore.Key{u.Key()}}
+		NotebookKeys:     []*datastore.Key{u.Key()}}
 	k, err := datastore.Put(u.context, k, note)
 	if err != nil {
 		return new(Note), err
@@ -135,18 +135,18 @@ func (u *User) NewNote(body string) (*Note, error) {
 	return note, u.Save()
 }
 
-func (u User) Key() *datastore.Key {
-	return datastore.NewKey(u.context, "User", u.ID, 0, nil)
+func (u Notebook) Key() *datastore.Key {
+	return datastore.NewKey(u.context, "Notebook", u.ID, 0, nil)
 }
 
-func (u User) Save() error {
+func (u Notebook) Save() error {
 	_, err := datastore.Put(u.context, u.Key(), &u)
 	return err
 }
 
-func GetUser(c appengine.Context) (*User, error) {
+func GetNotebook(c appengine.Context) (*Notebook, error) {
 	u := user.Current(c)
-	g := &User{ID: u.ID, context: c}
+	g := &Notebook{ID: u.ID, context: c}
 	k := g.Key()
 	err := datastore.Get(c, k, g)
 	if err != nil {

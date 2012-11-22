@@ -39,19 +39,19 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		g, err := grivet.GetUser(c)
+		notebook, err := grivet.GetNotebook(c)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		page := &Page{Tags: g.Tags()}
+		page := &Page{Tags: notebook.Tags()}
 
 		var names []string
 		if r.URL.Path != "/" {
 			names = strings.Split(r.URL.Path[1:], tagSeparator)
 		}
-		tags, err := g.TagsFrom(names)
+		tags, err := notebook.TagsFrom(names)
 		if err != nil {
 			log.Println("length:", len(names))
 			log.Println(err)
@@ -60,7 +60,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/"+tagString, http.StatusFound)
 			return
 		}
-		page.RelatedTags = g.RelatedTags(tags)
+		page.RelatedTags = notebook.RelatedTags(tags)
 		page.SelectedTags = tags
 		// TODO get related notes
 		err = templates.ExecuteTemplate(w, "main.html", page)
