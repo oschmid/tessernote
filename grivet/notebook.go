@@ -23,6 +23,7 @@ import (
 	"errors"
 	"sort"
 	"time"
+	"log"
 )
 
 type Notebook struct {
@@ -42,14 +43,21 @@ func (u Notebook) Tags() []Tag {
 	return tags
 }
 
-func (u Notebook) Notes() []Note {
-	var notes []Note
-	datastore.GetMulti(u.context, u.NoteKeys, notes)
+func (u Notebook) Notes() ([]Note, error) {
+	notes := make([]Note, len(u.NoteKeys))
+	if len(u.NoteKeys) == 0 {
+		return notes, nil
+	}
+
+	err := datastore.GetMulti(u.context, u.NoteKeys, notes)
+	if err != nil {
+		return notes, err
+	}
 	for i, n := range notes {
-		n.ID = u.NoteKeys[i]
+		n.ID = u.NoteKeys[i].Encode()
 		n.context = u.context
 	}
-	return notes
+	return notes, nil
 }
 
 // returns a subset of a user's tags by name
@@ -99,7 +107,7 @@ func (u Notebook) RelatedTags(tags []Tag) []Tag {
 	return tags
 }
 
-// returns a user's note by ID, missing note will be skipped
+// returns a user's note by ID
 func (u Notebook) Note(id string) (Note, error) {
 	// TODO binary search
 	var note Note
@@ -108,7 +116,7 @@ func (u Notebook) Note(id string) (Note, error) {
 			if err := datastore.Get(u.context, key, &note); err != nil {
 				return note, err
 			}
-			note.ID = key
+			note.ID = key.Encode()
 			note.context = u.context
 			return note, nil
 		}
@@ -125,10 +133,10 @@ func (u *Notebook) NewNote(body string) (*Note, error) {
 		NotebookKeys:     []*datastore.Key{u.Key()}}
 	k, err := datastore.Put(u.context, k, note)
 	if err != nil {
-		return new(Note), err
+		return note, err
 	}
 
-	note.ID = k
+	note.ID = k.Encode()
 	note.context = u.context
 
 	u.NoteKeys = append(u.NoteKeys, k)
@@ -151,6 +159,7 @@ func GetNotebook(c appengine.Context) (*Notebook, error) {
 	err := datastore.Get(c, k, g)
 	if err != nil {
 		// store new user
+		log.Println("new user", u.Email)
 		g.Name = u.Email
 		k, err = datastore.Put(c, k, g)
 	}

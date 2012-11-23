@@ -26,7 +26,6 @@ type Page struct {
 	RelatedTags  []grivet.Tag
 	SelectedTags []grivet.Tag
 	Notes        []grivet.Note
-	Note         grivet.Note
 	Edit         bool
 }
 
@@ -42,6 +41,8 @@ func (p Page) HtmlTags() template.HTML {
 // format notes as html
 func (p Page) HtmlNotes() template.HTML {
 	html := ""
-	// TODO
+	for _, note := range p.Notes {
+		html += note.Body + "<br>"
+	}
 	return template.HTML(html)
 }

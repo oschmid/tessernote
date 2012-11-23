@@ -23,7 +23,7 @@ import (
 )
 
 type Note struct {
-	ID           *datastore.Key `datastore:"-"`
+	ID           string `datastore:"-"` // datastore.Key.Encode()
 	Body         string
 	Created      time.Time
 	LastModified time.Time
@@ -45,6 +45,10 @@ func (n Note) Notebooks() []Notebook {
 func (n *Note) SetBody(body string) error {
 	n.Body = body
 	n.LastModified = time.Now()
-	_, err := datastore.Put(n.context, n.ID, n)
+	k, err := datastore.DecodeKey(n.ID)
+	if err != nil {
+		return err
+	}
+	_, err = datastore.Put(n.context, k, n)
 	return err
 }

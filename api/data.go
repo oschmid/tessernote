@@ -18,22 +18,110 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package api
 
 import (
-	"code.google.com/p/go-uuid/uuid"
+	"appengine"
+	"appengine/user"
+	"bytes"
 	"encoding/json"
+	"grivet"
+	"io"
 	"log"
 	"net/http"
-	"notes"
 )
 
 const (
-	GetTagsUrl    = "/tags/get"
-	DeleteTagsUrl = "/tags/delete"
-	RenameTagsUrl = "/tags/rename"
-	GetTitlesUrl  = "/titles"
-	GetNoteUrl    = "/note/get/"
-	SaveNoteUrl   = "/note/save"
-	DeleteNoteUrl = "/note/delete/"
+	SaveNoteURL   = "/note/save"
 )
+
+func isDataURL(url string) bool {
+	return url == SaveNoteURL
+}
+
+func serveData(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	u := user.Current(c)
+	if u == nil {
+		http.Error(w, "", http.StatusUnauthorized)
+		return
+	}
+
+	notebook, err := grivet.GetNotebook(c)
+	if err != nil {
+		log.Println("getnotebook:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	body, err := readPost(r)
+	if err != nil {
+		log.Println("readPost:", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	switch r.URL.Path {
+	case SaveNoteURL:
+		saveNote(w, body, notebook)
+	}
+}
+
+func readPost(r *http.Request) ([]byte, error) {
+	defer r.Body.Close()
+	buf := new(bytes.Buffer)
+	_, err := io.Copy(buf, r.Body)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(buf.String()), nil
+}
+
+// Reads a JSON formatted Note in from POST and writes it to the datastore.
+// Returns the new or updated Note in JSON format.
+func saveNote(w http.ResponseWriter, body []byte, notebook *grivet.Notebook) {
+	var note grivet.Note
+	err := json.Unmarshal(body, &note)
+	if err != nil {
+		log.Println("save:", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if note.ID == "" {
+		// save new note
+		n, err := notebook.NewNote(note.Body)
+		if err != nil {
+			log.Println("newnote:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		note = *n
+	} else {
+		// update existing note
+		n, err := notebook.Note(note.ID)
+		if err != nil {
+			log.Println("note:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = n.SetBody(note.Body)
+		if err != nil {
+			log.Println("setbody:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		note = n
+	}
+
+	bytes, err := json.Marshal(note)
+	if err != nil {
+		log.Println("marshal:", err, note)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(bytes)
+}
+
+// TODO remove old api
+/*
 
 // Returns a map of tags -> note count in JSON format.
 // Request can optionally specify a list of tags in JSON format in POST.
@@ -179,3 +267,4 @@ func DeleteNote(w http.ResponseWriter, id string) {
 	notebook.Delete(id)
 	w.WriteHeader(http.StatusOK)
 }
+*/

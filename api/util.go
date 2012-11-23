@@ -18,9 +18,7 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 package api
 
 import (
-	"bytes"
 	"encoding/gob"
-	"io"
 	"log"
 	"net/http"
 	"notes"
@@ -43,16 +41,6 @@ func MakePostHandler(url string, fn func(http.ResponseWriter, []byte)) (string, 
 		fn(w, post)
 		SaveNotebook()
 	}
-}
-
-func readPost(r *http.Request) ([]byte, error) {
-	defer r.Body.Close()
-	buf := new(bytes.Buffer)
-	_, err := io.Copy(buf, r.Body)
-	if err != nil {
-		return nil, err
-	}
-	return []byte(buf.String()), nil
 }
 
 func MakeGetHandler(url string, fn func(http.ResponseWriter, string)) (string, func(http.ResponseWriter, *http.Request)) {

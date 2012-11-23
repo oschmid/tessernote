@@ -42,7 +42,7 @@ func (t Tag) Notes() []Note {
 	var notes []Note
 	datastore.GetMulti(t.context, t.NoteKeys, notes)
 	for i, n := range notes {
-		n.ID = t.NoteKeys[i]
+		n.ID = t.NoteKeys[i].Encode()
 		n.context = t.context
 	}
 	return notes

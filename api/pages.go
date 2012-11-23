@@ -23,7 +23,9 @@ func init() {
 }
 
 func serve(w http.ResponseWriter, r *http.Request) {
-	if validURL.MatchString(r.URL.Path) {
+	if isDataURL(r.URL.Path) {
+		serveData(w, r)
+	} else if validURL.MatchString(r.URL.Path) {
 		c := appengine.NewContext(r)
 		if !loggedIn(w, r, c) {
 			return
@@ -44,7 +46,17 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		}
 		page.SelectedTags = tags
 		page.RelatedTags = notebook.RelatedTags(tags)
-		// TODO get related notes
+		if len(tags) == 0 {
+			notes, err := notebook.Notes()
+			if err != nil {
+				log.Println("notes:", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			page.Notes = notes
+		} else {
+			// TODO get related notes
+		}
 
 		err = templates.ExecuteTemplate(w, "main.html", page)
 		if err != nil {
