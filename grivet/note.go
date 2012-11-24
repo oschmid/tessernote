@@ -31,24 +31,27 @@ type Note struct {
 	context      appengine.Context `datastore:"-"`
 }
 
-func (n Note) Notebooks() []Notebook {
-	var users []Notebook
-	datastore.GetMulti(n.context, n.NotebookKeys, users)
-	for _, u := range users {
-		u.context = n.context
+func (note Note) Notebooks() ([]Notebook, error) {
+	var notebooks []Notebook
+	err := datastore.GetMulti(note.context, note.NotebookKeys, notebooks)
+	if err != nil {
+		return notebooks, err
 	}
-	return users
+	for _, notebook := range notebooks {
+		notebook.context = note.context
+	}
+	return notebooks, nil
 }
 
 // TODO get tags by parsing body for hashtags
 
-func (n *Note) SetBody(body string) error {
-	n.Body = body
-	n.LastModified = time.Now()
-	k, err := datastore.DecodeKey(n.ID)
+func (note *Note) SetBody(body string) error {
+	note.Body = body
+	note.LastModified = time.Now()
+	key, err := datastore.DecodeKey(note.ID)
 	if err != nil {
 		return err
 	}
-	_, err = datastore.Put(n.context, k, n)
+	_, err = datastore.Put(note.context, key, note)
 	return err
 }

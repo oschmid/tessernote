@@ -29,30 +29,39 @@ type Tag struct {
 	context      appengine.Context
 }
 
-func (t Tag) Notebooks() []Notebook {
-	var users []Notebook
-	datastore.GetMulti(t.context, t.NotebookKeys, users)
-	for _, u := range users {
-		u.context = t.context
+func (tag Tag) Notebooks() ([]Notebook, error) {
+	var notebooks []Notebook
+	err := datastore.GetMulti(tag.context, tag.NotebookKeys, notebooks)
+	if err != nil {
+		return notebooks, err
 	}
-	return users
+	for _, notebook := range notebooks {
+		notebook.context = tag.context
+	}
+	return notebooks, nil
 }
 
-func (t Tag) Notes() []Note {
+func (tag Tag) Notes() ([]Note, error) {
 	var notes []Note
-	datastore.GetMulti(t.context, t.NoteKeys, notes)
-	for i, n := range notes {
-		n.ID = t.NoteKeys[i].Encode()
-		n.context = t.context
+	err := datastore.GetMulti(tag.context, tag.NoteKeys, notes)
+	if err != nil {
+		return notes, err
 	}
-	return notes
+	for i, note := range notes {
+		note.ID = tag.NoteKeys[i].Encode()
+		note.context = tag.context
+	}
+	return notes, nil
 }
 
-func (t Tag) Children() []Tag {
+func (tag Tag) Children() ([]Tag, error) {
 	var children []Tag
-	datastore.GetMulti(t.context, t.ChildKeys, children)
-	for _, tag := range children {
-		tag.context = t.context
+	err := datastore.GetMulti(tag.context, tag.ChildKeys, children)
+	if err != nil {
+		return children, err
 	}
-	return children
+	for _, child := range children {
+		child.context = tag.context
+	}
+	return children, err
 }
