@@ -21,9 +21,9 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 	"errors"
+	"log"
 	"sort"
 	"time"
-	"log"
 )
 
 type Notebook struct {
@@ -31,6 +31,7 @@ type Notebook struct {
 	Name     string
 	TagKeys  []*datastore.Key // sorted by Tag.Name
 	NoteKeys []*datastore.Key
+	notes    []Note            // cache
 	context  appengine.Context `datastore:",noindex"`
 }
 
@@ -44,20 +45,19 @@ func (u Notebook) Tags() []Tag {
 }
 
 func (u Notebook) Notes() ([]Note, error) {
-	notes := make([]Note, len(u.NoteKeys))
-	if len(u.NoteKeys) == 0 {
-		return notes, nil
+	if len(u.notes) == 0 && len(u.NoteKeys) > 0 {
+		u.notes = make([]Note, len(u.NoteKeys))
+		err := datastore.GetMulti(u.context, u.NoteKeys, u.notes)
+		if err != nil {
+			return u.notes, err
+		}
+		for i := 0; i < len(u.notes); i++ {
+			note := &u.notes[i]
+			note.ID = u.NoteKeys[i].Encode()
+			note.context = u.context
+		}
 	}
-
-	err := datastore.GetMulti(u.context, u.NoteKeys, notes)
-	if err != nil {
-		return notes, err
-	}
-	for i, n := range notes {
-		n.ID = u.NoteKeys[i].Encode()
-		n.context = u.context
-	}
-	return notes, nil
+	return u.notes, nil
 }
 
 // returns a subset of a user's tags by name
@@ -130,7 +130,7 @@ func (u *Notebook) NewNote(body string) (*Note, error) {
 		Body:         body,
 		Created:      time.Now(),
 		LastModified: time.Now(),
-		NotebookKeys:     []*datastore.Key{u.Key()}}
+		NotebookKeys: []*datastore.Key{u.Key()}}
 	k, err := datastore.Put(u.context, k, note)
 	if err != nil {
 		return note, err

@@ -39,7 +39,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		}
 
 		page := &Page{Tags: notebook.Tags()}
-		tags, err := parseSelectedTags(w, r, notebook);
+		tags, err := parseSelectedTags(w, r, notebook)
 		if err != nil {
 			log.Println("page error:", err)
 			return

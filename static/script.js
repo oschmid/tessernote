@@ -6,7 +6,7 @@ function focusTextArea() {
 
 function saveNote() {
     note = new Object();
-    note.ID = $(this).attr('noteID')
+    note.ID = $(this).attr('noteid')
     note.Body = $(this).attr('value')
     if (note.Body != "") {
         $.post(saveNoteURL, JSON.stringify(note), function(data) {

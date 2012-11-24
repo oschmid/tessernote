@@ -27,7 +27,7 @@ type Note struct {
 	Body         string
 	Created      time.Time
 	LastModified time.Time
-	NotebookKeys     []*datastore.Key
+	NotebookKeys []*datastore.Key
 	context      appengine.Context `datastore:"-"`
 }
 

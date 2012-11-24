@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	SaveNoteURL   = "/note/save"
+	SaveNoteURL = "/note/save"
 )
 
 func isDataURL(url string) bool {

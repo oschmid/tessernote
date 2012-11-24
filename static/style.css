@@ -29,17 +29,13 @@ body
     right:10%;
 }
 
-#new
-{
-    border-width:thin;
-    border-style:solid;
-    border-color:#CCC;
-}
-
 .note
 {
     margin-bottom:.5em;
     padding:10px;
+    border-width:thin;
+    border-style:solid;
+    border-color:#CCC;
 }
 
 #notes textarea

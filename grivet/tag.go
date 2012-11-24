@@ -22,11 +22,11 @@ import (
 )
 
 type Tag struct {
-	Name      string // unique per user
-	NotebookKeys  []*datastore.Key
-	NoteKeys  []*datastore.Key
-	ChildKeys []*datastore.Key
-	context   appengine.Context
+	Name         string // unique per user
+	NotebookKeys []*datastore.Key
+	NoteKeys     []*datastore.Key
+	ChildKeys    []*datastore.Key
+	context      appengine.Context
 }
 
 func (t Tag) Notebooks() []Notebook {
