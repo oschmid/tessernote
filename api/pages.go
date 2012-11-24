@@ -33,19 +33,33 @@ func serve(w http.ResponseWriter, r *http.Request) {
 
 		notebook, err := grivet.GetNotebook(c)
 		if err != nil {
-			log.Println("notebook error:", err)
+			log.Println("getnotebook:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		page := &Page{Tags: notebook.Tags()}
-		tags, err := parseSelectedTags(w, r, notebook)
+		tags, err := notebook.Tags()
 		if err != nil {
-			log.Println("page error:", err)
+			log.Println("tags:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		page := &Page{Tags: tags}
+		tags, err = parseSelectedTags(w, r, notebook)
+		if err != nil {
+			log.Println("page:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		page.SelectedTags = tags
-		page.RelatedTags = notebook.RelatedTags(tags)
+		page.RelatedTags, err = notebook.RelatedTags(tags)
+		if err != nil {
+			log.Println("relatedtags:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
 		if len(tags) == 0 {
 			notes, err := notebook.Notes()
 			if err != nil {
