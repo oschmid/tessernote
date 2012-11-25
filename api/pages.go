@@ -38,7 +38,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tags, err := notebook.Tags()
+		tags, err := notebook.Tags(c)
 		if err != nil {
 			log.Println("tags:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -46,7 +46,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		}
 
 		page := &Page{Tags: tags}
-		tags, err = parseSelectedTags(w, r, notebook)
+		tags, err = parseSelectedTags(w, r, notebook, c)
 		if err != nil {
 			log.Println("page:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,14 +54,14 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		}
 
 		page.SelectedTags = tags
-		page.RelatedTags, err = notebook.RelatedTags(tags)
+		page.RelatedTags, err = notebook.RelatedTags(tags, c)
 		if err != nil {
 			log.Println("relatedtags:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
 		if len(tags) == 0 {
-			notes, err := notebook.Notes()
+			notes, err := notebook.Notes(c)
 			if err != nil {
 				log.Println("notes:", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -100,12 +100,12 @@ func loggedIn(w http.ResponseWriter, r *http.Request, c appengine.Context) bool 
 }
 
 // parses url for selected tags, redirects if it refers to missing tags
-func parseSelectedTags(w http.ResponseWriter, r *http.Request, notebook *grivet.Notebook) ([]grivet.Tag, error) {
+func parseSelectedTags(w http.ResponseWriter, r *http.Request, notebook *grivet.Notebook, c appengine.Context) ([]grivet.Tag, error) {
 	var names []string
 	if r.URL.Path != "/" {
 		names = strings.Split(r.URL.Path[1:], tagSeparator)
 	}
-	tags, err := notebook.TagsFrom(names)
+	tags, err := notebook.TagsFrom(names, c)
 	if err != nil {
 		names = namesFrom(tags)
 		tagString := strings.Join(names, tagSeparator)

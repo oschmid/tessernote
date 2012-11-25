@@ -26,42 +26,28 @@ type Tag struct {
 	NotebookKeys []*datastore.Key
 	NoteKeys     []*datastore.Key
 	ChildKeys    []*datastore.Key
-	context      appengine.Context
 }
 
-func (tag Tag) Notebooks() ([]Notebook, error) {
+func (tag Tag) Notebooks(c appengine.Context) ([]Notebook, error) {
 	var notebooks []Notebook
-	err := datastore.GetMulti(tag.context, tag.NotebookKeys, notebooks)
-	if err != nil {
-		return notebooks, err
-	}
-	for _, notebook := range notebooks {
-		notebook.context = tag.context
-	}
-	return notebooks, nil
+	err := datastore.GetMulti(c, tag.NotebookKeys, notebooks)
+	return notebooks, err
 }
 
-func (tag Tag) Notes() ([]Note, error) {
+func (tag Tag) Notes(c appengine.Context) ([]Note, error) {
 	var notes []Note
-	err := datastore.GetMulti(tag.context, tag.NoteKeys, notes)
+	err := datastore.GetMulti(c, tag.NoteKeys, notes)
 	if err != nil {
 		return notes, err
 	}
 	for i, note := range notes {
 		note.ID = tag.NoteKeys[i].Encode()
-		note.context = tag.context
 	}
 	return notes, nil
 }
 
-func (tag Tag) Children() ([]Tag, error) {
+func (tag Tag) Children(c appengine.Context) ([]Tag, error) {
 	var children []Tag
-	err := datastore.GetMulti(tag.context, tag.ChildKeys, children)
-	if err != nil {
-		return children, err
-	}
-	for _, child := range children {
-		child.context = tag.context
-	}
+	err := datastore.GetMulti(c, tag.ChildKeys, children)
 	return children, err
 }

@@ -30,31 +30,18 @@ type Note struct {
 	LastModified time.Time
 	TagKeys      []*datastore.Key
 	NotebookKeys []*datastore.Key
-	context      appengine.Context `datastore:"-"`
 }
 
-func (note Note) Tags() ([]Tag, error) {
+func (note Note) Tags(c appengine.Context) ([]Tag, error) {
 	var tags []Tag
-	err := datastore.GetMulti(note.context, note.TagKeys, tags)
-	if err != nil {
-		return tags, err
-	}
-	for _, tag := range tags {
-		tag.context = note.context
-	}
-	return tags, nil
+	err := datastore.GetMulti(c, note.TagKeys, tags)
+	return tags, err
 }
 
-func (note Note) Notebooks() ([]Notebook, error) {
+func (note Note) Notebooks(c appengine.Context) ([]Notebook, error) {
 	var notebooks []Notebook
-	err := datastore.GetMulti(note.context, note.NotebookKeys, notebooks)
-	if err != nil {
-		return notebooks, err
-	}
-	for _, notebook := range notebooks {
-		notebook.context = note.context
-	}
-	return notebooks, nil
+	err := datastore.GetMulti(c, note.NotebookKeys, notebooks)
+	return notebooks, err
 }
 
 func (note *Note) SetBody(body string) {

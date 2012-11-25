@@ -60,7 +60,7 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 
 	switch r.URL.Path {
 	case SaveNoteURL:
-		saveNote(w, body, notebook)
+		saveNote(w, body, notebook, c)
 	}
 }
 
@@ -76,7 +76,7 @@ func readPost(r *http.Request) ([]byte, error) {
 
 // Reads a JSON formatted Note in from POST and writes it to the datastore.
 // Returns the new or updated Note in JSON format.
-func saveNote(w http.ResponseWriter, body []byte, notebook *grivet.Notebook) {
+func saveNote(w http.ResponseWriter, body []byte, notebook *grivet.Notebook, c appengine.Context) {
 	var note grivet.Note
 	err := json.Unmarshal(body, &note)
 	if err != nil {
@@ -85,7 +85,7 @@ func saveNote(w http.ResponseWriter, body []byte, notebook *grivet.Notebook) {
 		return
 	}
 
-	note, err = notebook.SetNote(note)
+	note, err = notebook.SetNote(note, c)
 	if err != nil {
 		log.Println("setnote:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

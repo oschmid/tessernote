@@ -31,37 +31,31 @@ type Notebook struct {
 	Name     string
 	TagKeys  []*datastore.Key // sorted by Tag.Name
 	NoteKeys []*datastore.Key
-	tags     []Tag             // cache
-	notes    []Note            // cache
-	context  appengine.Context `datastore:",noindex"`
+	tags     []Tag  // cache
+	notes    []Note // cache
 }
 
-func (notebook *Notebook) Tags() ([]Tag, error) {
+func (notebook *Notebook) Tags(c appengine.Context) ([]Tag, error) {
 	if len(notebook.tags) == 0 && len(notebook.NoteKeys) > 0 {
 		notebook.tags = make([]Tag, len(notebook.TagKeys))
-		err := datastore.GetMulti(notebook.context, notebook.TagKeys, notebook.tags)
+		err := datastore.GetMulti(c, notebook.TagKeys, notebook.tags)
 		if err != nil {
 			return notebook.tags, err
-		}
-		for i := 0; i < len(notebook.tags); i++ {
-			tag := &notebook.tags[i]
-			tag.context = notebook.context
 		}
 	}
 	return notebook.tags, nil
 }
 
-func (notebook *Notebook) Notes() ([]Note, error) {
+func (notebook *Notebook) Notes(c appengine.Context) ([]Note, error) {
 	if len(notebook.notes) == 0 && len(notebook.NoteKeys) > 0 {
 		notebook.notes = make([]Note, len(notebook.NoteKeys))
-		err := datastore.GetMulti(notebook.context, notebook.NoteKeys, notebook.notes)
+		err := datastore.GetMulti(c, notebook.NoteKeys, notebook.notes)
 		if err != nil {
 			return notebook.notes, err
 		}
 		for i := 0; i < len(notebook.notes); i++ {
 			note := &notebook.notes[i]
 			note.ID = notebook.NoteKeys[i].Encode()
-			note.context = notebook.context
 		}
 	}
 	return notebook.notes, nil
@@ -69,13 +63,13 @@ func (notebook *Notebook) Notes() ([]Note, error) {
 
 // returns a subset of a user's tags by name
 // missing tags result in errors
-func (notebook *Notebook) TagsFrom(names []string) ([]Tag, error) {
+func (notebook *Notebook) TagsFrom(names []string, c appengine.Context) ([]Tag, error) {
 	tags := *new([]Tag)
 	if len(names) == 0 {
 		return tags, nil
 	}
 	sort.Strings(names)
-	allTags, err := notebook.Tags()
+	allTags, err := notebook.Tags(c)
 	if err != nil {
 		return tags, err
 	}
@@ -98,7 +92,7 @@ func (notebook *Notebook) TagsFrom(names []string) ([]Tag, error) {
 	return tags, nil
 }
 
-func (notebook *Notebook) RelatedTags(tags []Tag) ([]Tag, error) {
+func (notebook *Notebook) RelatedTags(tags []Tag, c appengine.Context) ([]Tag, error) {
 	relatedNoteKeys := make(map[string]datastore.Key)
 	for _, tag := range tags {
 		for _, key := range tag.NoteKeys {
@@ -106,7 +100,7 @@ func (notebook *Notebook) RelatedTags(tags []Tag) ([]Tag, error) {
 		}
 	}
 	tags = *new([]Tag)
-	allTags, err := notebook.Tags()
+	allTags, err := notebook.Tags(c)
 	if err != nil {
 		return tags, err
 	}
@@ -122,9 +116,9 @@ func (notebook *Notebook) RelatedTags(tags []Tag) ([]Tag, error) {
 }
 
 // returns a user's note by ID
-func (notebook *Notebook) Note(id string) (Note, error) {
+func (notebook *Notebook) Note(id string, c appengine.Context) (Note, error) {
 	// TODO binary search
-	notes, err := notebook.Notes()
+	notes, err := notebook.Notes(c)
 	if err != nil {
 		return *new(Note), err
 	}
@@ -137,42 +131,41 @@ func (notebook *Notebook) Note(id string) (Note, error) {
 	return *new(Note), errors.New("note does not exist")
 }
 
-func (notebook *Notebook) SetNote(note Note) (Note, error) {
+func (notebook *Notebook) SetNote(note Note, c appengine.Context) (Note, error) {
 	if note.ID == "" {
-		return notebook.addNewNote(note)
+		return notebook.addNewNote(note, c)
 	}
-	return notebook.updateNote(note)
+	return notebook.updateNote(note, c)
 }
 
-func (notebook *Notebook) addNewNote(note Note) (Note, error) {
-	err := datastore.RunInTransaction(notebook.context, func(c appengine.Context) error {
-		notebookKey := datastore.NewKey(c, "Notebook", notebook.ID, 0, nil)
+func (notebook *Notebook) addNewNote(note Note, c appengine.Context) (Note, error) {
+	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
+		notebookKey := datastore.NewKey(tc, "Notebook", notebook.ID, 0, nil)
 
 		// add note
-		key := datastore.NewIncompleteKey(c, "Note", nil)
+		key := datastore.NewIncompleteKey(tc, "Note", nil)
 		note.Created = time.Now()
 		note.LastModified = note.Created
 		note.NotebookKeys = []*datastore.Key{notebookKey}
-		key, err := datastore.Put(c, key, &note)
+		key, err := datastore.Put(tc, key, &note)
 		if err != nil {
 			return err
 		}
 		note.ID = key.Encode()
 
 		// TODO add/update tags
-		// TODO names := note.ParseTagNames()
+		//names := note.ParseTagNames()
 
 		// update notebook
 		notebook.NoteKeys = append(notebook.NoteKeys, key)
-		_, err = datastore.Put(c, notebookKey, &notebook)
+		_, err = datastore.Put(tc, notebookKey, &notebook)
 		return err
 	}, nil)
-	note.context = notebook.context
 	return note, err
 }
 
-func (notebook *Notebook) updateNote(note Note) (Note, error) {
-	err := datastore.RunInTransaction(notebook.context, func(c appengine.Context) error {
+func (notebook *Notebook) updateNote(note Note, c appengine.Context) (Note, error) {
+	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
 		// update note
 		key, err := datastore.DecodeKey(note.ID)
 		if err != nil {
@@ -180,7 +173,7 @@ func (notebook *Notebook) updateNote(note Note) (Note, error) {
 		}
 
 		existing := new(Note)
-		err = datastore.Get(c, key, existing)
+		err = datastore.Get(tc, key, existing)
 		if err != nil {
 			return err
 		}
@@ -189,7 +182,7 @@ func (notebook *Notebook) updateNote(note Note) (Note, error) {
 
 		existing.SetBody(note.Body)
 		note = *existing
-		_, err = datastore.Put(c, key, &note)
+		_, err = datastore.Put(tc, key, &note)
 		if err != nil {
 			return err
 		}
@@ -203,7 +196,7 @@ func (notebook *Notebook) updateNote(note Note) (Note, error) {
 
 func GetNotebook(c appengine.Context) (*Notebook, error) {
 	u := user.Current(c)
-	notebook := &Notebook{ID: u.ID, context: c}
+	notebook := &Notebook{ID: u.ID}
 	key := datastore.NewKey(c, "Notebook", notebook.ID, 0, nil)
 	err := datastore.Get(c, key, notebook)
 	if err != nil {
@@ -212,6 +205,5 @@ func GetNotebook(c appengine.Context) (*Notebook, error) {
 		notebook.Name = u.Email
 		key, err = datastore.Put(c, key, notebook)
 	}
-	notebook.context = c
 	return notebook, err
 }
