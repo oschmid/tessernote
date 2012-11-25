@@ -157,14 +157,17 @@ func (notebook *Notebook) addNewNote(note Note) (Note, error) {
 		if err != nil {
 			return err
 		}
+		note.ID = key.Encode()
 
 		// TODO add/update tags
+		// TODO names := note.ParseTagNames()
 
 		// update notebook
 		notebook.NoteKeys = append(notebook.NoteKeys, key)
 		_, err = datastore.Put(c, notebookKey, &notebook)
 		return err
 	}, nil)
+	note.context = notebook.context
 	return note, err
 }
 

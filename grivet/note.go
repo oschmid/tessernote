@@ -19,6 +19,7 @@ package grivet
 import (
 	"appengine"
 	"appengine/datastore"
+	"strings"
 	"time"
 )
 
@@ -59,4 +60,15 @@ func (note Note) Notebooks() ([]Notebook, error) {
 func (note *Note) SetBody(body string) {
 	note.Body = body
 	note.LastModified = time.Now()
+}
+
+// parses tag names from body
+func (note *Note) ParseTagNames() []string {
+	var names []string
+	matches := Hashtag.FindAllString(note.Body, len(note.Body))
+	for _, match := range matches {
+		name := strings.TrimFunc(match, isHashtagDecoration)
+		names = append(names, name)
+	}
+	return names
 }

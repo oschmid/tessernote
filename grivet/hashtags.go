@@ -17,7 +17,10 @@ along with Grivet.  If not, see <http://www.gnu.org/licenses/>.
 
 package grivet
 
-import "regexp"
+import (
+	"regexp"
+	"unicode"
+)
 
 // hashtag regexp pattern from https://github.com/twitter/twitter-text-java/blob/master/src/com/twitter/Regex.java
 const (
@@ -55,3 +58,7 @@ const (
 )
 
 var Hashtag = regexp.MustCompile(hashtag)
+
+func isHashtagDecoration(r rune) bool {
+	return r == '#' || r == '\uFF03' || unicode.IsSpace(r)
+}
