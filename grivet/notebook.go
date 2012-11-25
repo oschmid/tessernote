@@ -146,68 +146,62 @@ func (notebook *Notebook) SetNote(note Note) (Note, error) {
 
 func (notebook *Notebook) addNewNote(note Note) (Note, error) {
 	err := datastore.RunInTransaction(notebook.context, func(c appengine.Context) error {
-			// add note
-			key := datastore.NewIncompleteKey(notebook.context, "Note", nil)
-			note.Created = time.Now()
-			note.LastModified = note.Created
-			note.NotebookKeys = []*datastore.Key{notebook.Key()}
-			key, err := datastore.Put(notebook.context, key, &note)
-			if err != nil {
-				return err
-			}
+		notebookKey := datastore.NewKey(c, "Notebook", notebook.ID, 0, nil)
 
-			// TODO add/update tags
+		// add note
+		key := datastore.NewIncompleteKey(c, "Note", nil)
+		note.Created = time.Now()
+		note.LastModified = note.Created
+		note.NotebookKeys = []*datastore.Key{notebookKey}
+		key, err := datastore.Put(c, key, &note)
+		if err != nil {
+			return err
+		}
 
-			// update notebook
-			notebook.NoteKeys = append(notebook.NoteKeys, key)
-			return notebook.Save()
-		}, nil)
+		// TODO add/update tags
+
+		// update notebook
+		notebook.NoteKeys = append(notebook.NoteKeys, key)
+		_, err = datastore.Put(c, notebookKey, &notebook)
+		return err
+	}, nil)
 	return note, err
 }
 
 func (notebook *Notebook) updateNote(note Note) (Note, error) {
 	err := datastore.RunInTransaction(notebook.context, func(c appengine.Context) error {
-			// update note
-			key, err := datastore.DecodeKey(note.ID)
-			if err != nil {
-				return err
-			}
+		// update note
+		key, err := datastore.DecodeKey(note.ID)
+		if err != nil {
+			return err
+		}
 
-			existing := new(Note)
-			err = datastore.Get(c, key, existing)
-			if err != nil {
-				return err
-			}
+		existing := new(Note)
+		err = datastore.Get(c, key, existing)
+		if err != nil {
+			return err
+		}
 
-			// TODO remove from previous tags
+		// TODO remove from previous tags
 
-			existing.SetBody(note.Body)
-			note = *existing
-			_, err = datastore.Put(c, key, &note)
-			if err != nil {
-				return err
-			}
+		existing.SetBody(note.Body)
+		note = *existing
+		_, err = datastore.Put(c, key, &note)
+		if err != nil {
+			return err
+		}
 
-			// TODO add/update/remove tags
-			// TODO update notebook
-			return nil
-		}, nil)
+		// TODO add/update/remove tags
+		// TODO update notebook
+		return nil
+	}, nil)
 	return note, err
-}
-
-func (notebook Notebook) Key() *datastore.Key {
-	return datastore.NewKey(notebook.context, "Notebook", notebook.ID, 0, nil)
-}
-
-func (notebook Notebook) Save() error {
-	_, err := datastore.Put(notebook.context, notebook.Key(), &notebook)
-	return err
 }
 
 func GetNotebook(c appengine.Context) (*Notebook, error) {
 	u := user.Current(c)
 	notebook := &Notebook{ID: u.ID, context: c}
-	key := notebook.Key()
+	key := datastore.NewKey(c, "Notebook", notebook.ID, 0, nil)
 	err := datastore.Get(c, key, notebook)
 	if err != nil {
 		// store new user
