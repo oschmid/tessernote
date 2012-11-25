@@ -31,10 +31,11 @@ type Page struct {
 
 // format tags as html
 func (p Page) HtmlTags() template.HTML {
-	html := ""
+	html := "<div class='tag'>All Notes</div>"
 	for _, tag := range p.Tags {
-		html += tag.Name + "<br>"
+		html += "<div class='tag'>" + tag.Name + "</div>"
 	}
+	// TODO untagged notes
 	return template.HTML(html)
 }
 

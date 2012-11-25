@@ -85,30 +85,11 @@ func saveNote(w http.ResponseWriter, body []byte, notebook *grivet.Notebook) {
 		return
 	}
 
-	if note.ID == "" {
-		// save new note
-		n, err := notebook.NewNote(note.Body)
-		if err != nil {
-			log.Println("newnote:", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		note = *n
-	} else {
-		// update existing note
-		n, err := notebook.Note(note.ID)
-		if err != nil {
-			log.Println("note:", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		err = n.SetBody(note.Body)
-		if err != nil {
-			log.Println("setbody:", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		note = n
+	note, err = notebook.SetNote(note)
+	if err != nil {
+		log.Println("setnote:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	bytes, err := json.Marshal(note)

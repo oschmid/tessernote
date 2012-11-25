@@ -27,8 +27,21 @@ type Note struct {
 	Body         string
 	Created      time.Time
 	LastModified time.Time
+	TagKeys      []*datastore.Key
 	NotebookKeys []*datastore.Key
 	context      appengine.Context `datastore:"-"`
+}
+
+func (note Note) Tags() ([]Tag, error) {
+	var tags []Tag
+	err := datastore.GetMulti(note.context, note.TagKeys, tags)
+	if err != nil {
+		return tags, err
+	}
+	for _, tag := range tags {
+		tag.context = note.context
+	}
+	return tags, nil
 }
 
 func (note Note) Notebooks() ([]Notebook, error) {
@@ -43,15 +56,7 @@ func (note Note) Notebooks() ([]Notebook, error) {
 	return notebooks, nil
 }
 
-// TODO get tags by parsing body for hashtags
-
-func (note *Note) SetBody(body string) error {
+func (note *Note) SetBody(body string) {
 	note.Body = body
 	note.LastModified = time.Now()
-	key, err := datastore.DecodeKey(note.ID)
-	if err != nil {
-		return err
-	}
-	_, err = datastore.Put(note.context, key, note)
-	return err
 }

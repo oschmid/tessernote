@@ -128,6 +128,7 @@ func (notebook *Notebook) Note(id string) (Note, error) {
 	if err != nil {
 		return *new(Note), err
 	}
+
 	for _, note := range notes {
 		if note.ID == id {
 			return note, nil
@@ -136,23 +137,47 @@ func (notebook *Notebook) Note(id string) (Note, error) {
 	return *new(Note), errors.New("note does not exist")
 }
 
-func (notebook *Notebook) NewNote(body string) (*Note, error) {
-	key := datastore.NewIncompleteKey(notebook.context, "Note", nil)
-	note := &Note{
-		Body:         body,
-		Created:      time.Now(),
-		LastModified: time.Now(),
-		NotebookKeys: []*datastore.Key{notebook.Key()}}
-	key, err := datastore.Put(notebook.context, key, note)
+func (notebook *Notebook) SetNote(note Note) (Note, error) {
+	var key *datastore.Key
+	var err error
+	if note.ID == "" {
+		key = datastore.NewIncompleteKey(notebook.context, "Note", nil)
+		note.Created = time.Now()
+		note.LastModified = note.Created
+		note.NotebookKeys = []*datastore.Key{notebook.Key()}
+	} else {
+		key, err = datastore.DecodeKey(note.ID)
+		if err != nil {
+			return note, err
+		}
+
+		previous, err := notebook.Note(note.ID)
+		if err != nil {
+			return note, err
+		}
+
+		previous.SetBody(note.Body)
+		note = previous
+	}
+
+	// TODO parse tags
+
+	key, err = datastore.Put(notebook.context, key, &note)
 	if err != nil {
 		return note, err
 	}
 
+	if note.ID == "" {
+		notebook.NoteKeys = append(notebook.NoteKeys, key)
+		err = notebook.Save()
+		if err != nil {
+			return note, err
+		}
+	}
+
 	note.ID = key.Encode()
 	note.context = notebook.context
-
-	notebook.NoteKeys = append(notebook.NoteKeys, key)
-	return note, notebook.Save()
+	return note, nil
 }
 
 func (notebook Notebook) Key() *datastore.Key {
