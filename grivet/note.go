@@ -19,6 +19,7 @@ package grivet
 import (
 	"appengine"
 	"appengine/datastore"
+	"log"
 	"strings"
 	"time"
 )
@@ -58,4 +59,24 @@ func (note *Note) ParseTagNames() []string {
 		names = append(names, name)
 	}
 	return names
+}
+
+// adds note's key to note's tags
+func (note Note) addKeyToTags(c appengine.Context) error {
+	noteKey, err := datastore.DecodeKey(note.ID)
+	if err != nil {
+		log.Println("decodeKey:note", err)
+		return err
+	}
+
+	tags, err := note.Tags(c)
+	if err != nil {
+		return err
+	}
+
+	for _, tag := range tags {
+		tag.NoteKeys = append(tag.NoteKeys, noteKey)
+	}
+
+	return nil
 }

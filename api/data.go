@@ -87,7 +87,7 @@ func saveNote(w http.ResponseWriter, body []byte, notebook *grivet.Notebook, c a
 
 	note, err = notebook.SetNote(note, c)
 	if err != nil {
-		log.Println("setnote:", err)
+		log.Println("setNote:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

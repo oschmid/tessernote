@@ -33,7 +33,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 
 		notebook, err := grivet.GetNotebook(c)
 		if err != nil {
-			log.Println("getnotebook:", err)
+			log.Println("getNotebook:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -56,7 +56,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		page.SelectedTags = tags
 		page.RelatedTags, err = notebook.RelatedTags(tags, c)
 		if err != nil {
-			log.Println("relatedtags:", err)
+			log.Println("relatedTags:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
@@ -74,7 +74,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 
 		err = templates.ExecuteTemplate(w, "main.html", page)
 		if err != nil {
-			log.Println("template error:", err)
+			log.Println("executeTemplate:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else {
