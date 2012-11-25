@@ -52,6 +52,7 @@ func (notebook *Notebook) Notes(c appengine.Context) ([]Note, error) {
 		notebook.notes = make([]Note, len(notebook.NoteKeys))
 		err := datastore.GetMulti(c, notebook.NoteKeys, notebook.notes)
 		if err != nil {
+			log.Println("getMulti:notes", err)
 			return notebook.notes, err
 		}
 		for i := 0; i < len(notebook.notes); i++ {
@@ -72,6 +73,7 @@ func (notebook *Notebook) TagsFrom(names []string, c appengine.Context) ([]Tag, 
 	sort.Strings(names)
 	allTags, err := notebook.Tags(c)
 	if err != nil {
+		log.Println("tags:", err)
 		return tags, err
 	}
 	tagsIndex := 0
@@ -103,6 +105,7 @@ func (notebook *Notebook) RelatedTags(tags []Tag, c appengine.Context) ([]Tag, e
 	tags = *new([]Tag)
 	allTags, err := notebook.Tags(c)
 	if err != nil {
+		log.Println("tags:", err)
 		return tags, err
 	}
 	for _, tag := range allTags {
@@ -126,19 +129,23 @@ func (notebook *Notebook) SetNote(note Note, c appengine.Context) (Note, error) 
 func (notebook *Notebook) addNote(note Note, c appengine.Context) (Note, error) {
 	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
 		names := note.ParseTagNames()
+
 		var err error
 		note.TagKeys, err = notebook.addMissingTags(names, tc)
 		if err != nil {
+			log.Println("addMissingTags:", err)
 			return err
 		}
 
-		note, err = notebook.addNewNote(note, tc)
+		note, err = notebook.createNote(note, tc)
 		if err != nil {
+			log.Println("createNote:", err)
 			return err
 		}
 
 		err = note.addKeyToTags(tc)
 		if err != nil {
+			log.Println("addKeyToTags:", err)
 			return err
 		}
 
@@ -166,6 +173,7 @@ func (notebook *Notebook) addMissingTags(names []string, c appengine.Context) ([
 
 	notebookTags, err := notebook.Tags(c)
 	if err != nil {
+		log.Println("tags:", err)
 		return namedKeys, err
 	}
 
@@ -174,7 +182,7 @@ func (notebook *Notebook) addMissingTags(names []string, c appengine.Context) ([
 	missingTagKeys := *new([]*datastore.Key)
 	missingTags := *new([]Tag)
 	for _, name := range names {
-		missing := false
+		missing := true
 		for i, tag := range notebookTags {
 			if tag.Name == name {
 				missing = false
@@ -195,8 +203,9 @@ func (notebook *Notebook) addMissingTags(names []string, c appengine.Context) ([
 		return namedKeys, err
 	}
 
-	// add missing tag keys to notebook
+	// add missing tags to notebook
 	notebook.TagKeys = append(notebook.TagKeys, missingTagKeys...)
+	notebook.tags = append(notebook.tags, missingTags...)
 
 	// return keys for all tags in "names"
 	return namedKeys, nil
@@ -205,7 +214,7 @@ func (notebook *Notebook) addMissingTags(names []string, c appengine.Context) ([
 // assumes "note" has keys for all its tags
 // creates new note, adds its key to notebook
 // returns new note's key
-func (notebook *Notebook) addNewNote(note Note, c appengine.Context) (Note, error) {
+func (notebook *Notebook) createNote(note Note, c appengine.Context) (Note, error) {
 	noteKey := datastore.NewIncompleteKey(c, "Note", nil)
 	note.Created = time.Now()
 	note.LastModified = note.Created
