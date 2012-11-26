@@ -20,7 +20,6 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"log"
-	"strings"
 	"time"
 )
 
@@ -30,38 +29,53 @@ type Note struct {
 	Created      time.Time
 	LastModified time.Time
 	TagKeys      []*datastore.Key
+	tags         []Tag // cache
 	NotebookKeys []*datastore.Key
 }
 
-func (note Note) Tags(c appengine.Context) ([]Tag, error) {
-	var tags []Tag
-	err := datastore.GetMulti(c, note.TagKeys, tags)
-	return tags, err
+func (note *Note) Tags(c appengine.Context) ([]Tag, error) {
+	if len(note.tags) == 0 && len(note.TagKeys) > 0 {
+		note.tags = make([]Tag, len(note.TagKeys))
+		err := datastore.GetMulti(c, note.TagKeys, note.tags)
+		if err != nil {
+			log.Println("getMulti:tags", err)
+			return note.tags, err
+		}
+	}
+	return note.tags, nil
 }
 
 func (note Note) Notebooks(c appengine.Context) ([]Notebook, error) {
-	var notebooks []Notebook
-	err := datastore.GetMulti(c, note.NotebookKeys, notebooks)
-	return notebooks, err
+	notebooks := make([]Notebook, len(note.NotebookKeys))
+	if len(notebooks) > 0 {
+		err := datastore.GetMulti(c, note.NotebookKeys, notebooks)
+		if err != nil {
+			log.Println("getMulti:notebooks", err)
+			return notebooks, err
+		}
+	}
+	return notebooks, nil
 }
 
-func (note *Note) SetBody(body string) {
+// updates "note.Body" and "note.LastModified" and
+// returns itself
+func (note *Note) SetBody(body string, c appengine.Context) (Note, error) {
+	key, err := datastore.DecodeKey(note.ID)
+	if err != nil {
+		log.Println("decodeKey:note", err)
+		return *note, err
+	}
+
 	note.Body = body
 	note.LastModified = time.Now()
-}
-
-// parses tag names from body
-func (note *Note) ParseTagNames() []string {
-	var names []string
-	matches := Hashtag.FindAllString(note.Body, len(note.Body))
-	for _, match := range matches {
-		name := strings.TrimFunc(match, isHashtagDecoration)
-		names = append(names, name)
+	_, err = datastore.Put(c, key, note)
+	if err != nil {
+		log.Println("put:note", err)
 	}
-	return names
+	return *note, err
 }
 
-// adds note's key to note's tags
+// adds note's key to those of note's tags that are missing it
 func (note Note) addKeyToTags(c appengine.Context) error {
 	noteKey, err := datastore.DecodeKey(note.ID)
 	if err != nil {
@@ -71,12 +85,48 @@ func (note Note) addKeyToTags(c appengine.Context) error {
 
 	tags, err := note.Tags(c)
 	if err != nil {
+		log.Println("tags:", err)
 		return err
 	}
 
-	for _, tag := range tags {
-		tag.NoteKeys = append(tag.NoteKeys, noteKey)
+	put := false
+	for i := range tags {
+		if !containsKey(tags[i].NoteKeys, noteKey) {
+			tags[i].NoteKeys = append(tags[i].NoteKeys, noteKey)
+			put = true
+		}
 	}
 
-	return nil
+	if put {
+		_, err = datastore.PutMulti(c, note.TagKeys, tags)
+		if err != nil {
+			log.Println("putMulti:tags", err)
+		}
+	}
+	return err
+}
+
+func containsKey(keys []*datastore.Key, key *datastore.Key) bool {
+	for i := range keys {
+		if keys[i].Encode() == key.Encode() {
+			return true
+		}
+	}
+	return false
+}
+
+func GetNote(id string, c appengine.Context) (*Note, error) {
+	note := new(Note)
+	key, err := datastore.DecodeKey(id)
+	if err != nil {
+		log.Println("decodeKey:", err)
+		return note, err
+	}
+
+	err = datastore.Get(c, key, note)
+	if err != nil {
+		log.Println("get:", err)
+	}
+	note.ID = id
+	return note, err
 }

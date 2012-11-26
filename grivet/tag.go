@@ -19,6 +19,7 @@ package grivet
 import (
 	"appengine"
 	"appengine/datastore"
+	"log"
 )
 
 type Tag struct {
@@ -29,15 +30,19 @@ type Tag struct {
 }
 
 func (tag Tag) Notebooks(c appengine.Context) ([]Notebook, error) {
-	var notebooks []Notebook
+	notebooks := make([]Notebook, len(tag.NotebookKeys))
 	err := datastore.GetMulti(c, tag.NotebookKeys, notebooks)
+	if err != nil {
+		log.Println("getMulti:notebooks", err)
+	}
 	return notebooks, err
 }
 
 func (tag Tag) Notes(c appengine.Context) ([]Note, error) {
-	var notes []Note
+	notes := make([]Note, len(tag.NoteKeys))
 	err := datastore.GetMulti(c, tag.NoteKeys, notes)
 	if err != nil {
+		log.Println("getMulti:notes", err)
 		return notes, err
 	}
 	for i, note := range notes {
@@ -47,7 +52,10 @@ func (tag Tag) Notes(c appengine.Context) ([]Note, error) {
 }
 
 func (tag Tag) Children(c appengine.Context) ([]Tag, error) {
-	var children []Tag
+	children := make([]Tag, len(tag.ChildKeys))
 	err := datastore.GetMulti(c, tag.ChildKeys, children)
+	if err != nil {
+		log.Println("getMulti:children", err)
+	}
 	return children, err
 }

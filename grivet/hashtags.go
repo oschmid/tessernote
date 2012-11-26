@@ -19,6 +19,7 @@ package grivet
 
 import (
 	"regexp"
+	"strings"
 	"unicode"
 )
 
@@ -58,6 +59,16 @@ const (
 )
 
 var Hashtag = regexp.MustCompile(hashtag)
+
+func ParseTagNames(text string) []string {
+	var names []string
+	matches := Hashtag.FindAllString(text, len(text))
+	for _, match := range matches {
+		name := strings.TrimFunc(match, isHashtagDecoration)
+		names = append(names, name)
+	}
+	return names
+}
 
 func isHashtagDecoration(r rune) bool {
 	return r == '#' || r == '\uFF03' || unicode.IsSpace(r)

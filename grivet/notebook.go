@@ -128,10 +128,8 @@ func (notebook *Notebook) SetNote(note Note, c appengine.Context) (Note, error) 
 
 func (notebook *Notebook) addNote(note Note, c appengine.Context) (Note, error) {
 	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
-		names := note.ParseTagNames()
-
 		var err error
-		note.TagKeys, err = notebook.addMissingTags(names, tc)
+		note, err = notebook.addMissingTags(note, tc)
 		if err != nil {
 			log.Println("addMissingTags:", err)
 			return err
@@ -163,18 +161,18 @@ func (notebook Notebook) Key(c appengine.Context) *datastore.Key {
 	return datastore.NewKey(c, "Notebook", notebook.ID, 0, nil)
 }
 
-// creates missing tags, adds their keys to notebook
-// returns keys for all tags in "names"
-func (notebook *Notebook) addMissingTags(names []string, c appengine.Context) ([]*datastore.Key, error) {
-	namedKeys := *new([]*datastore.Key)
+// creates missing tags, adds their keys to notebook and note
+// returns the note
+func (notebook *Notebook) addMissingTags(note Note, c appengine.Context) (Note, error) {
+	names := ParseTagNames(note.Body)
 	if len(names) == 0 {
-		return namedKeys, nil
+		return note, nil
 	}
 
 	notebookTags, err := notebook.Tags(c)
 	if err != nil {
 		log.Println("tags:", err)
-		return namedKeys, err
+		return note, err
 	}
 
 	// find missing tags, named tags
@@ -182,14 +180,11 @@ func (notebook *Notebook) addMissingTags(names []string, c appengine.Context) ([
 	missingTagKeys := *new([]*datastore.Key)
 	missingTags := *new([]Tag)
 	for _, name := range names {
-		missing := true
-		for i, tag := range notebookTags {
-			if tag.Name == name {
-				missing = false
-				namedKeys = append(namedKeys, notebook.TagKeys[i])
-			}
-		}
-		if missing {
+		i := indexOfTag(notebookTags, name)
+		if i >= 0 {
+			note.TagKeys = append(note.TagKeys, notebook.TagKeys[i])
+			note.tags = append(note.tags, notebookTags[i])
+		} else {
 			tag := Tag{Name: name, NotebookKeys: []*datastore.Key{notebookKey}}
 			missingTags = append(missingTags, tag)
 			missingTagKeys = append(missingTagKeys, datastore.NewIncompleteKey(c, "Tag", nil))
@@ -197,23 +192,36 @@ func (notebook *Notebook) addMissingTags(names []string, c appengine.Context) ([
 	}
 
 	// create missing tags
-	missingTagKeys, err = datastore.PutMulti(c, missingTagKeys, missingTags)
-	if err != nil {
-		log.Println("putMulti:missingTags", err)
-		return namedKeys, err
+	if len(missingTags) > 0 {
+		missingTagKeys, err = datastore.PutMulti(c, missingTagKeys, missingTags)
+		if err != nil {
+			log.Println("putMulti:missingTags", err)
+			return note, err
+		}
 	}
 
 	// add missing tags to notebook
 	notebook.TagKeys = append(notebook.TagKeys, missingTagKeys...)
 	notebook.tags = append(notebook.tags, missingTags...)
 
-	// return keys for all tags in "names"
-	return namedKeys, nil
+	// add tags to note
+	note.TagKeys = append(note.TagKeys, missingTagKeys...)
+	note.tags = append(note.tags, missingTags...)
+	return note, nil
 }
 
-// assumes "note" has keys for all its tags
-// creates new note, adds its key to notebook
-// returns new note's key
+func indexOfTag(tags []Tag, name string) int {
+	for i, tag := range tags {
+		if tag.Name == name {
+			return i
+		}
+	}
+	return -1
+}
+
+// assumes "note" has keys for all its tags,
+// creates new note, adds its key to notebook and
+// returns new note
 func (notebook *Notebook) createNote(note Note, c appengine.Context) (Note, error) {
 	noteKey := datastore.NewIncompleteKey(c, "Note", nil)
 	note.Created = time.Now()
@@ -231,35 +239,143 @@ func (notebook *Notebook) createNote(note Note, c appengine.Context) (Note, erro
 
 func (notebook *Notebook) updateNote(note Note, c appengine.Context) (Note, error) {
 	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
-		// update note
-		key, err := datastore.DecodeKey(note.ID)
+		oldNote, err := GetNote(note.ID, tc)
 		if err != nil {
-			log.Println("decodeKey:", err)
+			log.Println("getNote:", err)
 			return err
 		}
 
-		existing := new(Note)
-		err = datastore.Get(tc, key, existing)
+		err = notebook.removeNoteFromOldTags(*oldNote, note, tc)
 		if err != nil {
-			log.Println("get:", err)
+			log.Println("removeNoteFromStaleTags:", err)
 			return err
 		}
 
-		// TODO remove from previous tags
-
-		existing.SetBody(note.Body)
-		note = *existing
-		_, err = datastore.Put(tc, key, &note)
+		note, err = notebook.addMissingTags(note, tc)
 		if err != nil {
-			log.Println("put:", err)
+			log.Println("addMissingTags:", err)
 			return err
 		}
 
-		// TODO add/update tags
-		// TODO update notebook
-		return nil
+		note, err := oldNote.SetBody(note.Body, tc)
+		if err != nil {
+			log.Println("setBody:", err)
+			return err
+		}
+
+		err = note.addKeyToTags(tc)
+		if err != nil {
+			log.Println("addKeyToTags:", err)
+			return err
+		}
+
+		key := notebook.Key(tc)
+		_, err = datastore.Put(tc, key, notebook)
+		if err != nil {
+			log.Println("put:notebook", err)
+		}
+		return err
 	}, &datastore.TransactionOptions{XG: true})
 	return note, err
+}
+
+// removes note's key from tags it no longer has and
+// removes empty tags from notebook
+func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.Context) error {
+	oldTags, err := oldNote.Tags(c)
+	if err != nil {
+		log.Println("tags:", err)
+		return err
+	}
+
+	// remove from old tags
+	names := ParseTagNames(note.Body)
+	tagsToUpdate := *new([]Tag)
+	keysToUpdate := *new([]*datastore.Key)
+	keysToRemove := *new([]*datastore.Key)
+	for i := range oldTags {
+		if len(oldTags[i].NoteKeys) == 1 {
+			keysToRemove = append(keysToRemove, notebook.TagKeys[i])
+		} else if !containsName(names, oldTags[i].Name) {
+			key, err := datastore.DecodeKey(note.ID)
+			if err != nil {
+				log.Println("decodeKey:note", err)
+				return err
+			}
+			oldTags[i].NoteKeys = removeKey(oldTags[i].NoteKeys, key)
+			tagsToUpdate = append(tagsToUpdate, oldTags[i])
+			keysToUpdate = append(keysToUpdate, oldNote.TagKeys[i])
+		}
+	}
+
+	// update tags
+	if len(keysToUpdate) > 0 {
+		keysToUpdate, err = datastore.PutMulti(c, keysToUpdate, tagsToUpdate)
+		if err != nil {
+			log.Println("putMulti:update", err)
+			return err
+		}
+	}
+
+	// remove empty tags
+	if len(keysToRemove) > 0 {
+		err = datastore.DeleteMulti(c, keysToRemove)
+		if err != nil {
+			log.Println("deleteMulti:removeKeys", err)
+			return err
+		}
+	}
+
+	// update notebook tags
+	cachedTags := len(notebook.tags) > 0
+	tagKeys := *new([]*datastore.Key)
+	tags := *new([]Tag)
+	for i := range notebook.TagKeys {
+		if !containsKey(keysToRemove, notebook.TagKeys[i]) {
+			if containsKey(keysToUpdate, notebook.TagKeys[i]) && cachedTags {
+				index := indexOfKey(keysToUpdate, notebook.TagKeys[i])
+				notebook.tags[i] = tagsToUpdate[index]
+			} else {
+				tagKeys = append(tagKeys, notebook.TagKeys[i])
+				if cachedTags {
+					tags = append(tags, notebook.tags[i])
+				}
+			}
+		}
+	}
+	notebook.TagKeys = tagKeys
+	if cachedTags {
+		notebook.tags = tags
+	}
+	return nil
+}
+
+func removeKey(keys []*datastore.Key, remove *datastore.Key) []*datastore.Key {
+	diff := *new([]*datastore.Key)
+	for i := range keys {
+		if keys[i].Encode() != remove.Encode() {
+			diff = append(diff, keys[i])
+		}
+	}
+	return diff
+}
+
+func containsName(names []string, name string) bool {
+	for _, n := range names {
+		if n == name {
+			return true
+		}
+	}
+	return false
+}
+
+func indexOfKey(keys []*datastore.Key, key *datastore.Key) int {
+	for i := range keys {
+		if keys[i].Encode() == key.Encode() {
+			return i
+		}
+	}
+	return -1
 }
 
 func GetNotebook(c appengine.Context) (*Notebook, error) {
@@ -268,7 +384,7 @@ func GetNotebook(c appengine.Context) (*Notebook, error) {
 	key := datastore.NewKey(c, "Notebook", notebook.ID, 0, nil)
 	err := datastore.Get(c, key, notebook)
 	if err != nil {
-		// store new user
+		// create new user
 		log.Println("new user", u.Email)
 		notebook.Name = u.Email
 		key, err = datastore.Put(c, key, notebook)
