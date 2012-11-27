@@ -59,15 +59,18 @@ func (note Note) Notebooks(c appengine.Context) ([]Notebook, error) {
 
 // updates "note.Body" and "note.LastModified" and
 // returns itself
-func (note *Note) SetBody(body string, c appengine.Context) (Note, error) {
+func (note *Note) Update(new Note, c appengine.Context) (Note, error) {
 	key, err := datastore.DecodeKey(note.ID)
 	if err != nil {
 		log.Println("decodeKey:note", err)
 		return *note, err
 	}
 
-	note.Body = body
+	note.Body = new.Body
 	note.LastModified = time.Now()
+	note.TagKeys = new.TagKeys
+	note.tags = new.tags
+	note.NotebookKeys = note.NotebookKeys
 	_, err = datastore.Put(c, key, note)
 	if err != nil {
 		log.Println("put:note", err)
@@ -89,16 +92,18 @@ func (note Note) addKeyToTags(c appengine.Context) error {
 		return err
 	}
 
-	put := false
+	tagKeysToUpdate := *new([]*datastore.Key)
+	tagsToUpdate := *new([]Tag)
 	for i := range tags {
 		if !containsKey(tags[i].NoteKeys, noteKey) {
 			tags[i].NoteKeys = append(tags[i].NoteKeys, noteKey)
-			put = true
+			tagKeysToUpdate = append(tagKeysToUpdate, note.TagKeys[i])
+			tagsToUpdate = append(tagsToUpdate, tags[i])
 		}
 	}
 
-	if put {
-		_, err = datastore.PutMulti(c, note.TagKeys, tags)
+	if len(tagsToUpdate) > 0 {
+		_, err = datastore.PutMulti(c, tagKeysToUpdate, tagsToUpdate)
 		if err != nil {
 			log.Println("putMulti:tags", err)
 		}

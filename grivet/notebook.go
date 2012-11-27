@@ -30,8 +30,8 @@ type Notebook struct {
 	ID       string // user.User.ID
 	Name     string
 	TagKeys  []*datastore.Key // sorted by Tag.Name
+	tags     []Tag            // cache
 	NoteKeys []*datastore.Key
-	tags     []Tag  // cache
 	notes    []Note // cache
 }
 
@@ -234,6 +234,7 @@ func (notebook *Notebook) createNote(note Note, c appengine.Context) (Note, erro
 	}
 	note.ID = noteKey.Encode()
 	notebook.NoteKeys = append(notebook.NoteKeys, noteKey)
+	notebook.notes = append(notebook.notes, note)
 	return note, nil
 }
 
@@ -245,7 +246,7 @@ func (notebook *Notebook) updateNote(note Note, c appengine.Context) (Note, erro
 			return err
 		}
 
-		err = notebook.removeNoteFromOldTags(*oldNote, note, tc)
+		note, err = notebook.removeNoteFromOldTags(*oldNote, note, tc)
 		if err != nil {
 			log.Println("removeNoteFromStaleTags:", err)
 			return err
@@ -257,7 +258,7 @@ func (notebook *Notebook) updateNote(note Note, c appengine.Context) (Note, erro
 			return err
 		}
 
-		note, err := oldNote.SetBody(note.Body, tc)
+		note, err := oldNote.Update(note, tc)
 		if err != nil {
 			log.Println("setBody:", err)
 			return err
@@ -281,11 +282,11 @@ func (notebook *Notebook) updateNote(note Note, c appengine.Context) (Note, erro
 
 // removes note's key from tags it no longer has and
 // removes empty tags from notebook
-func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.Context) error {
+func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.Context) (Note, error) {
 	oldTags, err := oldNote.Tags(c)
 	if err != nil {
 		log.Println("tags:", err)
-		return err
+		return note, err
 	}
 
 	// remove from old tags
@@ -295,16 +296,18 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 	keysToRemove := *new([]*datastore.Key)
 	for i := range oldTags {
 		if len(oldTags[i].NoteKeys) == 1 {
-			keysToRemove = append(keysToRemove, notebook.TagKeys[i])
+			keysToRemove = append(keysToRemove, oldNote.TagKeys[i])
 		} else if !containsName(names, oldTags[i].Name) {
 			key, err := datastore.DecodeKey(note.ID)
 			if err != nil {
 				log.Println("decodeKey:note", err)
-				return err
+				return note, err
 			}
 			oldTags[i].NoteKeys = removeKey(oldTags[i].NoteKeys, key)
 			tagsToUpdate = append(tagsToUpdate, oldTags[i])
 			keysToUpdate = append(keysToUpdate, oldNote.TagKeys[i])
+			note.TagKeys = append(note.TagKeys, oldNote.TagKeys[i])
+			note.tags = append(note.tags, oldNote.tags[i])
 		}
 	}
 
@@ -313,7 +316,7 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 		keysToUpdate, err = datastore.PutMulti(c, keysToUpdate, tagsToUpdate)
 		if err != nil {
 			log.Println("putMulti:update", err)
-			return err
+			return note, err
 		}
 	}
 
@@ -322,7 +325,7 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 		err = datastore.DeleteMulti(c, keysToRemove)
 		if err != nil {
 			log.Println("deleteMulti:removeKeys", err)
-			return err
+			return note, err
 		}
 	}
 
@@ -347,7 +350,7 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 	if cachedTags {
 		notebook.tags = tags
 	}
-	return nil
+	return note, nil
 }
 
 func removeKey(keys []*datastore.Key, remove *datastore.Key) []*datastore.Key {
