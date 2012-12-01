@@ -1,9 +1,26 @@
+/*
+This file is part of Tessernote.
+
+Tessernote is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Tessernote is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package api
 
 import (
 	"appengine"
 	"appengine/user"
-	"grivet"
+	"note"
 	"html/template"
 	"log"
 	"net/http"
@@ -31,7 +48,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		notebook, err := grivet.GetNotebook(c)
+		notebook, err := note.GetNotebook(c)
 		if err != nil {
 			log.Println("getNotebook:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -100,7 +117,7 @@ func loggedIn(w http.ResponseWriter, r *http.Request, c appengine.Context) bool 
 }
 
 // parses url for selected tags, redirects if it refers to missing tags
-func parseSelectedTags(w http.ResponseWriter, r *http.Request, notebook *grivet.Notebook, c appengine.Context) ([]grivet.Tag, error) {
+func parseSelectedTags(w http.ResponseWriter, r *http.Request, notebook *note.Notebook, c appengine.Context) ([]note.Tag, error) {
 	var names []string
 	if r.URL.Path != "/" {
 		names = strings.Split(r.URL.Path[1:], tagSeparator)
@@ -114,7 +131,7 @@ func parseSelectedTags(w http.ResponseWriter, r *http.Request, notebook *grivet.
 	return tags, err
 }
 
-func namesFrom(tags []grivet.Tag) []string {
+func namesFrom(tags []note.Tag) []string {
 	names := *new([]string)
 	for _, tag := range tags {
 		names = append(names, tag.Name)
