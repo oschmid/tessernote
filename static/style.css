@@ -21,6 +21,11 @@ body
     right:70%;
 }
 
+.tag
+{
+    cursor:pointer;
+}
+
 #notes
 {
     position:absolute;
