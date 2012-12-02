@@ -22,10 +22,10 @@ import (
 	"appengine/user"
 	"bytes"
 	"encoding/json"
-	"note"
 	"io"
 	"log"
 	"net/http"
+	"note"
 )
 
 const (

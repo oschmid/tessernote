@@ -46,8 +46,8 @@ const (
 		"\u200c" + // Zero-Width Non-Joiner
 		"\u0e01-\u0e3a\u0e40-\u0e4e" + // Thai
 		"\u1100-\u11ff\u3130-\u3185\uA960-\uA97F\uAC00-\uD7AF\uD7B0-\uD7FF" + // Hangul (Korean)
-		// TODO							   "\\p{Hiragana}\\p{Katakana}" +                                               // Japanese Hiragana and Katakana
-		// TODO							   "\\p{Unified_Ideograph}" +                                                   // Japanese Kanji / Chinese Han
+		"\\p{Hiragana}\\p{Katakana}" + // Japanese Hiragana and Katakana
+		// TODO "\\p{Unified_Ideograph}" + // Japanese Kanji / Chinese Han (could also be CJK, CJK_Unified_Ideograph, Unified_Ideograph)
 		"\u3003\u3005\u303b" + // Kanji/Han iteration marks
 		"\uff21-\uff3a\uff41-\uff5a" + // full width Alphabet
 		"\uff66-\uff9f" + // half width Katakana

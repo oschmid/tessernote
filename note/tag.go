@@ -60,3 +60,34 @@ func (tag Tag) Children(c appengine.Context) ([]Tag, error) {
 	}
 	return children, err
 }
+
+func RelatedNotes(tags []Tag, c appengine.Context) ([]Note, error) {
+	if len(tags) == 0 {
+		return *new([]Note), nil
+	}
+
+	noteKeys := tags[0].NoteKeys
+	for i := 1; i < len(tags); i++ {
+		noteKeys = unionKeys(noteKeys, tags[i].NoteKeys)
+	}
+
+	notes, err := make([]Note, len(noteKeys)), *new(error)
+	if len(noteKeys) > 0 {
+		err = datastore.GetMulti(c, noteKeys, notes)
+		if err != nil {
+			log.Println("getMulti:relatedNotes", err)
+		}
+	}
+	return notes, err
+}
+
+func unionKeys(a, b []*datastore.Key) []*datastore.Key {
+	c := *new([]*datastore.Key)
+	for _, elem := range a {
+		j := indexOfKey(b, elem)
+		if j >= 0 {
+			c = append(c, b[j])
+		}
+	}
+	return c
+}

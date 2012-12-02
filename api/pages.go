@@ -20,10 +20,10 @@ package api
 import (
 	"appengine"
 	"appengine/user"
-	"note"
 	"html/template"
 	"log"
 	"net/http"
+	"note"
 	"regexp"
 	"strings"
 )
@@ -78,15 +78,14 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(tags) == 0 {
-			notes, err := notebook.Notes(c)
-			if err != nil {
-				log.Println("notes:", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			page.Notes = notes
+			page.Notes, err = notebook.Notes(c)
 		} else {
-			// TODO get related notes
+			page.Notes, err = note.RelatedNotes(tags, c)
+		}
+		if err != nil {
+			log.Println("notes:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		err = templates.ExecuteTemplate(w, "main.html", page)

@@ -18,8 +18,8 @@ along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
 package api
 
 import (
-	"note"
 	"html/template"
+	"note"
 )
 
 type Page struct {
