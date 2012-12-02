@@ -32,7 +32,7 @@ type Page struct {
 
 // format tags as html
 func (p Page) HtmlTags() template.HTML {
-	html := "<div class='tag'>All Notes</div>"
+	html := "<div id='allNotes' class='tag'>All Notes</div>"
 	for _, tag := range p.Tags {
 		html += "<div class='tag'>" + tag.Name + "</div>"
 	}
