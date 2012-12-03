@@ -112,15 +112,6 @@ func (note Note) addKeyToTags(c appengine.Context) error {
 	return err
 }
 
-func containsKey(keys []*datastore.Key, key *datastore.Key) bool {
-	for i := range keys {
-		if keys[i].Encode() == key.Encode() {
-			return true
-		}
-	}
-	return false
-}
-
 func GetNote(id string, c appengine.Context) (*Note, error) {
 	note := new(Note)
 	key, err := datastore.DecodeKey(id)

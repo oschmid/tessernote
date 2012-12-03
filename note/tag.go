@@ -80,14 +80,3 @@ func RelatedNotes(tags []Tag, c appengine.Context) ([]Note, error) {
 	}
 	return notes, err
 }
-
-func unionKeys(a, b []*datastore.Key) []*datastore.Key {
-	c := *new([]*datastore.Key)
-	for _, elem := range a {
-		j := indexOfKey(b, elem)
-		if j >= 0 {
-			c = append(c, b[j])
-		}
-	}
-	return c
-}

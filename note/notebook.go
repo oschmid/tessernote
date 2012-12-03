@@ -36,6 +36,10 @@ type Notebook struct {
 	notes    []Note // cache
 }
 
+func (notebook Notebook) Key(c appengine.Context) *datastore.Key {
+	return datastore.NewKey(c, "Notebook", notebook.ID, 0, nil)
+}
+
 func (notebook *Notebook) Tags(c appengine.Context) ([]Tag, error) {
 	if len(notebook.tags) == 0 && len(notebook.NoteKeys) > 0 {
 		notebook.tags = make([]Tag, len(notebook.TagKeys))
@@ -158,10 +162,6 @@ func (notebook *Notebook) addNote(note Note, c appengine.Context) (Note, error) 
 	return note, err
 }
 
-func (notebook Notebook) Key(c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, "Notebook", notebook.ID, 0, nil)
-}
-
 // creates missing tags, adds their keys to notebook and note
 // returns the note
 func (notebook *Notebook) addMissingTags(note Note, c appengine.Context) (Note, error) {
@@ -209,15 +209,6 @@ func (notebook *Notebook) addMissingTags(note Note, c appengine.Context) (Note, 
 	note.TagKeys = append(note.TagKeys, missingTagKeys...)
 	note.tags = append(note.tags, missingTags...)
 	return note, nil
-}
-
-func indexOfTag(tags []Tag, name string) int {
-	for i, tag := range tags {
-		if tag.Name == name {
-			return i
-		}
-	}
-	return -1
 }
 
 // assumes "note" has keys for all its tags,
@@ -298,7 +289,7 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 	for i := range oldTags {
 		if len(oldTags[i].NoteKeys) == 1 {
 			keysToRemove = append(keysToRemove, oldNote.TagKeys[i])
-		} else if !containsName(names, oldTags[i].Name) {
+		} else if !containsString(names, oldTags[i].Name) {
 			key, err := datastore.DecodeKey(note.ID)
 			if err != nil {
 				log.Println("decodeKey:note", err)
@@ -354,38 +345,10 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 	return note, nil
 }
 
-func removeKey(keys []*datastore.Key, remove *datastore.Key) []*datastore.Key {
-	diff := *new([]*datastore.Key)
-	for i := range keys {
-		if keys[i].Encode() != remove.Encode() {
-			diff = append(diff, keys[i])
-		}
-	}
-	return diff
-}
-
-func containsName(names []string, name string) bool {
-	for _, n := range names {
-		if n == name {
-			return true
-		}
-	}
-	return false
-}
-
-func indexOfKey(keys []*datastore.Key, key *datastore.Key) int {
-	for i := range keys {
-		if keys[i].Encode() == key.Encode() {
-			return i
-		}
-	}
-	return -1
-}
-
 func GetNotebook(c appengine.Context) (*Notebook, error) {
 	u := user.Current(c)
 	notebook := &Notebook{ID: u.ID}
-	key := datastore.NewKey(c, "Notebook", notebook.ID, 0, nil)
+	key := notebook.Key(c)
 	err := datastore.Get(c, key, notebook)
 	if err != nil {
 		// create new user
