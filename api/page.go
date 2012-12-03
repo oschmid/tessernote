@@ -44,7 +44,7 @@ func (p Page) HtmlTags() template.HTML {
 func (p Page) HtmlNotes() template.HTML {
 	html := ""
 	for _, note := range p.Notes {
-		html += "<div class='note'><textarea noteid=\"" + note.ID + "\" class='resize'>" + note.Body + "</textarea></div>"
+		html += "<div class='note'><textarea noteid=\"" + note.ID + "\" class='resize'>" + note.Body + "</textarea><input type='button' class='save' value='Save'></div>"
 	}
 	return template.HTML(html)
 }

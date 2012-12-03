@@ -50,3 +50,8 @@ body
     outline:none;
     resize:none;
 }
+
+.save
+{
+    display:none;
+}
