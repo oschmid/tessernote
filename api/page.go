@@ -23,21 +23,27 @@ import (
 )
 
 type Page struct {
-	Tags         []note.Tag
-	RelatedTags  []note.Tag
-	SelectedTags []note.Tag
-	Notes        []note.Note
-	Edit         bool
+	Tags          []note.Tag
+	RelatedTags   []note.Tag
+	SelectedTags  []note.Tag
+	Notes         []note.Note
+	UntaggedNotes bool
 }
 
 // format tags as html
 func (p Page) HtmlTags() template.HTML {
-	html := "<div id='allNotes' class='tag'>All Notes</div>"
+	html := createTagDiv("All Notes")
 	for _, tag := range p.Tags {
-		html += "<div class='tag'>" + tag.Name + "</div>"
+		html += createTagDiv(tag.Name)
 	}
-	// TODO untagged notes
+	if p.UntaggedNotes {
+		html += createTagDiv("Untagged Notes")
+	}
 	return template.HTML(html)
+}
+
+func createTagDiv(name string) string {
+	return "<div class='tag'>" + name + "</div>"
 }
 
 // format notes as html

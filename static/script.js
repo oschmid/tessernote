@@ -1,8 +1,10 @@
 var saveNoteURL = '/note/save'
 
 function filterByTag(e) {
-    if ($(this).attr('id') == 'allNotes') {
+    if ($(this).text() == 'All Notes') {
         location.pathname = '/'
+    } else if ($(this).text() == 'Untagged Notes') {
+        location.pathname = '/untagged/'
     } else if (e.shiftKey && location.pathname != '/') {
         location.pathname += ',' + $(this).text()
     } else {

@@ -28,12 +28,14 @@ import (
 )
 
 type Notebook struct {
-	ID       string // user.User.ID
-	Name     string
-	TagKeys  []*datastore.Key // sorted by Tag.Name
-	tags     []Tag            // cache
-	NoteKeys []*datastore.Key
-	notes    []Note // cache
+	ID               string // user.User.ID
+	Name             string
+	TagKeys          []*datastore.Key // sorted by Tag.Name
+	tags             []Tag // cache
+	NoteKeys         []*datastore.Key
+	notes            []Note // cache
+	UntaggedNoteKeys []*datastore.Key
+	untaggedNotes    []Note //cache
 }
 
 func (notebook Notebook) Key(c appengine.Context) *datastore.Key {
@@ -66,6 +68,22 @@ func (notebook *Notebook) Notes(c appengine.Context) ([]Note, error) {
 		}
 	}
 	return notebook.notes, nil
+}
+
+func (notebook *Notebook) UntaggedNotes(c appengine.Context) ([]Note, error) {
+	if len(notebook.untaggedNotes) == 0 && len(notebook.UntaggedNoteKeys) > 0 {
+		notebook.untaggedNotes = make([]Note, len(notebook.UntaggedNoteKeys))
+		err := datastore.GetMulti(c, notebook.UntaggedNoteKeys, notebook.untaggedNotes)
+		if err != nil {
+			log.Println("getMulti:untaggedNotes", err)
+			return notebook.untaggedNotes, err
+		}
+		for i := 0; i < len(notebook.untaggedNotes); i++ {
+			note := &notebook.untaggedNotes[i]
+			note.ID = notebook.UntaggedNoteKeys[i].Encode()
+		}
+	}
+	return notebook.untaggedNotes, nil
 }
 
 // returns a subset of a user's tags by name
@@ -204,6 +222,14 @@ func (notebook *Notebook) addMissingTags(note Note, c appengine.Context) (Note, 
 	// add missing tags to notebook
 	notebook.TagKeys = append(notebook.TagKeys, missingTagKeys...)
 	notebook.tags = append(notebook.tags, missingTags...)
+	if len(names) == 0 && note.ID != "" {
+		noteKey, err := datastore.DecodeKey(note.ID)
+		if err != nil {
+			log.Println("decodeKey:note", err)
+			return note, err
+		}
+		notebook.UntaggedNoteKeys = append(notebook.UntaggedNoteKeys, noteKey)
+	}
 
 	// add tags to note
 	note.TagKeys = append(note.TagKeys, missingTagKeys...)
@@ -227,6 +253,9 @@ func (notebook *Notebook) createNote(note Note, c appengine.Context) (Note, erro
 	note.ID = noteKey.Encode()
 	notebook.NoteKeys = append(notebook.NoteKeys, noteKey)
 	notebook.notes = append(notebook.notes, note)
+	if len(note.TagKeys) == 0 {
+		notebook.UntaggedNoteKeys = append(notebook.UntaggedNoteKeys, noteKey)
+	}
 	return note, nil
 }
 
@@ -341,6 +370,14 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 	notebook.TagKeys = tagKeys
 	if cachedTags {
 		notebook.tags = tags
+	}
+	if len(names) > 0 {
+		noteKey, err := datastore.DecodeKey(note.ID)
+		if err != nil {
+			log.Println("decodeKey:note", err)
+			return note, err
+		}
+		notebook.UntaggedNoteKeys = removeKey(notebook.UntaggedNoteKeys, noteKey)
 	}
 	return note, nil
 }

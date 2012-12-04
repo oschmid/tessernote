@@ -31,7 +31,9 @@ import (
 var (
 	tagPattern   = "[a-zA-Z0-9]" // TODO use twitter regex
 	tagSeparator = ","
-	validURL     = regexp.MustCompile("^/((" + tagPattern + "+\\" + tagSeparator + ")*" + tagPattern + "+)*$")
+	tagsPattern  = "(" + tagPattern + "+\\" + tagSeparator + ")*" + tagPattern + "+"
+	untaggedURL  = "/untagged/"
+	validURL     = regexp.MustCompile("^(/|(" + untaggedURL +")|(/" + tagsPattern + "))$")
 	templates    = template.Must(template.ParseFiles("templates/main.html"))
 )
 
@@ -77,7 +79,10 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		if len(tags) == 0 {
+		page.UntaggedNotes = len(notebook.UntaggedNoteKeys) > 0
+		if r.URL.Path == untaggedURL {
+			page.Notes, err = notebook.UntaggedNotes(c)
+		} else if len(tags) == 0 {
 			page.Notes, err = notebook.Notes(c)
 		} else {
 			page.Notes, err = note.RelatedNotes(tags, c)
@@ -118,7 +123,7 @@ func loggedIn(w http.ResponseWriter, r *http.Request, c appengine.Context) bool 
 // parses url for selected tags, redirects if it refers to missing tags
 func parseSelectedTags(w http.ResponseWriter, r *http.Request, notebook *note.Notebook, c appengine.Context) ([]note.Tag, error) {
 	var names []string
-	if r.URL.Path != "/" {
+	if r.URL.Path != "/" && r.URL.Path != untaggedURL {
 		names = strings.Split(r.URL.Path[1:], tagSeparator)
 	}
 	tags, err := notebook.TagsFrom(names, c)
