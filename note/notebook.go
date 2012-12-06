@@ -142,7 +142,7 @@ func (notebook *Notebook) RelatedTags(tags []Tag, c appengine.Context) ([]Tag, e
 	return tags, nil
 }
 
-func (notebook *Notebook) SetNote(note Note, c appengine.Context) (Note, error) {
+func (notebook *Notebook) Put(note Note, c appengine.Context) (Note, error) {
 	if note.ID == "" {
 		return notebook.addNote(note, c)
 	}
@@ -269,7 +269,7 @@ func (notebook *Notebook) updateNote(note Note, c appengine.Context) (Note, erro
 
 		note, err = notebook.removeNoteFromOldTags(*oldNote, note, tc)
 		if err != nil {
-			log.Println("removeNoteFromStaleTags:", err)
+			log.Println("removeNoteFromOldTags:", err)
 			return err
 		}
 
@@ -380,6 +380,48 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 		notebook.UntaggedNoteKeys = removeKey(notebook.UntaggedNoteKeys, noteKey)
 	}
 	return note, nil
+}
+
+func (notebook *Notebook) Delete(note Note, c appengine.Context) (bool, error) {
+	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
+			noteKey, err := datastore.DecodeKey(note.ID)
+			if err != nil {
+				log.Println("decodeKey:note", err)
+				return err
+			}
+			err = datastore.Get(tc, noteKey, &note)
+			if err != nil {
+				log.Println("get:note", err)
+				return err
+			}
+
+			// remove note key from notebook
+			notebook.NoteKeys = removeKey(notebook.NoteKeys, noteKey)
+
+			// remove note key from tags
+			untaggedNote := Note{ID:note.ID}
+			note, err = notebook.removeNoteFromOldTags(note, untaggedNote, tc)
+			if err != nil {
+				log.Println("removeNoteFromOldTags:", err)
+				return err
+			}
+
+			// save notebook
+			key := notebook.Key(tc)
+			_, err = datastore.Put(tc, key, notebook)
+			if err != nil {
+				log.Println("put:notebook", err)
+				return err
+			}
+
+			// remove note
+			err = datastore.Delete(tc, noteKey)
+			if err != nil {
+				log.Println("delete:note", err)
+			}
+			return err
+		}, &datastore.TransactionOptions{XG: true})
+	return err == nil, err
 }
 
 func GetNotebook(c appengine.Context) (*Notebook, error) {

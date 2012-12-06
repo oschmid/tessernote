@@ -29,11 +29,12 @@ import (
 )
 
 const (
+	DeleteNoteURL = "/note/delete"
 	SaveNoteURL = "/note/save"
 )
 
 func isDataURL(url string) bool {
-	return url == SaveNoteURL
+	return url == DeleteNoteURL || url == SaveNoteURL
 }
 
 func serveData(w http.ResponseWriter, r *http.Request) {
@@ -59,6 +60,8 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.URL.Path {
+	case DeleteNoteURL:
+		deleteNote(w, body, notebook, c)
 	case SaveNoteURL:
 		saveNote(w, body, notebook, c)
 	}
@@ -74,6 +77,33 @@ func readPost(r *http.Request) ([]byte, error) {
 	return []byte(buf.String()), nil
 }
 
+// Reads a JSON formatted Note in from POST and deletes the note with that ID from the datastore.
+// Returns true if note was deleted, false otherwise
+func deleteNote(w http.ResponseWriter, body []byte, notebook *note.Notebook, c appengine.Context) {
+	var note note.Note
+	err := json.Unmarshal(body, &note)
+	if err != nil {
+		log.Println("delete:", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	deleted, err := notebook.Delete(note, c)
+	if err != nil {
+		log.Println("delete:note", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	reply, err := json.Marshal(deleted)
+	if err != nil {
+		log.Println("marshal:", err, deleted)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(reply)
+}
+
 // Reads a JSON formatted Note in from POST and writes it to the datastore.
 // Returns the new or updated Note in JSON format.
 func saveNote(w http.ResponseWriter, body []byte, notebook *note.Notebook, c appengine.Context) {
@@ -85,18 +115,18 @@ func saveNote(w http.ResponseWriter, body []byte, notebook *note.Notebook, c app
 		return
 	}
 
-	note, err = notebook.SetNote(note, c)
+	note, err = notebook.Put(note, c)
 	if err != nil {
-		log.Println("setNote:", err)
+		log.Println("put:note", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	bytes, err := json.Marshal(note)
+	reply, err := json.Marshal(note)
 	if err != nil {
 		log.Println("marshal:", err, note)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Write(bytes)
+	w.Write(reply)
 }

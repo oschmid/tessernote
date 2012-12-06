@@ -36,6 +36,7 @@ body
 
 .note
 {
+    position:relative;
     margin-bottom:.5em;
     padding:10px;
     border-width:thin;
@@ -49,6 +50,15 @@ body
     border:0;
     outline:none;
     resize:none;
+}
+
+.delete
+{
+    display:none;
+    position:absolute;
+    top:0.01em;
+    right:0.3em;
+    cursor:pointer;
 }
 
 .save

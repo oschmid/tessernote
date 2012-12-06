@@ -50,7 +50,7 @@ func createTagDiv(name string) string {
 func (p Page) HtmlNotes() template.HTML {
 	html := ""
 	for _, note := range p.Notes {
-		html += "<div class='note'><textarea noteid=\"" + note.ID + "\" class='resize'>" + note.Body + "</textarea><input type='button' class='save' value='Save'></div>"
+		html += "<div class='note'><div class='delete'>x</div><textarea noteid=\"" + note.ID + "\" class='resize'>" + note.Body + "</textarea><input type='button' class='save' value='Save'></div>"
 	}
 	return template.HTML(html)
 }
