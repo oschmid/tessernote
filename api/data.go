@@ -18,15 +18,15 @@ along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
 package api
 
 import (
-	"github.com/oschmid/tessernote/context"
 	"appengine"
 	"appengine/user"
 	"bytes"
 	"encoding/json"
+	"github.com/oschmid/tessernote"
+	"github.com/oschmid/tessernote/context"
 	"io"
 	"log"
 	"net/http"
-	"github.com/oschmid/tessernote/note"
 )
 
 const (
@@ -47,7 +47,7 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notebook, err := note.GetNotebook(c)
+	notebook, err := tessernote.GetNotebook(c)
 	if err != nil {
 		log.Println("getnotebook:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -81,8 +81,8 @@ func readPost(r *http.Request) ([]byte, error) {
 
 // Reads a JSON formatted Note in from POST and deletes the note with that ID from the datastore.
 // Returns true if note was deleted, false otherwise
-func deleteNote(w http.ResponseWriter, body []byte, notebook *note.Notebook, c appengine.Context) {
-	var note note.Note
+func deleteNote(w http.ResponseWriter, body []byte, notebook *tessernote.Notebook, c appengine.Context) {
+	var note tessernote.Note
 	err := json.Unmarshal(body, &note)
 	if err != nil {
 		log.Println("delete:", err)
@@ -108,8 +108,8 @@ func deleteNote(w http.ResponseWriter, body []byte, notebook *note.Notebook, c a
 
 // Reads a JSON formatted Note in from POST and writes it to the datastore.
 // Returns the new or updated Note in JSON format.
-func saveNote(w http.ResponseWriter, body []byte, notebook *note.Notebook, c appengine.Context) {
-	var note note.Note
+func saveNote(w http.ResponseWriter, body []byte, notebook *tessernote.Notebook, c appengine.Context) {
+	var note tessernote.Note
 	err := json.Unmarshal(body, &note)
 	if err != nil {
 		log.Println("save:", err)

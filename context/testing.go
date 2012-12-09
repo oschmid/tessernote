@@ -22,8 +22,8 @@ package context
 import (
 	"appengine"
 	"github.com/oschmid/appenginetesting"
-	"net/http"
 	"html/template"
+	"net/http"
 )
 
 type Context appengine.Context

@@ -18,12 +18,12 @@ along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
 package api
 
 import (
-	"github.com/oschmid/tessernote/context"
 	"appengine"
 	"appengine/user"
+	"github.com/oschmid/tessernote"
+	"github.com/oschmid/tessernote/context"
 	"log"
 	"net/http"
-	"github.com/oschmid/tessernote/note"
 	"regexp"
 	"strings"
 )
@@ -50,7 +50,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		notebook, err := note.GetNotebook(c)
+		notebook, err := tessernote.GetNotebook(c)
 		if err != nil {
 			log.Println("getNotebook:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -64,7 +64,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		page := &Page{Tags: tags}
+		page := &tessernote.Page{Tags: tags}
 		tags, err = parseSelectedTags(w, r, notebook, c)
 		if err != nil {
 			log.Println("page:", err)
@@ -85,7 +85,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		} else if len(tags) == 0 {
 			page.Notes, err = notebook.Notes(c)
 		} else {
-			page.Notes, err = note.RelatedNotes(tags, c)
+			page.Notes, err = tessernote.RelatedNotes(tags, c)
 		}
 		if err != nil {
 			log.Println("notes:", err)
@@ -121,7 +121,7 @@ func loggedIn(w http.ResponseWriter, r *http.Request, c appengine.Context) bool 
 }
 
 // parses url for selected tags, redirects if it refers to missing tags
-func parseSelectedTags(w http.ResponseWriter, r *http.Request, notebook *note.Notebook, c appengine.Context) ([]note.Tag, error) {
+func parseSelectedTags(w http.ResponseWriter, r *http.Request, notebook *tessernote.Notebook, c appengine.Context) ([]tessernote.Tag, error) {
 	var names []string
 	if r.URL.Path != "/" && r.URL.Path != untaggedURL {
 		names = strings.Split(r.URL.Path[1:], tagSeparator)
@@ -135,7 +135,7 @@ func parseSelectedTags(w http.ResponseWriter, r *http.Request, notebook *note.No
 	return tags, err
 }
 
-func namesFrom(tags []note.Tag) []string {
+func namesFrom(tags []tessernote.Tag) []string {
 	names := *new([]string)
 	for _, tag := range tags {
 		names = append(names, tag.Name)

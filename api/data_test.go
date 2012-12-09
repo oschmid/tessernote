@@ -19,21 +19,56 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/oschmid/tessernote"
+	"github.com/oschmid/tessernote/context"
 	"net/http"
-	"github.com/oschmid/tessernote/note"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
 
+func TestGetNotebook(t *testing.T) {
+	// TODO implement
+}
+
 func TestSaveNewNote(t *testing.T) {
-	note := note.Note{Body: "body"}
+	note := tessernote.Note{Body: "body"}
 	bytes, err := json.Marshal(note)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = http.NewRequest("POST", "https://tessernote.appspot.com"+SaveNoteURL, strings.NewReader(string(bytes)))
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("POST", "https://tessernote.appspot.com"+SaveNoteURL, strings.NewReader(string(bytes)))
 	if err != nil {
 		t.Fatal(err)
 	}
-	// TODO make save request
+	serveData(w, r)
+
+	// check note was added
+	c := context.NewContext(r)
+	defer context.Close()
+	notebook, err := tessernote.GetNotebook(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	notes, err := notebook.Notes(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(notes) != 1 {
+		t.Fatal(err)
+	}
+	if notes[0].Body != note.Body {
+		t.Fatal("expected=%s actual=%s", notes[0].Body, note.Body)
+	}
+
+	// check response ID is the same
+	response := []byte(w.Body.String())
+	err = json.Unmarshal(response, note)
+	if err != nil {
+		t.Fatal(err, string(response))
+	}
+	if notes[0].ID != note.ID {
+		t.Fatal("expected=%s actual=%s", notes[0].ID, note.ID)
+	}
 }

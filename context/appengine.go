@@ -21,8 +21,8 @@ package context
 
 import (
 	"appengine"
-	"net/http"
 	"html/template"
+	"net/http"
 )
 
 var Templates = template.Must(template.ParseFiles("github.com/oschmid/tessernote/api/templates/main.html"))

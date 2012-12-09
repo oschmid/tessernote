@@ -15,18 +15,17 @@ You should have received a copy of the GNU General Public License
 along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package api
+package tessernote
 
 import (
 	"html/template"
-	"github.com/oschmid/tessernote/note"
 )
 
 type Page struct {
-	Tags          []note.Tag
-	RelatedTags   []note.Tag
-	SelectedTags  []note.Tag
-	Notes         []note.Note
+	Tags          []Tag
+	RelatedTags   []Tag
+	SelectedTags  []Tag
+	Notes         []Note
 	UntaggedNotes bool
 }
 
