@@ -10,7 +10,7 @@ Tessernote is:
 2. download [go-appengine-sdk 1.7.3](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Go)
 3. [copy appengine sdk and goprotobuf into go](http://stackoverflow.com/questions/11286534/test-cases-for-go-and-appengine)
 4. setup a go workspace with bin/ pkg/ and src/ directories
-5. run 'go get github.com/oschmid/tessernote/api'
+5. run 'go get github.com/oschmid/tessernote'
 6. mv app.yaml into src/ so that you can run it locally using dev_appserver.py
 7. run 'git update-index --assume-unchanged app.yaml' so that the delete isn't checked in
 
