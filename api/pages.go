@@ -18,9 +18,9 @@ along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
 package api
 
 import (
+	"api/context"
 	"appengine"
 	"appengine/user"
-	"html/template"
 	"log"
 	"net/http"
 	"note"
@@ -33,8 +33,7 @@ var (
 	tagSeparator = ","
 	tagsPattern  = "(" + tagPattern + "+\\" + tagSeparator + ")*" + tagPattern + "+"
 	untaggedURL  = "/untagged/"
-	validURL     = regexp.MustCompile("^(/|(" + untaggedURL +")|(/" + tagsPattern + "))$")
-	templates    = template.Must(template.ParseFiles("templates/main.html"))
+	validURL     = regexp.MustCompile("^(/|(" + untaggedURL + ")|(/" + tagsPattern + "))$")
 )
 
 func init() {
@@ -45,7 +44,8 @@ func serve(w http.ResponseWriter, r *http.Request) {
 	if isDataURL(r.URL.Path) {
 		serveData(w, r)
 	} else if validURL.MatchString(r.URL.Path) {
-		c := appengine.NewContext(r)
+		c := context.NewContext(r)
+		defer context.Close()
 		if !loggedIn(w, r, c) {
 			return
 		}
@@ -93,7 +93,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = templates.ExecuteTemplate(w, "main.html", page)
+		err = context.Templates.ExecuteTemplate(w, "main.html", page)
 		if err != nil {
 			log.Println("executeTemplate:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

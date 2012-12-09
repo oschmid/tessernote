@@ -31,7 +31,7 @@ type Notebook struct {
 	ID               string // user.User.ID
 	Name             string
 	TagKeys          []*datastore.Key // sorted by Tag.Name
-	tags             []Tag // cache
+	tags             []Tag            // cache
 	NoteKeys         []*datastore.Key
 	notes            []Note // cache
 	UntaggedNoteKeys []*datastore.Key
@@ -47,7 +47,7 @@ func (notebook *Notebook) Tags(c appengine.Context) ([]Tag, error) {
 		notebook.tags = make([]Tag, len(notebook.TagKeys))
 		err := datastore.GetMulti(c, notebook.TagKeys, notebook.tags)
 		if err != nil {
-			log.Println("tags:", err)
+			log.Println("getMulti:tags", err)
 			return notebook.tags, err
 		}
 	}
@@ -384,43 +384,43 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 
 func (notebook *Notebook) Delete(note Note, c appengine.Context) (bool, error) {
 	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
-			noteKey, err := datastore.DecodeKey(note.ID)
-			if err != nil {
-				log.Println("decodeKey:note", err)
-				return err
-			}
-			err = datastore.Get(tc, noteKey, &note)
-			if err != nil {
-				log.Println("get:note", err)
-				return err
-			}
-
-			// remove note key from notebook
-			notebook.NoteKeys = removeKey(notebook.NoteKeys, noteKey)
-
-			// remove note key from tags
-			untaggedNote := Note{ID:note.ID}
-			note, err = notebook.removeNoteFromOldTags(note, untaggedNote, tc)
-			if err != nil {
-				log.Println("removeNoteFromOldTags:", err)
-				return err
-			}
-
-			// save notebook
-			key := notebook.Key(tc)
-			_, err = datastore.Put(tc, key, notebook)
-			if err != nil {
-				log.Println("put:notebook", err)
-				return err
-			}
-
-			// remove note
-			err = datastore.Delete(tc, noteKey)
-			if err != nil {
-				log.Println("delete:note", err)
-			}
+		noteKey, err := datastore.DecodeKey(note.ID)
+		if err != nil {
+			log.Println("decodeKey:note", err)
 			return err
-		}, &datastore.TransactionOptions{XG: true})
+		}
+		err = datastore.Get(tc, noteKey, &note)
+		if err != nil {
+			log.Println("get:note", err)
+			return err
+		}
+
+		// remove note key from notebook
+		notebook.NoteKeys = removeKey(notebook.NoteKeys, noteKey)
+
+		// remove note key from tags
+		untaggedNote := Note{ID: note.ID}
+		note, err = notebook.removeNoteFromOldTags(note, untaggedNote, tc)
+		if err != nil {
+			log.Println("removeNoteFromOldTags:", err)
+			return err
+		}
+
+		// save notebook
+		key := notebook.Key(tc)
+		_, err = datastore.Put(tc, key, notebook)
+		if err != nil {
+			log.Println("put:notebook", err)
+			return err
+		}
+
+		// remove note
+		err = datastore.Delete(tc, noteKey)
+		if err != nil {
+			log.Println("delete:note", err)
+		}
+		return err
+	}, &datastore.TransactionOptions{XG: true})
 	return err == nil, err
 }
 

@@ -18,6 +18,7 @@ along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
 package api
 
 import (
+	"api/context"
 	"appengine"
 	"appengine/user"
 	"bytes"
@@ -30,7 +31,7 @@ import (
 
 const (
 	DeleteNoteURL = "/note/delete"
-	SaveNoteURL = "/note/save"
+	SaveNoteURL   = "/note/save"
 )
 
 func isDataURL(url string) bool {
@@ -38,7 +39,8 @@ func isDataURL(url string) bool {
 }
 
 func serveData(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
+	c := context.NewContext(r)
+	defer context.Close()
 	u := user.Current(c)
 	if u == nil {
 		http.Error(w, "", http.StatusUnauthorized)
