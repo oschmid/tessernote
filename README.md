@@ -6,11 +6,12 @@ Tessernote is:
 - organized on-the-fly: tagging is done by writing hashtags in notes
 
 ###How to install
-1 download go 1.0.3 ([install guide](http://golang.org/doc/install))
-2 download [go-appengine-sdk 1.7.3](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Go)
-3 [copy appengine sdk and goprotobuf into go](http://stackoverflow.com/questions/11286534/test-cases-for-go-and-appengine)
-4 'go get github.com/oschmid/tessernote/api'
-5 mv app.yaml into src/
+1. install go 1.0.3 ([install guide](http://golang.org/doc/install))
+2. download [go-appengine-sdk 1.7.3](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Go)
+3. [copy appengine sdk and goprotobuf into go](http://stackoverflow.com/questions/11286534/test-cases-for-go-and-appengine)
+4. setup a go workspace with bin/ pkg/ and src/ directories
+5. run 'go get github.com/oschmid/tessernote/api'
+6. mv app.yaml into src/
 
 ###Fetchnotes
 It turns out my idea of organizing notes by hashtag isn't as original as I thought. So if you want a note taking app
