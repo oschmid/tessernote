@@ -19,7 +19,7 @@ package api
 
 import (
 	"html/template"
-	"note"
+	"github.com/oschmid/tessernote/note"
 )
 
 type Page struct {

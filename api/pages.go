@@ -18,12 +18,12 @@ along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
 package api
 
 import (
-	"api/context"
+	"github.com/oschmid/tessernote/context"
 	"appengine"
 	"appengine/user"
 	"log"
 	"net/http"
-	"note"
+	"github.com/oschmid/tessernote/note"
 	"regexp"
 	"strings"
 )

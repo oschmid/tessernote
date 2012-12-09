@@ -25,7 +25,7 @@ import (
 	"html/template"
 )
 
-var Templates = template.Must(template.ParseFiles("api/templates/main.html"))
+var Templates = template.Must(template.ParseFiles("github.com/oschmid/tessernote/api/templates/main.html"))
 
 type Context appengine.Context
 

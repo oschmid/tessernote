@@ -20,7 +20,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"note"
+	"github.com/oschmid/tessernote/note"
 	"strings"
 	"testing"
 )
