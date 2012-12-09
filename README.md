@@ -6,6 +6,7 @@ Tessernote is:
 - organized on-the-fly: tagging is done by writing hashtags in notes
 
 ###Dependencies
+- go 1.0.3 ([install guide](http://golang.org/doc/install))
 - [go-appengine-sdk 1.7.3](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Go)
 - gae-go-testing ([install guide](http://stackoverflow.com/questions/11286534/test-cases-for-go-and-appengine))
 
