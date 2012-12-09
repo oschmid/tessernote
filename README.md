@@ -11,7 +11,8 @@ Tessernote is:
 3. [copy appengine sdk and goprotobuf into go](http://stackoverflow.com/questions/11286534/test-cases-for-go-and-appengine)
 4. setup a go workspace with bin/ pkg/ and src/ directories
 5. run 'go get github.com/oschmid/tessernote/api'
-6. mv app.yaml into src/
+6. mv app.yaml into src/ so that you can run it locally using dev_appserver.py
+7. run 'git update-index --assume-unchanged app.yaml' so that the delete isn't checked in
 
 ###Fetchnotes
 It turns out my idea of organizing notes by hashtag isn't as original as I thought. So if you want a note taking app
