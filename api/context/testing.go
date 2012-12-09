@@ -21,7 +21,7 @@ package context
 
 import (
 	"appengine"
-	appenginetesting "github.com/tenntenn/gae-go-testing"
+	"github.com/oschmid/appenginetesting"
 	"net/http"
 	"html/template"
 )
