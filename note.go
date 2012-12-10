@@ -30,8 +30,8 @@ type Note struct {
 	Created      time.Time
 	LastModified time.Time
 	TagKeys      []*datastore.Key
-	tags         []Tag // cache
 	NotebookKeys []*datastore.Key
+	tags         []Tag // cache
 }
 
 func (note *Note) Tags(c appengine.Context) ([]Tag, error) {

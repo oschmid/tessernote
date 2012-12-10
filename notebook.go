@@ -31,10 +31,10 @@ type Notebook struct {
 	ID               string // user.User.ID
 	Name             string
 	TagKeys          []*datastore.Key // sorted by Tag.Name
-	tags             []Tag            // cache
 	NoteKeys         []*datastore.Key
-	notes            []Note // cache
 	UntaggedNoteKeys []*datastore.Key
+	tags             []Tag  // cache
+	notes            []Note // cache
 	untaggedNotes    []Note //cache
 }
 
