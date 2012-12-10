@@ -425,8 +425,12 @@ func (notebook *Notebook) Delete(note Note, c appengine.Context) (bool, error) {
 }
 
 func GetNotebook(c appengine.Context) (*Notebook, error) {
+	notebook := new(Notebook)
 	u := user.Current(c)
-	notebook := &Notebook{ID: u.ID}
+	if u == nil {
+		return notebook, errors.New("user is null")
+	}
+	notebook.ID = u.ID
 	key := notebook.Key(c)
 	err := datastore.Get(c, key, notebook)
 	if err != nil {

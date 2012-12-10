@@ -42,7 +42,7 @@ func TestSaveNewNote(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	serveData(w, r)
+	serve(w, r)
 
 	// check note was added
 	c := context.NewContext(r)
