@@ -97,7 +97,7 @@ func CreateNote(w http.ResponseWriter, r *http.Request, c appengine.Context, not
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	
+
 	var note tessernote.Note
 	err = json.Unmarshal(body, &note)
 	if err != nil {

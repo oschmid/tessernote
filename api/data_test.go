@@ -34,16 +34,17 @@ func TestSaveNewNote(t *testing.T) {
 		t.Fatal(err)
 	}
 	w := httptest.NewRecorder()
-	r, err := http.NewRequest("POST", "https://tessernote.appspot.com"+SaveNoteURL, strings.NewReader(string(bytes)))
+	r, err := http.NewRequest("POST", "https://tessernote.appspot.com"+NotesURL, strings.NewReader(string(bytes)))
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// TODO create a test notebook, accessible by serve()
+
 	serve(w, r)
 
 	c := context.NewContext(r)
 	defer context.Close()
-
-	// TODO fake a user
 
 	// check note was added
 	notebook, err := tessernote.GetNotebook(c)
