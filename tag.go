@@ -20,7 +20,6 @@ package tessernote
 import (
 	"appengine"
 	"appengine/datastore"
-	"log"
 	"regexp"
 	"strings"
 	"unicode"
@@ -74,7 +73,7 @@ func (tag Tag) Notebooks(c appengine.Context) ([]Notebook, error) {
 	notebooks := make([]Notebook, len(tag.NotebookKeys))
 	err := datastore.GetMulti(c, tag.NotebookKeys, notebooks)
 	if err != nil {
-		log.Println("getMulti:notebooks", err)
+		c.Errorf("getting tag notebooks:", err)
 	}
 	return notebooks, err
 }
@@ -83,7 +82,7 @@ func (tag Tag) Notes(c appengine.Context) ([]Note, error) {
 	notes := make([]Note, len(tag.NoteKeys))
 	err := datastore.GetMulti(c, tag.NoteKeys, notes)
 	if err != nil {
-		log.Println("getMulti:notes", err)
+		c.Errorf("getting tag notes:", err)
 		return notes, err
 	}
 	for i, note := range notes {
@@ -96,7 +95,7 @@ func (tag Tag) Children(c appengine.Context) ([]Tag, error) {
 	children := make([]Tag, len(tag.ChildKeys))
 	err := datastore.GetMulti(c, tag.ChildKeys, children)
 	if err != nil {
-		log.Println("getMulti:children", err)
+		c.Errorf("getting tag children:", err)
 	}
 	return children, err
 }
@@ -115,7 +114,7 @@ func RelatedNotes(tags []Tag, c appengine.Context) ([]Note, error) {
 	if len(noteKeys) > 0 {
 		err = datastore.GetMulti(c, noteKeys, notes)
 		if err != nil {
-			log.Println("getMulti:relatedNotes", err)
+			c.Errorf("getting related notes:", err)
 		}
 	}
 	return notes, err

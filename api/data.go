@@ -25,7 +25,6 @@ import (
 	"github.com/oschmid/tessernote"
 	"github.com/oschmid/tessernote/context"
 	"io"
-	"log"
 	"net/http"
 	"regexp"
 )
@@ -50,7 +49,6 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 
 	notebook, err := tessernote.GetNotebook(c)
 	if err != nil {
-		log.Println("getnotebook:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -94,9 +92,8 @@ func ReplaceAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context
 // Creates a new note in "notebook" with the contents of the JSON formatted note in "r"
 // Uses "w" to write the new note (with its automatically assigned ID) in JSON format
 func CreateNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
-	body, err := readPost(r)
+	body, err := readRequestBody(r)
 	if err != nil {
-		log.Println("readPost:", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -104,21 +101,19 @@ func CreateNote(w http.ResponseWriter, r *http.Request, c appengine.Context, not
 	var note tessernote.Note
 	err = json.Unmarshal(body, &note)
 	if err != nil {
-		log.Println("save:", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	note, err = notebook.Put(note, c)
 	if err != nil {
-		log.Println("put:note", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	reply, err := json.Marshal(note)
 	if err != nil {
-		log.Println("marshal:", err, note)
+		c.Errorf("marshaling note:", err, "\n", note)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -152,21 +147,20 @@ func DeleteNote(w http.ResponseWriter, r *http.Request, c appengine.Context, not
 	id := r.URL.Path[len(NotesURL):]
 	deleted, err := notebook.Delete(id, c)
 	if err != nil {
-		log.Println("delete:note", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	reply, err := json.Marshal(deleted)
 	if err != nil {
-		log.Println("marshal:", err, deleted)
+		c.Errorf("marshaling delete response:", err, "\n", deleted)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Write(reply)
 }
 
-func readPost(r *http.Request) ([]byte, error) {
+func readRequestBody(r *http.Request) ([]byte, error) {
 	defer r.Body.Close()
 	buf := new(bytes.Buffer)
 	_, err := io.Copy(buf, r.Body)

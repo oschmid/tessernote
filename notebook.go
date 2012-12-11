@@ -22,7 +22,6 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 	"errors"
-	"log"
 	"sort"
 	"time"
 )
@@ -47,7 +46,7 @@ func (notebook *Notebook) Tags(c appengine.Context) ([]Tag, error) {
 		notebook.tags = make([]Tag, len(notebook.TagKeys))
 		err := datastore.GetMulti(c, notebook.TagKeys, notebook.tags)
 		if err != nil {
-			log.Println("getMulti:tags", err)
+			c.Errorf("getting notebook tags:", err)
 			return notebook.tags, err
 		}
 	}
@@ -59,7 +58,7 @@ func (notebook *Notebook) Notes(c appengine.Context) ([]Note, error) {
 		notebook.notes = make([]Note, len(notebook.NoteKeys))
 		err := datastore.GetMulti(c, notebook.NoteKeys, notebook.notes)
 		if err != nil {
-			log.Println("getMulti:notes", err)
+			c.Errorf("getting notebook notes:", err)
 			return notebook.notes, err
 		}
 		for i := 0; i < len(notebook.notes); i++ {
@@ -75,7 +74,7 @@ func (notebook *Notebook) UntaggedNotes(c appengine.Context) ([]Note, error) {
 		notebook.untaggedNotes = make([]Note, len(notebook.UntaggedNoteKeys))
 		err := datastore.GetMulti(c, notebook.UntaggedNoteKeys, notebook.untaggedNotes)
 		if err != nil {
-			log.Println("getMulti:untaggedNotes", err)
+			c.Errorf("getting notebook untagged notes:", err)
 			return notebook.untaggedNotes, err
 		}
 		for i := 0; i < len(notebook.untaggedNotes); i++ {
@@ -96,7 +95,6 @@ func (notebook *Notebook) TagsFrom(names []string, c appengine.Context) ([]Tag, 
 	sort.Strings(names)
 	allTags, err := notebook.Tags(c)
 	if err != nil {
-		log.Println("tags:", err)
 		return tags, err
 	}
 	tagsIndex := 0
@@ -128,7 +126,6 @@ func (notebook *Notebook) RelatedTags(tags []Tag, c appengine.Context) ([]Tag, e
 	tags = *new([]Tag)
 	allTags, err := notebook.Tags(c)
 	if err != nil {
-		log.Println("tags:", err)
 		return tags, err
 	}
 	for _, tag := range allTags {
@@ -154,27 +151,21 @@ func (notebook *Notebook) addNote(note Note, c appengine.Context) (Note, error) 
 		var err error
 		note, err = notebook.addMissingTags(note, tc)
 		if err != nil {
-			log.Println("addMissingTags:", err)
 			return err
 		}
 
 		note, err = notebook.createNote(note, tc)
 		if err != nil {
-			log.Println("createNote:", err)
 			return err
 		}
 
 		err = note.addKeyToTags(tc)
 		if err != nil {
-			log.Println("addKeyToTags:", err)
 			return err
 		}
 
 		key := notebook.Key(tc)
 		_, err = datastore.Put(tc, key, notebook)
-		if err != nil {
-			log.Println("put:notebook", err)
-		}
 		return err
 	}, &datastore.TransactionOptions{XG: true})
 	return note, err
@@ -190,7 +181,6 @@ func (notebook *Notebook) addMissingTags(note Note, c appengine.Context) (Note, 
 
 	notebookTags, err := notebook.Tags(c)
 	if err != nil {
-		log.Println("tags:", err)
 		return note, err
 	}
 
@@ -214,7 +204,7 @@ func (notebook *Notebook) addMissingTags(note Note, c appengine.Context) (Note, 
 	if len(missingTags) > 0 {
 		missingTagKeys, err = datastore.PutMulti(c, missingTagKeys, missingTags)
 		if err != nil {
-			log.Println("putMulti:missingTags", err)
+			c.Errorf("adding missing tags:", err)
 			return note, err
 		}
 	}
@@ -225,7 +215,7 @@ func (notebook *Notebook) addMissingTags(note Note, c appengine.Context) (Note, 
 	if len(names) == 0 && note.ID != "" {
 		noteKey, err := datastore.DecodeKey(note.ID)
 		if err != nil {
-			log.Println("decodeKey:note", err)
+			c.Errorf("decoding note key:", err)
 			return note, err
 		}
 		notebook.UntaggedNoteKeys = append(notebook.UntaggedNoteKeys, noteKey)
@@ -247,7 +237,7 @@ func (notebook *Notebook) createNote(note Note, c appengine.Context) (Note, erro
 	note.NotebookKeys = []*datastore.Key{notebook.Key(c)}
 	noteKey, err := datastore.Put(c, noteKey, &note)
 	if err != nil {
-		log.Println("put:note", err)
+		c.Errorf("adding note:", err)
 		return note, err
 	}
 	note.ID = noteKey.Encode()
@@ -263,38 +253,33 @@ func (notebook *Notebook) updateNote(note Note, c appengine.Context) (Note, erro
 	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
 		oldNote, err := GetNote(note.ID, tc)
 		if err != nil {
-			log.Println("getNote:", err)
 			return err
 		}
 
 		note, err = notebook.removeNoteFromOldTags(*oldNote, note, tc)
 		if err != nil {
-			log.Println("removeNoteFromOldTags:", err)
 			return err
 		}
 
 		note, err = notebook.addMissingTags(note, tc)
 		if err != nil {
-			log.Println("addMissingTags:", err)
 			return err
 		}
 
 		note, err := oldNote.Update(note, tc)
 		if err != nil {
-			log.Println("setBody:", err)
 			return err
 		}
 
 		err = note.addKeyToTags(tc)
 		if err != nil {
-			log.Println("addKeyToTags:", err)
 			return err
 		}
 
 		key := notebook.Key(tc)
 		_, err = datastore.Put(tc, key, notebook)
 		if err != nil {
-			log.Println("put:notebook", err)
+			c.Errorf("updating notebook:", err)
 		}
 		return err
 	}, &datastore.TransactionOptions{XG: true})
@@ -306,7 +291,6 @@ func (notebook *Notebook) updateNote(note Note, c appengine.Context) (Note, erro
 func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.Context) (Note, error) {
 	oldTags, err := oldNote.Tags(c)
 	if err != nil {
-		log.Println("tags:", err)
 		return note, err
 	}
 
@@ -321,7 +305,7 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 		} else if !containsString(names, oldTags[i].Name) {
 			key, err := datastore.DecodeKey(note.ID)
 			if err != nil {
-				log.Println("decodeKey:note", err)
+				c.Errorf("decoding note key:", err)
 				return note, err
 			}
 			oldTags[i].NoteKeys = removeKey(oldTags[i].NoteKeys, key)
@@ -336,7 +320,7 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 	if len(keysToUpdate) > 0 {
 		keysToUpdate, err = datastore.PutMulti(c, keysToUpdate, tagsToUpdate)
 		if err != nil {
-			log.Println("putMulti:update", err)
+			c.Errorf("deleting note from old tags:", err)
 			return note, err
 		}
 	}
@@ -345,7 +329,7 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 	if len(keysToRemove) > 0 {
 		err = datastore.DeleteMulti(c, keysToRemove)
 		if err != nil {
-			log.Println("deleteMulti:removeKeys", err)
+			c.Errorf("deleting empty tags:", err)
 			return note, err
 		}
 	}
@@ -374,7 +358,7 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 	if len(names) > 0 {
 		noteKey, err := datastore.DecodeKey(note.ID)
 		if err != nil {
-			log.Println("decodeKey:note", err)
+			c.Errorf("decoding note key:", err)
 			return note, err
 		}
 		notebook.UntaggedNoteKeys = removeKey(notebook.UntaggedNoteKeys, noteKey)
@@ -386,14 +370,14 @@ func (notebook *Notebook) Delete(id string, c appengine.Context) (bool, error) {
 	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
 		noteKey, err := datastore.DecodeKey(id)
 		if err != nil {
-			log.Println("decodeKey:note", err)
+			c.Errorf("decoding note key:", err)
 			return err
 		}
 
 		var note Note
 		err = datastore.Get(tc, noteKey, &note)
 		if err != nil {
-			log.Println("get:note", err)
+			c.Errorf("getting note:", err)
 			return err
 		}
 
@@ -404,7 +388,6 @@ func (notebook *Notebook) Delete(id string, c appengine.Context) (bool, error) {
 		untaggedNote := Note{ID: note.ID}
 		note, err = notebook.removeNoteFromOldTags(note, untaggedNote, tc)
 		if err != nil {
-			log.Println("removeNoteFromOldTags:", err)
 			return err
 		}
 
@@ -412,14 +395,14 @@ func (notebook *Notebook) Delete(id string, c appengine.Context) (bool, error) {
 		key := notebook.Key(tc)
 		_, err = datastore.Put(tc, key, notebook)
 		if err != nil {
-			log.Println("put:notebook", err)
+			c.Errorf("updating notebook:", err)
 			return err
 		}
 
 		// remove note
 		err = datastore.Delete(tc, noteKey)
 		if err != nil {
-			log.Println("delete:note", err)
+			c.Errorf("deleting note:", err)
 		}
 		return err
 	}, &datastore.TransactionOptions{XG: true})
@@ -437,7 +420,7 @@ func GetNotebook(c appengine.Context) (*Notebook, error) {
 	err := datastore.Get(c, key, notebook)
 	if err != nil {
 		// create new user
-		log.Println("new user", u.Email)
+		c.Infof("adding new notebook for:", u.Email)
 		notebook.Name = u.Email
 		key, err = datastore.Put(c, key, notebook)
 	}

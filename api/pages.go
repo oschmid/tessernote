@@ -22,7 +22,6 @@ import (
 	"appengine/user"
 	"github.com/oschmid/tessernote"
 	"github.com/oschmid/tessernote/context"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -52,14 +51,12 @@ func serve(w http.ResponseWriter, r *http.Request) {
 
 		notebook, err := tessernote.GetNotebook(c)
 		if err != nil {
-			log.Println("getNotebook:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		tags, err := notebook.Tags(c)
 		if err != nil {
-			log.Println("tags:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -67,7 +64,6 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		page := &tessernote.Page{Tags: tags}
 		tags, err = parseSelectedTags(w, r, notebook, c)
 		if err != nil {
-			log.Println("page:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -75,7 +71,6 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		page.SelectedTags = tags
 		page.RelatedTags, err = notebook.RelatedTags(tags, c)
 		if err != nil {
-			log.Println("relatedTags:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
@@ -88,14 +83,13 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			page.Notes, err = tessernote.RelatedNotes(tags, c)
 		}
 		if err != nil {
-			log.Println("notes:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		err = context.Templates.ExecuteTemplate(w, "main.html", page)
 		if err != nil {
-			log.Println("executeTemplate:", err)
+			c.Errorf("executing template:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else {
@@ -109,7 +103,7 @@ func loggedIn(w http.ResponseWriter, r *http.Request, c appengine.Context) bool 
 	if u == nil {
 		url, err := user.LoginURL(c, r.URL.String())
 		if err != nil {
-			log.Println(err)
+			c.Errorf("logging in:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return false
 		}

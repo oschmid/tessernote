@@ -20,7 +20,6 @@ package tessernote
 import (
 	"appengine"
 	"appengine/datastore"
-	"log"
 	"time"
 )
 
@@ -39,7 +38,7 @@ func (note *Note) Tags(c appengine.Context) ([]Tag, error) {
 		note.tags = make([]Tag, len(note.TagKeys))
 		err := datastore.GetMulti(c, note.TagKeys, note.tags)
 		if err != nil {
-			log.Println("getMulti:tags", err)
+			c.Errorf("getting note tags:", err)
 			return note.tags, err
 		}
 	}
@@ -51,7 +50,7 @@ func (note Note) Notebooks(c appengine.Context) ([]Notebook, error) {
 	if len(notebooks) > 0 {
 		err := datastore.GetMulti(c, note.NotebookKeys, notebooks)
 		if err != nil {
-			log.Println("getMulti:notebooks", err)
+			c.Errorf("getting note notebooks:", err)
 			return notebooks, err
 		}
 	}
@@ -63,7 +62,7 @@ func (note Note) Notebooks(c appengine.Context) ([]Notebook, error) {
 func (note *Note) Update(new Note, c appengine.Context) (Note, error) {
 	key, err := datastore.DecodeKey(note.ID)
 	if err != nil {
-		log.Println("decodeKey:note", err)
+		c.Errorf("decoding note key:", err)
 		return *note, err
 	}
 
@@ -74,7 +73,7 @@ func (note *Note) Update(new Note, c appengine.Context) (Note, error) {
 	note.NotebookKeys = note.NotebookKeys
 	_, err = datastore.Put(c, key, note)
 	if err != nil {
-		log.Println("put:note", err)
+		c.Errorf("updating note:", err)
 	}
 	return *note, err
 }
@@ -83,13 +82,12 @@ func (note *Note) Update(new Note, c appengine.Context) (Note, error) {
 func (note Note) addKeyToTags(c appengine.Context) error {
 	noteKey, err := datastore.DecodeKey(note.ID)
 	if err != nil {
-		log.Println("decodeKey:note", err)
+		c.Errorf("decoding note key:", err)
 		return err
 	}
 
 	tags, err := note.Tags(c)
 	if err != nil {
-		log.Println("tags:", err)
 		return err
 	}
 
@@ -106,7 +104,7 @@ func (note Note) addKeyToTags(c appengine.Context) error {
 	if len(tagsToUpdate) > 0 {
 		_, err = datastore.PutMulti(c, tagKeysToUpdate, tagsToUpdate)
 		if err != nil {
-			log.Println("putMulti:tags", err)
+			c.Errorf("updating note tags:", err)
 		}
 	}
 	return err
@@ -116,13 +114,13 @@ func GetNote(id string, c appengine.Context) (*Note, error) {
 	note := new(Note)
 	key, err := datastore.DecodeKey(id)
 	if err != nil {
-		log.Println("decodeKey:", err)
+		c.Errorf("decoding note key:", err)
 		return note, err
 	}
 
 	err = datastore.Get(c, key, note)
 	if err != nil {
-		log.Println("get:", err)
+		c.Errorf("getting note:", err)
 	}
 	note.ID = id
 	return note, err
