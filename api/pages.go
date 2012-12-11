@@ -33,7 +33,7 @@ var (
 	tagSeparator = ","
 	tagsPattern  = "(" + tagPattern + "+\\" + tagSeparator + ")*" + tagPattern + "+"
 	untaggedURL  = "/untagged/"
-	validURL     = regexp.MustCompile("^(/|(" + untaggedURL + ")|(/" + tagsPattern + "))$")
+	validPageURL = regexp.MustCompile("^(/|(" + untaggedURL + ")|(/" + tagsPattern + "))$")
 )
 
 func init() {
@@ -41,9 +41,9 @@ func init() {
 }
 
 func serve(w http.ResponseWriter, r *http.Request) {
-	if isDataURL(r.URL.Path) {
+	if validDataURL.MatchString(r.URL.Path) {
 		serveData(w, r)
-	} else if validURL.MatchString(r.URL.Path) {
+	} else if validPageURL.MatchString(r.URL.Path) {
 		c := context.NewContext(r)
 		defer context.Close()
 		if !loggedIn(w, r, c) {

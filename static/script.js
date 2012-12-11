@@ -1,5 +1,4 @@
-var saveNoteURL = '/note/save'
-var deleteNoteURL = '/note/delete'
+var notesURL = '/notes/'
 
 function filterByTag(e) {
     if ($(this).text() == 'All Notes') {
@@ -25,10 +24,10 @@ function deleteNote(e) {
     textarea = $(this).next('textarea')
     note = new Object();
     note.ID = textarea.attr('noteid')
-    $.post(deleteNoteURL, JSON.stringify(note), function(success) {
+    $.ajax({url: notesURL + note.ID, type:'DELETE', success: function(response) {
         // TODO remove note without reloading page
         location.reload();
-    })
+    }});
 }
 
 function hideDelete() {
@@ -46,10 +45,17 @@ function saveNote() {
     note.ID = textarea.attr('noteid')
     note.Body = textarea.attr('value')
     if (note.Body != '') {
-        $.post(saveNoteURL, JSON.stringify(note), function(note) {
-            // TODO insert note without reloading page
-            location.reload();
-        });
+        if (note.ID) {
+            $.ajax({url:notesURL+note.ID, type:"PUT", data:JSON.stringify(note), success: function(note) {
+                // TODO replace note without reloading page
+                location.reload();
+            }})
+        } else {
+            $.post(notesURL, JSON.stringify(note), function(note) {
+                // TODO insert note without reloading page
+                location.reload();
+            });
+        }
     }
     $(this).hide();
 }

@@ -27,10 +27,6 @@ import (
 	"testing"
 )
 
-func TestGetNotebook(t *testing.T) {
-	// TODO implement
-}
-
 func TestSaveNewNote(t *testing.T) {
 	note := tessernote.Note{Body: "body"}
 	bytes, err := json.Marshal(note)
@@ -44,9 +40,12 @@ func TestSaveNewNote(t *testing.T) {
 	}
 	serve(w, r)
 
-	// check note was added
 	c := context.NewContext(r)
 	defer context.Close()
+
+	// TODO fake a user
+
+	// check note was added
 	notebook, err := tessernote.GetNotebook(c)
 	if err != nil {
 		t.Fatal(err)

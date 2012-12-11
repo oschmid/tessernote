@@ -382,13 +382,15 @@ func (notebook *Notebook) removeNoteFromOldTags(oldNote, note Note, c appengine.
 	return note, nil
 }
 
-func (notebook *Notebook) Delete(note Note, c appengine.Context) (bool, error) {
+func (notebook *Notebook) Delete(id string, c appengine.Context) (bool, error) {
 	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
-		noteKey, err := datastore.DecodeKey(note.ID)
+		noteKey, err := datastore.DecodeKey(id)
 		if err != nil {
 			log.Println("decodeKey:note", err)
 			return err
 		}
+
+		var note Note
 		err = datastore.Get(tc, noteKey, &note)
 		if err != nil {
 			log.Println("get:note", err)

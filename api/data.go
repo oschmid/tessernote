@@ -27,16 +27,17 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 )
 
 const (
-	DeleteNoteURL = "/note/delete"
-	SaveNoteURL   = "/note/save"
+	NotesURL = "/notes/"
 )
 
-func isDataURL(url string) bool {
-	return url == DeleteNoteURL || url == SaveNoteURL
-}
+var (
+	idPattern    = "[0-9a-zA-Z-_]"
+	validDataURL = regexp.MustCompile("^" + NotesURL + idPattern + "*$")
+)
 
 func serveData(w http.ResponseWriter, r *http.Request) {
 	c := context.NewContext(r)
@@ -54,63 +55,54 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.URL.Path == NotesURL {
+		switch r.Method {
+		case "GET":
+			GetAllNotes(w, r, c, notebook)
+		case "PUT":
+			ReplaceAllNotes(w, r, c, notebook)
+		case "POST":
+			CreateNote(w, r, c, notebook)
+		case "DELETE":
+			DeleteAllNotes(w, r, c, notebook)
+		}
+	} else {
+		switch r.Method {
+		case "GET":
+			GetNote(w, r, c, notebook)
+		case "PUT":
+			ReplaceNote(w, r, c, notebook)
+		case "DELETE":
+			DeleteNote(w, r, c, notebook)
+		}
+	}
+}
+
+// Uses "w" to write a JSON formatted list of all Note IDs in "notebook"
+func GetAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
+	// TODO return a list note IDs
+	http.Error(w, "not yet implemented", http.StatusInternalServerError)
+}
+
+// Replaces the contents of "notebook" with the JSON formatted list of notes in "r"
+// Uses "w" to write "true" if succeeded or an error message otherwise
+func ReplaceAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
+	// TODO replace all notes with new notes
+	http.Error(w, "not yet implemented", http.StatusInternalServerError)
+}
+
+// Creates a new note in "notebook" with the contents of the JSON formatted note in "r"
+// Uses "w" to write the new note (with its automatically assigned ID) in JSON format
+func CreateNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
 	body, err := readPost(r)
 	if err != nil {
 		log.Println("readPost:", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	switch r.URL.Path {
-	case DeleteNoteURL:
-		deleteNote(w, body, notebook, c)
-	case SaveNoteURL:
-		saveNote(w, body, notebook, c)
-	}
-}
-
-func readPost(r *http.Request) ([]byte, error) {
-	defer r.Body.Close()
-	buf := new(bytes.Buffer)
-	_, err := io.Copy(buf, r.Body)
-	if err != nil {
-		return nil, err
-	}
-	return []byte(buf.String()), nil
-}
-
-// Reads a JSON formatted Note in from POST and deletes the note with that ID from the datastore.
-// Returns true if note was deleted, false otherwise
-func deleteNote(w http.ResponseWriter, body []byte, notebook *tessernote.Notebook, c appengine.Context) {
+	
 	var note tessernote.Note
-	err := json.Unmarshal(body, &note)
-	if err != nil {
-		log.Println("delete:", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	deleted, err := notebook.Delete(note, c)
-	if err != nil {
-		log.Println("delete:note", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	reply, err := json.Marshal(deleted)
-	if err != nil {
-		log.Println("marshal:", err, deleted)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(reply)
-}
-
-// Reads a JSON formatted Note in from POST and writes it to the datastore.
-// Returns the new or updated Note in JSON format.
-func saveNote(w http.ResponseWriter, body []byte, notebook *tessernote.Notebook, c appengine.Context) {
-	var note tessernote.Note
-	err := json.Unmarshal(body, &note)
+	err = json.Unmarshal(body, &note)
 	if err != nil {
 		log.Println("save:", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -131,4 +123,55 @@ func saveNote(w http.ResponseWriter, body []byte, notebook *tessernote.Notebook,
 		return
 	}
 	w.Write(reply)
+}
+
+// Deletes all notes in "notebook"
+// Uses "w" to write "true" if notes were deleted, "false" if notebook was empty
+func DeleteAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
+	// TODO delete all notes
+	http.Error(w, "not yet implemented", http.StatusInternalServerError)
+}
+
+// Retrieves a note from "notebook" by its ID
+// Uses "w" to write the note in JSON format
+func GetNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
+	// TODO retrieve a note by ID
+	http.Error(w, "not yet implemented", http.StatusInternalServerError)
+}
+
+// Replaces a note from "notebook" by its ID, creates it if it doesn't exist
+// Uses "w" to write the note in JSON format
+func ReplaceNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
+	// TODO replace note by ID, create if it doesn't exist
+	http.Error(w, "not yet implemented", http.StatusInternalServerError)
+}
+
+// Reads a Note.ID from URL and deletes it from the Notebook
+// Uses "w" to write "true" if note was deleted, "false" if it never existed
+func DeleteNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
+	id := r.URL.Path[len(NotesURL):]
+	deleted, err := notebook.Delete(id, c)
+	if err != nil {
+		log.Println("delete:note", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	reply, err := json.Marshal(deleted)
+	if err != nil {
+		log.Println("marshal:", err, deleted)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(reply)
+}
+
+func readPost(r *http.Request) ([]byte, error) {
+	defer r.Body.Close()
+	buf := new(bytes.Buffer)
+	_, err := io.Copy(buf, r.Body)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(buf.String()), nil
 }
