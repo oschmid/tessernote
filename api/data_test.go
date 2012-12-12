@@ -22,13 +22,23 @@ import (
 	"encoding/json"
 	"github.com/oschmid/appenginetesting"
 	"github.com/oschmid/tessernote"
+	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 )
 
+var once = new(sync.Once)
+
+func setupTests() {
+	once.Do(func() { templates = template.Must(template.ParseFiles("templates/main.html")) })
+}
+
 func TestSaveNewNote(t *testing.T) {
+	setupTests()
+	
 	note := tessernote.Note{Body: "body"}
 	bytes, err := json.Marshal(note)
 	if err != nil {

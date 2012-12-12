@@ -21,7 +21,7 @@ import (
 	"appengine"
 	"appengine/user"
 	"github.com/oschmid/tessernote"
-	"github.com/oschmid/tessernote/context"
+	"html/template"
 	"net/http"
 	"regexp"
 	"strings"
@@ -33,6 +33,7 @@ var (
 	tagsPattern  = "(" + tagPattern + "+\\" + tagSeparator + ")*" + tagPattern + "+"
 	untaggedURL  = "/untagged/"
 	validPageURL = regexp.MustCompile("^(/|(" + untaggedURL + ")|(/" + tagsPattern + "))$")
+	templates, _ = template.ParseFiles("github.com/oschmid/tessernote/api/templates/main.html")
 )
 
 func init() {
@@ -86,7 +87,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = context.Templates.ExecuteTemplate(w, "main.html", page)
+		err = templates.ExecuteTemplate(w, "main.html", page)
 		if err != nil {
 			c.Errorf("executing template:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
