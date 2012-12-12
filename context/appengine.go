@@ -19,21 +19,6 @@ along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
 
 package context
 
-import (
-	"appengine"
-	"html/template"
-	"net/http"
-)
+import "html/template"
 
 var Templates = template.Must(template.ParseFiles("github.com/oschmid/tessernote/api/templates/main.html"))
-
-type Context appengine.Context
-
-// NewContext returns a new context for an in-flight HTTP request.
-func NewContext(r *http.Request) appengine.Context {
-	return appengine.NewContext(r)
-}
-
-func Close() {
-	// do nothing
-}

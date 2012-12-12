@@ -43,8 +43,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 	if validDataURL.MatchString(r.URL.Path) {
 		serveData(w, r)
 	} else if validPageURL.MatchString(r.URL.Path) {
-		c := context.NewContext(r)
-		defer context.Close()
+		c := appengine.NewContext(r)
 		if !loggedIn(w, r, c) {
 			return
 		}

@@ -18,9 +18,10 @@ along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
 package api
 
 import (
+	"appengine/datastore"
 	"encoding/json"
+	"github.com/oschmid/appenginetesting"
 	"github.com/oschmid/tessernote"
-	"github.com/oschmid/tessernote/context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -39,15 +40,24 @@ func TestSaveNewNote(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// TODO create a test notebook, accessible by serve()
+	// create a test notebook
+	notebook := new(tessernote.Notebook)
+	c, err := appenginetesting.NewContext(nil)
+	defer c.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	key := datastore.NewIncompleteKey(c, "Notebook", nil)
+	key, err = datastore.Put(c, key, notebook)
+	if err != nil {
+		t.Fatal(err)
+	}
+	notebook.ID = key.Encode()
 
-	serve(w, r)
-
-	c := context.NewContext(r)
-	defer context.Close()
+	CreateNote(w, r, c, notebook)
 
 	// check note was added
-	notebook, err := tessernote.GetNotebook(c)
+	notebook, err = tessernote.GetNotebook(c)
 	if err != nil {
 		t.Fatal(err)
 	}

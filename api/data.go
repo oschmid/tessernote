@@ -23,7 +23,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/oschmid/tessernote"
-	"github.com/oschmid/tessernote/context"
 	"io"
 	"net/http"
 	"regexp"
@@ -39,8 +38,7 @@ var (
 )
 
 func serveData(w http.ResponseWriter, r *http.Request) {
-	c := context.NewContext(r)
-	defer context.Close()
+	c := appengine.NewContext(r)
 	u := user.Current(c)
 	if u == nil {
 		http.Error(w, "", http.StatusUnauthorized)
