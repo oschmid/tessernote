@@ -21,8 +21,10 @@ import (
 	"appengine"
 	"appengine/user"
 	"github.com/oschmid/tessernote"
+	"github.com/oschmid/tessernote/filepath"
 	"html/template"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -33,7 +35,7 @@ var (
 	tagsPattern  = "(" + tagPattern + "+\\" + tagSeparator + ")*" + tagPattern + "+"
 	untaggedURL  = "/untagged/"
 	validPageURL = regexp.MustCompile("^(/|(" + untaggedURL + ")|(/" + tagsPattern + "))$")
-	templates, _ = template.ParseFiles("github.com/oschmid/tessernote/api/templates/main.html")
+	templates    = getTemplates()
 )
 
 func init() {
@@ -135,4 +137,11 @@ func namesFrom(tags []tessernote.Tag) []string {
 		names = append(names, tag.Name)
 	}
 	return names
+}
+
+func getTemplates() *template.Template {
+	pwd, _ := os.Getwd()
+	main := strings.Join([]string{"github.com", "oschmid", "tessernote", "api", "templates", "main.html"}, string(os.PathSeparator))
+	main = filepath.Merge(pwd, main)
+	return template.Must(template.ParseFiles(main))
 }

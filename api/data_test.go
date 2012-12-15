@@ -22,23 +22,13 @@ import (
 	"encoding/json"
 	"github.com/oschmid/appenginetesting"
 	"github.com/oschmid/tessernote"
-	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"sync"
 	"testing"
 )
 
-var once = new(sync.Once)
-
-func setupTests() {
-	once.Do(func() { templates = template.Must(template.ParseFiles("templates/main.html")) })
-}
-
-func TestSaveNewNote(t *testing.T) {
-	setupTests()
-	
+func TestCreateNote(t *testing.T) {
 	note := tessernote.Note{Body: "body"}
 	bytes, err := json.Marshal(note)
 	if err != nil {
@@ -67,19 +57,15 @@ func TestSaveNewNote(t *testing.T) {
 	CreateNote(w, r, c, notebook)
 
 	// check note was added
-	notebook, err = tessernote.GetNotebook(c)
-	if err != nil {
-		t.Fatal(err)
-	}
 	notes, err := notebook.Notes(c)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(notes) != 1 {
-		t.Fatal(err)
+		t.Fatalf("expected=%d actual=%d", 1, len(notes))
 	}
 	if notes[0].Body != note.Body {
-		t.Fatal("expected=%s actual=%s", notes[0].Body, note.Body)
+		t.Fatalf("expected=%s actual=%s", notes[0].Body, note.Body)
 	}
 
 	// check response ID is the same
@@ -89,6 +75,6 @@ func TestSaveNewNote(t *testing.T) {
 		t.Fatal(err, string(response))
 	}
 	if notes[0].ID != note.ID {
-		t.Fatal("expected=%s actual=%s", notes[0].ID, note.ID)
+		t.Fatalf("expected=%s actual=%s", notes[0].ID, note.ID)
 	}
 }
