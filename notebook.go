@@ -236,9 +236,11 @@ func (notebook *Notebook) updateTags(key *datastore.Key, oldNote, note *Note, c 
 		notebook.addTagKeys(note.TagKeys)
 	} else if len(oldNote.TagKeys) > 0 && len(note.TagKeys) == 0 {
 		notebook.removeTagKeys(deleted)
-		notebook.UntaggedNoteKeys = append(notebook.UntaggedNoteKeys, key)
-	} else {
-		// untagged note remains untagged
+		if note.ID != "" {
+			notebook.UntaggedNoteKeys = append(notebook.UntaggedNoteKeys, key)
+		}
+	} else if note.ID == "" {
+		notebook.UntaggedNoteKeys = removeKey(notebook.UntaggedNoteKeys, key)
 	}
 	return err
 }
