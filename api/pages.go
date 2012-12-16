@@ -57,32 +57,31 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tags, err := notebook.Tags(c)
+		page := new(tessernote.Page)
+		page.Tags, err = notebook.Tags(c)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		page := &tessernote.Page{Tags: tags}
-		tags, err = parseSelectedTags(w, r, notebook, c)
+		page.SelectedTags, err = parseSelectedTags(w, r, notebook, c)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		page.SelectedTags = tags
-		page.RelatedTags, err = notebook.RelatedTags(tags, c)
+		page.RelatedTags, err = notebook.RelatedTags(page.SelectedTags, c)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		page.UntaggedNotes = len(notebook.UntaggedNoteKeys) > 0
 		if r.URL.Path == untaggedURL {
 			page.Notes, err = notebook.UntaggedNotes(c)
-		} else if len(tags) == 0 {
+		} else if len(page.SelectedTags) == 0 {
 			page.Notes, err = notebook.Notes(c)
 		} else {
-			page.Notes, err = tessernote.RelatedNotes(tags, c)
+			page.Notes, err = tessernote.RelatedNotes(page.SelectedTags, c)
 		}
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -97,6 +97,7 @@ func (tag Tag) Children(c appengine.Context) ([]Tag, error) {
 	if err != nil {
 		c.Errorf("getting tag children:", err)
 	}
+	// TODO add keys
 	return children, err
 }
 
@@ -132,4 +133,12 @@ func ParseTagNames(text string) []string {
 
 func isHashtagDecoration(r rune) bool {
 	return r == '#' || r == '\uFF03' || unicode.IsSpace(r)
+}
+
+func NewTag(name string, notebook Notebook, note Note, c appengine.Context) *Tag {
+	tag := new(Tag)
+	tag.Name = name
+	tag.NotebookKeys = []*datastore.Key{notebook.Key(c)}
+	tag.NoteKeys = []*datastore.Key{note.Key(c)}
+	return tag
 }
