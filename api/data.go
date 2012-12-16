@@ -61,6 +61,8 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 			CreateNote(w, r, c, notebook)
 		case "DELETE":
 			DeleteAllNotes(w, r, c, notebook)
+		default:
+			http.NotFound(w, r)
 		}
 	} else {
 		switch r.Method {
@@ -70,6 +72,8 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 			ReplaceNote(w, r, c, notebook)
 		case "DELETE":
 			DeleteNote(w, r, c, notebook)
+		default:
+			http.NotFound(w, r)
 		}
 	}
 }
