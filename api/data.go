@@ -44,13 +44,11 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", http.StatusUnauthorized)
 		return
 	}
-
 	notebook, err := tessernote.GetNotebook(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	if r.URL.Path == NotesURL {
 		switch r.Method {
 		case "GET":
@@ -94,32 +92,36 @@ func ReplaceAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context
 // Creates a new note in "notebook" with the contents of the JSON formatted note in "r"
 // Uses "w" to write the new note (with its automatically assigned ID) in JSON format
 func CreateNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
-	body, err := readRequestBody(r)
+	note, err := readNoteFromBody(w, r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	var note tessernote.Note
-	err = json.Unmarshal(body, &note)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	note, err = notebook.Put(note, c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	reply, err := json.Marshal(note)
 	if err != nil {
-		c.Errorf("marshaling note:", err, "\n", note)
+		c.Errorf("marshaling note (%+v): %s", note, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Write(reply)
+}
+
+func readNoteFromBody(w http.ResponseWriter, r *http.Request) (note tessernote.Note, err error) {
+	body, err := readRequestBody(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return note, err
+	}
+	err = json.Unmarshal(body, &note)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return note, err
+	}
+	return note, nil
 }
 
 // Deletes all notes in "notebook"
@@ -139,8 +141,27 @@ func GetNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebo
 // Replaces a note from "notebook" by its ID, creates it if it doesn't exist
 // Uses "w" to write the note in JSON format
 func ReplaceNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
-	// TODO replace note by ID, create if it doesn't exist
-	http.Error(w, "not yet implemented", http.StatusInternalServerError)
+	id := r.URL.Path[len(NotesURL):]
+	note, err := readNoteFromBody(w, r)
+	if err != nil {
+		return
+	}
+	if id != note.ID {
+		http.Error(w, "mismatched note.ID and URL", http.StatusBadRequest)
+		return
+	}
+	note, err = notebook.Put(note, c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	reply, err := json.Marshal(note)
+	if err != nil {
+		c.Errorf("marshaling note (%+v): %s", note, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(reply)
 }
 
 // Reads a Note.ID from URL and deletes it from the Notebook
@@ -152,10 +173,9 @@ func DeleteNote(w http.ResponseWriter, r *http.Request, c appengine.Context, not
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	reply, err := json.Marshal(deleted)
 	if err != nil {
-		c.Errorf("marshaling delete response:", err, "\n", deleted)
+		c.Errorf("marshaling delete response (%t): %s", deleted, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

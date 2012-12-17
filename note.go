@@ -35,7 +35,7 @@ type Note struct {
 func (note Note) Key(c appengine.Context) *datastore.Key {
 	key, err := datastore.DecodeKey(note.ID)
 	if err != nil {
-		c.Errorf("decoding note key:", err)
+		c.Errorf("decoding note key (%s): %s", note.ID, err)
 		panic(err)
 	}
 	return key

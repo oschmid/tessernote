@@ -90,7 +90,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 
 		err = templates.ExecuteTemplate(w, "main.html", page)
 		if err != nil {
-			c.Errorf("executing template:", err)
+			c.Errorf("executing template: %s", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else {
@@ -104,7 +104,7 @@ func loggedIn(w http.ResponseWriter, r *http.Request, c appengine.Context) bool 
 	if u == nil {
 		url, err := user.LoginURL(c, r.URL.String())
 		if err != nil {
-			c.Errorf("logging in:", err)
+			c.Errorf("logging in: %s", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return false
 		}

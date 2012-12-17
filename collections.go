@@ -21,6 +21,13 @@ import (
 	"appengine/datastore"
 )
 
+func addKey(keys []*datastore.Key, add *datastore.Key) []*datastore.Key {
+	if !containsKey(keys, add) {
+		keys = append(keys, add)
+	}
+	return keys
+}
+
 func removeKey(keys []*datastore.Key, remove *datastore.Key) []*datastore.Key {
 	diff := *new([]*datastore.Key)
 	for i := range keys {
