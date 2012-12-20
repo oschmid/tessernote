@@ -20,6 +20,7 @@ package tessernote
 import (
 	"appengine"
 	"appengine/datastore"
+	"github.com/oschmid/tessernote/store"
 	"regexp"
 	"strings"
 	"unicode"
@@ -71,7 +72,7 @@ type Tag struct {
 
 func (tag Tag) Notebooks(c appengine.Context) ([]Notebook, error) {
 	notebooks := make([]Notebook, len(tag.NotebookKeys))
-	err := datastore.GetMulti(c, tag.NotebookKeys, notebooks)
+	err := store.GetMulti(c, tag.NotebookKeys, notebooks)
 	if err != nil {
 		c.Errorf("getting tag notebooks: %s", err)
 	}
@@ -80,7 +81,7 @@ func (tag Tag) Notebooks(c appengine.Context) ([]Notebook, error) {
 
 func (tag Tag) Notes(c appengine.Context) ([]Note, error) {
 	notes := make([]Note, len(tag.NoteKeys))
-	err := datastore.GetMulti(c, tag.NoteKeys, notes)
+	err := store.GetMulti(c, tag.NoteKeys, notes)
 	if err != nil {
 		c.Errorf("getting tag notes: %s", err)
 		return notes, err
@@ -93,7 +94,7 @@ func (tag Tag) Notes(c appengine.Context) ([]Note, error) {
 
 func (tag Tag) Children(c appengine.Context) ([]Tag, error) {
 	children := make([]Tag, len(tag.ChildKeys))
-	err := datastore.GetMulti(c, tag.ChildKeys, children)
+	err := store.GetMulti(c, tag.ChildKeys, children)
 	if err != nil {
 		c.Errorf("getting tag children: %s", err)
 	}
@@ -112,7 +113,7 @@ func RelatedNotes(tags []Tag, c appengine.Context) ([]Note, error) {
 
 	notes, err := make([]Note, len(noteKeys)), *new(error)
 	if len(noteKeys) > 0 {
-		err = datastore.GetMulti(c, noteKeys, notes)
+		err = store.GetMulti(c, noteKeys, notes)
 		if err != nil {
 			c.Errorf("getting related notes: %s", err)
 		}
