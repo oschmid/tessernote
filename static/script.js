@@ -46,10 +46,7 @@ function saveNote() {
     note.Body = textarea.attr('value')
     if (note.Body != '') {
         if (note.ID) {
-            $.ajax({url:notesURL+note.ID, type:"PUT", data:JSON.stringify(note), success: function(note) {
-                // TODO replace note without reloading page
-                location.reload();
-            }})
+            $.ajax({url:notesURL+note.ID, type:"PUT", data:JSON.stringify(note)})
         } else {
             $.post(notesURL, JSON.stringify(note), function(note) {
                 // TODO insert note without reloading page
