@@ -45,7 +45,7 @@ func (notebook Notebook) Key(c appengine.Context) *datastore.Key {
 func (notebook *Notebook) Tags(c appengine.Context) ([]Tag, error) {
 	if len(notebook.tags) == 0 && len(notebook.NoteKeys) > 0 {
 		notebook.tags = make([]Tag, len(notebook.TagKeys))
-		err := cachestore.GetMulti(c, notebook.TagKeys, notebook.tags)
+		err := datastore.GetMulti(c, notebook.TagKeys, notebook.tags)
 		if err != nil {
 			c.Errorf("getting notebook tags: %s", err)
 			return notebook.tags, err
@@ -57,7 +57,7 @@ func (notebook *Notebook) Tags(c appengine.Context) ([]Tag, error) {
 func (notebook *Notebook) Notes(c appengine.Context) ([]Note, error) {
 	if len(notebook.notes) == 0 && len(notebook.NoteKeys) > 0 {
 		notebook.notes = make([]Note, len(notebook.NoteKeys))
-		err := cachestore.GetMulti(c, notebook.NoteKeys, notebook.notes)
+		err := datastore.GetMulti(c, notebook.NoteKeys, notebook.notes)
 		if err != nil {
 			c.Errorf("getting notebook notes: %s", err)
 			return notebook.notes, err
@@ -73,7 +73,7 @@ func (notebook *Notebook) Notes(c appengine.Context) ([]Note, error) {
 func (notebook *Notebook) UntaggedNotes(c appengine.Context) ([]Note, error) {
 	if len(notebook.untaggedNotes) == 0 && len(notebook.UntaggedNoteKeys) > 0 {
 		notebook.untaggedNotes = make([]Note, len(notebook.UntaggedNoteKeys))
-		err := cachestore.GetMulti(c, notebook.UntaggedNoteKeys, notebook.untaggedNotes)
+		err := datastore.GetMulti(c, notebook.UntaggedNoteKeys, notebook.untaggedNotes)
 		if err != nil {
 			c.Errorf("getting notebook untagged notes: %s", err)
 			return notebook.untaggedNotes, err
