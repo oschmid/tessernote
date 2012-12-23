@@ -26,6 +26,16 @@ body
     cursor:pointer;
 }
 
+.related
+{
+    color:black;
+}
+
+.selected
+{
+    font-weight:bold;
+}
+
 #notes
 {
     position:absolute;

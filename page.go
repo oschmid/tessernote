@@ -23,26 +23,48 @@ import (
 
 type Page struct {
 	Tags          []Tag
-	RelatedTags   []Tag
-	SelectedTags  []Tag
 	Notes         []Note
 	UntaggedNotes bool
+	relatedTag    map[string]bool
+	selectedTag   map[string]bool
+}
+
+func (p *Page) SetRelatedTags(tags []Tag) {
+	p.relatedTag = make(map[string]bool)
+	for _, tag := range tags {
+		p.relatedTag[tag.Name] = true
+	}
+}
+
+func (p *Page) SetSelectedTags(tags []Tag) {
+	p.selectedTag = make(map[string]bool)
+	for _, tag := range tags {
+		p.selectedTag[tag.Name] = true
+	}
 }
 
 // format tags as html
 func (p Page) HtmlTags() template.HTML {
-	html := createTagDiv("All Notes")
+	html := p.createTagDiv("All Notes")
 	for _, tag := range p.Tags {
-		html += createTagDiv(tag.Name)
+		html += p.createTagDiv(tag.Name)
 	}
 	if p.UntaggedNotes {
-		html += createTagDiv("Untagged Notes")
+		html += p.createTagDiv("Untagged Notes")
 	}
 	return template.HTML(html)
 }
 
-func createTagDiv(name string) string {
-	return "<div class='tag'>" + name + "</div>"
+func (p Page) createTagDiv(name string) string {
+	div := "<div class='tag"
+	if p.relatedTag[name] {
+		div += " related"
+	}
+	if p.selectedTag[name] {
+		div += " selected"
+	}
+	div += "'>" + name + "</div>"
+	return div
 }
 
 // format notes as html
