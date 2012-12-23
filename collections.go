@@ -21,6 +21,7 @@ import (
 	"appengine/datastore"
 )
 
+// addKey appends add to keys if add doesn't already exist in keys
 func addKey(keys []*datastore.Key, add *datastore.Key) []*datastore.Key {
 	if !containsKey(keys, add) {
 		keys = append(keys, add)
@@ -28,27 +29,19 @@ func addKey(keys []*datastore.Key, add *datastore.Key) []*datastore.Key {
 	return keys
 }
 
+// removeKey removes remove from keys
 func removeKey(keys []*datastore.Key, remove *datastore.Key) []*datastore.Key {
-	diff := *new([]*datastore.Key)
-	for i := range keys {
-		if keys[i].Encode() != remove.Encode() {
-			diff = append(diff, keys[i])
-		}
+	i := indexOfKey(keys, remove)
+	if i >= 0 {
+		copy(keys[i:], keys[i + 1:])
+		keys[len(keys) - 1] = nil
+		return keys[:len(keys) - 1]
 	}
-	return diff
+	return keys
 }
 
 func containsKey(keys []*datastore.Key, key *datastore.Key) bool {
 	return indexOfKey(keys, key) >= 0
-}
-
-func containsString(strings []string, s string) bool {
-	for _, elem := range strings {
-		if elem == s {
-			return true
-		}
-	}
-	return false
 }
 
 func indexOfKey(keys []*datastore.Key, key *datastore.Key) int {
@@ -58,6 +51,15 @@ func indexOfKey(keys []*datastore.Key, key *datastore.Key) int {
 		}
 	}
 	return -1
+}
+
+func containsString(strings []string, s string) bool {
+	for _, elem := range strings {
+		if elem == s {
+			return true
+		}
+	}
+	return false
 }
 
 func indexOfTag(tags []Tag, name string) int {
