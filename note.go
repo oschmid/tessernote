@@ -32,6 +32,9 @@ type Note struct {
 	NotebookKeys []*datastore.Key
 }
 
+// Key decodes this Note's unique datastore Key from note.ID.
+// note.ID is not stored in the datastore and must be set when Note
+// is read from the datastore. If note.ID is not set Key will panic.
 func (note Note) Key(c appengine.Context) *datastore.Key {
 	key, err := datastore.DecodeKey(note.ID)
 	if err != nil {

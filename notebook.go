@@ -26,7 +26,7 @@ import (
 	"time"
 )
 
-// TODO use sets (with datastore loaders) not arrays
+// TODO use sets (with datastore loaders?) not arrays
 type Notebook struct {
 	ID               string // user.User.ID
 	Name             string
@@ -38,10 +38,12 @@ type Notebook struct {
 	untaggedNotes    []Note //cache
 }
 
+// Key returns a datastore.Key for Notebook
 func (notebook Notebook) Key(c appengine.Context) *datastore.Key {
 	return datastore.NewKey(c, "Notebook", notebook.ID, 0, nil)
 }
 
+// Tags returns all tags used to sort this Notebook's notes
 func (notebook *Notebook) Tags(c appengine.Context) ([]Tag, error) {
 	if len(notebook.tags) == 0 && len(notebook.NoteKeys) > 0 {
 		notebook.tags = make([]Tag, len(notebook.TagKeys))
@@ -54,6 +56,7 @@ func (notebook *Notebook) Tags(c appengine.Context) ([]Tag, error) {
 	return notebook.tags, nil
 }
 
+// Notes returns all notes in this Notebook including untagged notes
 func (notebook *Notebook) Notes(c appengine.Context) ([]Note, error) {
 	if len(notebook.notes) == 0 && len(notebook.NoteKeys) > 0 {
 		notebook.notes = make([]Note, len(notebook.NoteKeys))
@@ -70,6 +73,7 @@ func (notebook *Notebook) Notes(c appengine.Context) ([]Note, error) {
 	return notebook.notes, nil
 }
 
+// UntaggedNotes returns all untagged notes in this Notebook
 func (notebook *Notebook) UntaggedNotes(c appengine.Context) ([]Note, error) {
 	if len(notebook.untaggedNotes) == 0 && len(notebook.UntaggedNoteKeys) > 0 {
 		notebook.untaggedNotes = make([]Note, len(notebook.UntaggedNoteKeys))
@@ -86,8 +90,7 @@ func (notebook *Notebook) UntaggedNotes(c appengine.Context) ([]Note, error) {
 	return notebook.untaggedNotes, nil
 }
 
-// returns a subset of a user's tags by name
-// missing tags result in errors
+// TagsFrom returns tags in this Notebook by name. Returns an error if a tag is missing  
 func (notebook *Notebook) TagsFrom(names []string, c appengine.Context) (tags []Tag, err error) {
 	allTags, err := notebook.Tags(c)
 	if err != nil {
@@ -99,12 +102,13 @@ func (notebook *Notebook) TagsFrom(names []string, c appengine.Context) (tags []
 			tags = append(tags, allTags[i])
 		} else {
 			c.Debugf("user missing tag: %s", name)
-			return tags, errors.New("user missing tag: " + name)
+			return tags, errors.New("tessernote: missing tag (" + name + ")")
 		}
 	}
 	return tags, nil
 }
 
+// TagsOf returns the Tags of a Note in this Notebook
 func (notebook *Notebook) TagsOf(note Note, c appengine.Context) (tags []Tag, err error) {
 	allTags, err := notebook.Tags(c)
 	if err != nil {
@@ -122,6 +126,9 @@ func (notebook *Notebook) TagsOf(note Note, c appengine.Context) (tags []Tag, er
 	return tags, nil
 }
 
+// RelatedTags returns all Tags in this Notebook that refer to the Notes referred to by a subset of Tags.
+// 
+// For example: if Tags A and B refer to Note C and only Tag A is given as input, the output will be A and B.
 func (notebook *Notebook) RelatedTags(tags []Tag, c appengine.Context) ([]Tag, error) {
 	relatedNoteKeys := make(map[string]datastore.Key)
 	for _, tag := range tags {
@@ -145,6 +152,7 @@ func (notebook *Notebook) RelatedTags(tags []Tag, c appengine.Context) ([]Tag, e
 	return tags, nil
 }
 
+// Put updates a Note or creates it if it doesn't already exist and sorts out all Tag relationships.
 func (notebook *Notebook) Put(note Note, c appengine.Context) (Note, error) {
 	if note.ID != "" && containsKey(notebook.NoteKeys, note.Key(c)) {
 		return notebook.updateNote(note, c)
@@ -152,6 +160,8 @@ func (notebook *Notebook) Put(note Note, c appengine.Context) (Note, error) {
 	return notebook.addNote(note, c)
 }
 
+// addNote adds a Note to this Notebook, updating existing Tags to point to it if they're mentioned
+// and adding any new Tags
 func (notebook *Notebook) addNote(note Note, c appengine.Context) (Note, error) {
 	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
 		// add note (without tags) TODO add existing tags
@@ -186,6 +196,8 @@ func (notebook *Notebook) addNote(note Note, c appengine.Context) (Note, error) 
 	return note, err
 }
 
+// addNoteWithoutTags adds a Note to the datastore so that a unique Key is created for it. That Key is
+// then used for adding/updating Tags.
 func (notebook Notebook) addNoteWithoutTags(note *Note, c appengine.Context) (*datastore.Key, error) {
 	note.Created = time.Now()
 	note.LastModified = note.Created
@@ -201,6 +213,9 @@ func (notebook Notebook) addNoteWithoutTags(note *Note, c appengine.Context) (*d
 	return key, nil
 }
 
+// newNoteKey returns a unique Key for a new Note. New Notes can be created with Keys generated outside of 
+// Tessernote. However if this Key is not unique (e.g. if it refers to a Note in another Notebook) then a new
+// Key is generated.
 func (notebook Notebook) newNoteKey(note *Note, c appengine.Context) *datastore.Key {
 	if note.ID != "" {
 		key, err := datastore.DecodeKey(note.ID)
@@ -216,9 +231,8 @@ func (notebook Notebook) newNoteKey(note *Note, c appengine.Context) *datastore.
 	return datastore.NewIncompleteKey(c, "Note", notebook.Key(c))
 }
 
-// Gets the tag difference between 'oldNote' and 'note'.
-// Adds missing tags to the datastore, removes note from unused tags, adds note to new existing tags, removes empty tags.
-// Updates 'notebook' and 'note' tag keys.
+// updateTags calculates the Tag difference between oldNote and note. It adds missing Tags to the datastore,
+// removes note from Tags that refered to oldNote but not note, and cleans up Tags that no longer refer to any Notes.
 func (notebook *Notebook) updateTags(key *datastore.Key, oldNote, note *Note, c appengine.Context) error {
 	tagKeys, tags, count, deleted, err := notebook.updateTagKeys(oldNote, note, c)
 	if err != nil {
@@ -259,22 +273,22 @@ func (notebook *Notebook) updateTags(key *datastore.Key, oldNote, note *Note, c 
 	return err
 }
 
-// Updates the tag keys of 'notebook' and 'note' to reflect the changes of turning 'oldNote' into 'note.
-// Returns the datastore changes that make this change permanent.
+// updateTagKeys updates tags in memory to reflect the changes of turning oldNote into note and returns
+// the objects to commit to the datastore to make these changes permanent.
 func (notebook *Notebook) updateTagKeys(oldNote, note *Note, c appengine.Context) (keys []*datastore.Key, tags []Tag, count int, deleted []*datastore.Key, err error) {
 	// get note tags
 	keys, tags, names, err := notebook.parseTagsOf(*note, c)
 	count = len(keys)
 
 	// get remove tags
-	removedFromTagKeys, removedFromTags, deleted, err := notebook.getRemovedTags(oldNote, names, c)
+	removedFromTagKeys, removedFromTags, deleted, err := notebook.removedTags(oldNote, names, c)
 	keys = append(keys, removedFromTagKeys...)
 	tags = append(tags, removedFromTags...)
 	return keys, tags, count, deleted, err
 }
 
-// Parses the hashtags of a note.Body. Finds the associated Tags. Creates missing tags.
-// Returns tags, their keys and names, creating new incomplete keys for those that don't yet exist.
+// parseTagsOf parses the hashtags of note.Body, and returns the associated Tags. Missing Tags are also created with
+// incomplete Keys.
 func (notebook *Notebook) parseTagsOf(note Note, c appengine.Context) (keys []*datastore.Key, tags []Tag, names []string, err error) {
 	names = ParseTagNames(note.Body)
 	allTags, err := notebook.Tags(c)
@@ -290,14 +304,15 @@ func (notebook *Notebook) parseTagsOf(note Note, c appengine.Context) (keys []*d
 			tags = append(tags, allTags[i])
 		} else {
 			keys = append(keys, datastore.NewIncompleteKey(c, "Tag", notebookKey))
-			tags = append(tags, *NewTag(name, *notebook, note, c))
+			tags = append(tags, *NewTag(name, note, *notebook, c))
 		}
 	}
 	return keys, tags, names, nil
 }
 
-// Gets the tags that note was removed from and the tags that can be deleted because they no longer refer to any notes.
-func (notebook *Notebook) getRemovedTags(oldNote *Note, names []string, c appengine.Context) (removedFromKeys []*datastore.Key, removedFromTags []Tag, deleteKeys []*datastore.Key, err error) {
+// removedTags returns the Tags in oldNote that are not named in names and the Tags that can be cleaned up because they no longer
+// refer to any Notes.
+func (notebook *Notebook) removedTags(oldNote *Note, names []string, c appengine.Context) (removedFromKeys []*datastore.Key, removedFromTags []Tag, deleteKeys []*datastore.Key, err error) {
 	oldTags, err := notebook.TagsOf(*oldNote, c)
 	if err != nil {
 		return removedFromKeys, removedFromTags, deleteKeys, err
@@ -317,7 +332,7 @@ func (notebook *Notebook) getRemovedTags(oldNote *Note, names []string, c appeng
 	return removedFromKeys, removedFromTags, deleteKeys, nil
 }
 
-// Removes tag keys from notebook. Ignores tag keys not in notebook.
+// removeTagKeys removes tag Keys from this Notebook. Tags not in this Notebook are ignored.
 func (notebook *Notebook) removeTagKeys(tagKeys []*datastore.Key) {
 	notebook.tags = *new([]Tag)
 	for _, key := range tagKeys {
@@ -325,7 +340,7 @@ func (notebook *Notebook) removeTagKeys(tagKeys []*datastore.Key) {
 	}
 }
 
-// Adds missing tag keys to notebook. Ignores tag keys that already exist.
+// addTagKeys adds missing tag Keys to this Notebook. Keys of tags that already exist are ignored.
 func (notebook *Notebook) addTagKeys(tagKeys []*datastore.Key) {
 	notebook.tags = *new([]Tag)
 	for _, key := range tagKeys {
@@ -333,6 +348,7 @@ func (notebook *Notebook) addTagKeys(tagKeys []*datastore.Key) {
 	}
 }
 
+// save updates this Notebook in the datastore
 func (notebook *Notebook) save(c appengine.Context) error {
 	c.Debugf("updating notebook: %+v", *notebook)
 	_, err := cachestore.Put(c, notebook.Key(c), notebook)
@@ -342,6 +358,8 @@ func (notebook *Notebook) save(c appengine.Context) error {
 	return err
 }
 
+// updateNote updates a Note in this Notebook, updating existing Tags to either start or stop pointing to it,
+// cleaning up Tags that no longer point to any Note, and adding any new Tags.
 func (notebook *Notebook) updateNote(note Note, c appengine.Context) (Note, error) {
 	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
 		// get old note
@@ -377,6 +395,8 @@ func (notebook *Notebook) updateNote(note Note, c appengine.Context) (Note, erro
 	return note, err
 }
 
+// Delete deletes a Note from this Notebook, removes it from any Tags that refer to it and deletes any Tags
+// that no longer refer to any Notes
 func (notebook *Notebook) Delete(id string, c appengine.Context) (bool, error) {
 	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
 		note := Note{ID: id}
@@ -408,6 +428,7 @@ func (notebook *Notebook) Delete(id string, c appengine.Context) (bool, error) {
 	return err == nil, err
 }
 
+// GetNotebook returns a user's unique Notebook
 func GetNotebook(c appengine.Context) (*Notebook, error) {
 	notebook := new(Notebook)
 	u := user.Current(c)

@@ -42,6 +42,7 @@ func init() {
 	http.HandleFunc("/", serve)
 }
 
+// serve handles Tessernote's page requests
 func serve(w http.ResponseWriter, r *http.Request) {
 	if validDataURL.MatchString(r.URL.Path) {
 		serveData(w, r)
@@ -100,7 +101,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// checks if user is logged in, redirects user to login if they aren't
+// loggedIn checks if user is logged in and redirects user to login if they aren't
 func loggedIn(w http.ResponseWriter, r *http.Request, c appengine.Context) bool {
 	u := user.Current(c)
 	if u == nil {
@@ -117,7 +118,7 @@ func loggedIn(w http.ResponseWriter, r *http.Request, c appengine.Context) bool 
 	return true
 }
 
-// parses url for selected tags, redirects if it refers to missing tags
+// parseSelectedTags parses url for selected tags and redirects if it refers to missing tags
 func parseSelectedTags(w http.ResponseWriter, r *http.Request, notebook *tessernote.Notebook, c appengine.Context) ([]tessernote.Tag, error) {
 	var names []string
 	if r.URL.Path != "/" && r.URL.Path != untaggedURL {
@@ -132,6 +133,7 @@ func parseSelectedTags(w http.ResponseWriter, r *http.Request, notebook *tessern
 	return tags, err
 }
 
+// namesFrom returns the names of tags
 func namesFrom(tags []tessernote.Tag) []string {
 	names := *new([]string)
 	for _, tag := range tags {
@@ -140,6 +142,7 @@ func namesFrom(tags []tessernote.Tag) []string {
 	return names
 }
 
+// getTemplates returns Tessernote's HTML templates
 func getTemplates() *template.Template {
 	pwd, _ := os.Getwd()
 	main := strings.Join([]string{"github.com", "oschmid", "tessernote", "api", "templates", "main.html"}, string(os.PathSeparator))

@@ -29,6 +29,7 @@ type Page struct {
 	selectedTag   map[string]bool
 }
 
+// SetRelatedTags sets the related tags of the Notes displayed on this Page.
 func (p *Page) SetRelatedTags(tags []Tag) {
 	p.relatedTag = make(map[string]bool)
 	for _, tag := range tags {
@@ -36,6 +37,7 @@ func (p *Page) SetRelatedTags(tags []Tag) {
 	}
 }
 
+// SetSelectedTags sets the selected tags of this Page.
 func (p *Page) SetSelectedTags(tags []Tag) {
 	p.selectedTag = make(map[string]bool)
 	for _, tag := range tags {
@@ -43,7 +45,7 @@ func (p *Page) SetSelectedTags(tags []Tag) {
 	}
 }
 
-// format tags as html
+// HtmlTags returns the Tags on this Page as HTML.
 func (p Page) HtmlTags() template.HTML {
 	html := p.createTagDiv("All Notes")
 	for _, tag := range p.Tags {
@@ -55,6 +57,7 @@ func (p Page) HtmlTags() template.HTML {
 	return template.HTML(html)
 }
 
+// createTagDiv returns a HTML div element for this named Tag.
 func (p Page) createTagDiv(name string) string {
 	div := "<div class='tag"
 	if p.relatedTag[name] {
@@ -67,7 +70,7 @@ func (p Page) createTagDiv(name string) string {
 	return div
 }
 
-// format notes as html
+// HtmlNotes returns the Notes on this Page as HTML.
 func (p Page) HtmlNotes() template.HTML {
 	html := ""
 	for _, note := range p.Notes {

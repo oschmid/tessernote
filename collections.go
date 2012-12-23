@@ -33,9 +33,9 @@ func addKey(keys []*datastore.Key, add *datastore.Key) []*datastore.Key {
 func removeKey(keys []*datastore.Key, remove *datastore.Key) []*datastore.Key {
 	i := indexOfKey(keys, remove)
 	if i >= 0 {
-		copy(keys[i:], keys[i + 1:])
-		keys[len(keys) - 1] = nil
-		return keys[:len(keys) - 1]
+		copy(keys[i:], keys[i+1:])
+		keys[len(keys)-1] = nil
+		return keys[:len(keys)-1]
 	}
 	return keys
 }

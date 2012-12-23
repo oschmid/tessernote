@@ -19,7 +19,7 @@ package filepath
 
 import "os"
 
-// Merge 2 parts of a filepath so that any overlap is ignored
+// Merge combines 2 parts of a filepath so that any overlap is ignored
 // e.g. /a/b/c + b/c/d = /a/b/c/d
 func Merge(start, end string) string {
 	overlap := stringOverlapLength(start, end)
@@ -29,7 +29,7 @@ func Merge(start, end string) string {
 	return start + end[overlap:]
 }
 
-// Calculates how much the end of s1 overlaps the beginning of s2
+// stringOverlapLength calculates how much the end of s1 overlaps the beginning of s2
 // e.g. stringOverlapLength("abcdef", "defghl") = 3
 func stringOverlapLength(s1, s2 string) int {
 	//Trim s1 so it isn't longer than s2

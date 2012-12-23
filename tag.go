@@ -64,12 +64,13 @@ const (
 var Hashtag = regexp.MustCompile(hashtag)
 
 type Tag struct {
-	Name         string // unique per user
+	Name         string // unique per Notebook
 	NotebookKeys []*datastore.Key
 	NoteKeys     []*datastore.Key
 	ChildKeys    []*datastore.Key
 }
 
+// Notebooks returns all Notebooks that share this Tag.
 func (tag Tag) Notebooks(c appengine.Context) ([]Notebook, error) {
 	notebooks := make([]Notebook, len(tag.NotebookKeys))
 	err := cachestore.GetMulti(c, tag.NotebookKeys, notebooks)
@@ -79,6 +80,7 @@ func (tag Tag) Notebooks(c appengine.Context) ([]Notebook, error) {
 	return notebooks, err
 }
 
+// Notes returns all Notes that share this Tag.
 func (tag Tag) Notes(c appengine.Context) ([]Note, error) {
 	notes := make([]Note, len(tag.NoteKeys))
 	err := cachestore.GetMulti(c, tag.NoteKeys, notes)
@@ -92,6 +94,7 @@ func (tag Tag) Notes(c appengine.Context) ([]Note, error) {
 	return notes, nil
 }
 
+// Children returns all Tags this Note is parent to.
 func (tag Tag) Children(c appengine.Context) ([]Tag, error) {
 	children := make([]Tag, len(tag.ChildKeys))
 	err := cachestore.GetMulti(c, tag.ChildKeys, children)
@@ -101,6 +104,7 @@ func (tag Tag) Children(c appengine.Context) ([]Tag, error) {
 	return children, err
 }
 
+// RelatedNotes returns the union of all Notes referred to by a set of Tags.
 func RelatedNotes(tags []Tag, c appengine.Context) ([]Note, error) {
 	if len(tags) == 0 {
 		return *new([]Note), nil
@@ -121,6 +125,7 @@ func RelatedNotes(tags []Tag, c appengine.Context) ([]Note, error) {
 	return notes, err
 }
 
+// ParseTagNames parses a string for hashtags.
 func ParseTagNames(text string) []string {
 	var names []string
 	matches := Hashtag.FindAllString(text, len(text))
@@ -131,11 +136,13 @@ func ParseTagNames(text string) []string {
 	return names
 }
 
+// isHashtagDecoration returns true for hash characters (#) and whitespace
 func isHashtagDecoration(r rune) bool {
 	return r == '#' || r == '\uFF03' || unicode.IsSpace(r)
 }
 
-func NewTag(name string, notebook Notebook, note Note, c appengine.Context) *Tag {
+// NewTag creates a new Tag for a Note in a Notebook
+func NewTag(name string, note Note, notebook Notebook, c appengine.Context) *Tag {
 	tag := new(Tag)
 	tag.Name = name
 	tag.NotebookKeys = []*datastore.Key{notebook.Key(c)}

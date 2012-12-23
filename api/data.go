@@ -37,6 +37,7 @@ var (
 	validDataURL = regexp.MustCompile("^" + NotesURL + idPattern + "*$")
 )
 
+// serveData handles requests to Tessernote's RESTful data API
 func serveData(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	u := user.Current(c)
@@ -76,23 +77,23 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Uses "w" to write a JSON formatted list of all Note IDs in "notebook"
+// GetAllNotes writes a JSON formatted list of all Note IDs in the authorized User's Notebook to w.
 func GetAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
 	// TODO return a list note IDs
 	http.Error(w, "not yet implemented", http.StatusInternalServerError)
 }
 
-// Replaces the contents of "notebook" with the JSON formatted list of notes in "r"
-// Uses "w" to write "true" if succeeded or an error message otherwise
+// ReplaceAllNotes replaces the Notes of the authorized User's Notebook with a new set of Notes. It takes as
+// input a JSON formatted list of Notes and writes true if succeeded or an error message otherwise to w.
 func ReplaceAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
 	// TODO replace all notes with new notes
 	http.Error(w, "not yet implemented", http.StatusInternalServerError)
 }
 
-// Creates a new note in "notebook" with the contents of the JSON formatted note in "r"
-// Uses "w" to write the new note (with its automatically assigned ID) in JSON format
+// CreateNote creates a new Note in the authorized User's Notebook. It takes as input a JSON formatted Note 
+// and writes the new Note (with its automatically assigned unique ID) in JSON format to w.
 func CreateNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
-	note, err := readNoteFromBody(w, r)
+	note, err := readNote(w, r)
 	if err != nil {
 		return
 	}
@@ -110,7 +111,8 @@ func CreateNote(w http.ResponseWriter, r *http.Request, c appengine.Context, not
 	w.Write(reply)
 }
 
-func readNoteFromBody(w http.ResponseWriter, r *http.Request) (note tessernote.Note, err error) {
+// readNote decodes a JSON formatted Note from the request body.
+func readNote(w http.ResponseWriter, r *http.Request) (note tessernote.Note, err error) {
 	body, err := readRequestBody(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -124,25 +126,36 @@ func readNoteFromBody(w http.ResponseWriter, r *http.Request) (note tessernote.N
 	return note, nil
 }
 
-// Deletes all notes in "notebook"
-// Uses "w" to write "true" if notes were deleted, "false" if notebook was empty
+// readRequestBody reads the bytes from r's body
+func readRequestBody(r *http.Request) ([]byte, error) {
+	defer r.Body.Close()
+	buf := new(bytes.Buffer)
+	_, err := io.Copy(buf, r.Body)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(buf.String()), nil
+}
+
+// DeleteAllNotes deletes all Notes from the authorized User's Notebook. It writes true if Notes were deleted,
+// and false if the Notebook was empty to w.
 func DeleteAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
 	// TODO delete all notes
 	http.Error(w, "not yet implemented", http.StatusInternalServerError)
 }
 
-// Retrieves a note from "notebook" by its ID
-// Uses "w" to write the note in JSON format
+// GetNote retrieves a note from the authorized User's Notebook by ID. The Note is written in JSON format to w.
 func GetNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
 	// TODO retrieve a note by ID
 	http.Error(w, "not yet implemented", http.StatusInternalServerError)
 }
 
-// Replaces a note from "notebook" by its ID, creates it if it doesn't exist
-// Uses "w" to write the note in JSON format
+// ReplaceNote replaces a Note in the authorized User's Notebook by its ID. If the Note doesn't exist it is created.
+// If the Note's ID has already been assigned (e.g. in another Notebook) a new one is generated for this Note.
+// The Note is written in JSON format to w.
 func ReplaceNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
 	id := r.URL.Path[len(NotesURL):]
-	note, err := readNoteFromBody(w, r)
+	note, err := readNote(w, r)
 	if err != nil {
 		return
 	}
@@ -164,8 +177,8 @@ func ReplaceNote(w http.ResponseWriter, r *http.Request, c appengine.Context, no
 	w.Write(reply)
 }
 
-// Reads a Note.ID from URL and deletes it from the Notebook
-// Uses "w" to write "true" if note was deleted, "false" if it never existed
+// DeleteNote deletes a Note by the ID in the URL. Uses w to write true if the Note was deleted, false
+// if it never existed.
 func DeleteNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
 	id := r.URL.Path[len(NotesURL):]
 	deleted, err := notebook.Delete(id, c)
@@ -180,14 +193,4 @@ func DeleteNote(w http.ResponseWriter, r *http.Request, c appengine.Context, not
 		return
 	}
 	w.Write(reply)
-}
-
-func readRequestBody(r *http.Request) ([]byte, error) {
-	defer r.Body.Close()
-	buf := new(bytes.Buffer)
-	_, err := io.Copy(buf, r.Body)
-	if err != nil {
-		return nil, err
-	}
-	return []byte(buf.String()), nil
 }
