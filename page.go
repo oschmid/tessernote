@@ -47,12 +47,13 @@ func (p *Page) SetSelectedTags(tags []Tag) {
 
 // HtmlTags returns the Tags on this Page as HTML.
 func (p Page) HtmlTags() template.HTML {
+	spacer := "\n    "
 	html := p.createTagDiv("All Notes")
 	for _, tag := range p.Tags {
-		html += p.createTagDiv(tag.Name)
+		html += spacer + p.createTagDiv(tag.Name)
 	}
 	if p.UntaggedNotes {
-		html += p.createTagDiv("Untagged Notes")
+		html += spacer + p.createTagDiv("Untagged Notes")
 	}
 	return template.HTML(html)
 }
@@ -74,7 +75,12 @@ func (p Page) createTagDiv(name string) string {
 func (p Page) HtmlNotes() template.HTML {
 	html := ""
 	for _, note := range p.Notes {
-		html += "<div class='note'><div class='delete'>x</div><textarea noteid=\"" + note.ID + "\" class='resize'>" + note.Body + "</textarea><input type='button' class='save' value='Save'></div>"
+		html += "\n" +
+			"    <div class='note'>" +
+			"        <div class='delete'>x</div>" +
+			"        <textarea noteid=\"" + note.ID + "\" class='resize'>" + note.Body + "</textarea>" +
+			"        <input type='button' class='save' value='Save'>" +
+			"    </div>"
 	}
 	return template.HTML(html)
 }

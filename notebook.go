@@ -21,12 +21,21 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
+	"encoding/gob"
 	"errors"
 	"github.com/oschmid/cachestore"
 	"time"
 )
 
-// TODO use sets (with datastore loaders?) not arrays
+var Debug = false // If true, print debug info
+
+func init() {
+	gob.Register(*new(Notebook))
+	gob.Register(*new(Note)) // TODO move to note.go
+	gob.Register(*new(Tag))  // TODO move to tag.go
+}
+
+// TODO use Key sets (and implement PropertyLoadSaver) not arrays
 type Notebook struct {
 	ID               string // user.User.ID
 	Name             string
@@ -47,7 +56,7 @@ func (notebook Notebook) Key(c appengine.Context) *datastore.Key {
 func (notebook *Notebook) Tags(c appengine.Context) ([]Tag, error) {
 	if len(notebook.tags) == 0 && len(notebook.NoteKeys) > 0 {
 		notebook.tags = make([]Tag, len(notebook.TagKeys))
-		err := datastore.GetMulti(c, notebook.TagKeys, notebook.tags)
+		err := cachestore.GetMulti(c, notebook.TagKeys, notebook.tags)
 		if err != nil {
 			c.Errorf("getting notebook tags: %s", err)
 			return notebook.tags, err
@@ -60,7 +69,7 @@ func (notebook *Notebook) Tags(c appengine.Context) ([]Tag, error) {
 func (notebook *Notebook) Notes(c appengine.Context) ([]Note, error) {
 	if len(notebook.notes) == 0 && len(notebook.NoteKeys) > 0 {
 		notebook.notes = make([]Note, len(notebook.NoteKeys))
-		err := datastore.GetMulti(c, notebook.NoteKeys, notebook.notes)
+		err := cachestore.GetMulti(c, notebook.NoteKeys, notebook.notes)
 		if err != nil {
 			c.Errorf("getting notebook notes: %s", err)
 			return notebook.notes, err
@@ -77,7 +86,7 @@ func (notebook *Notebook) Notes(c appengine.Context) ([]Note, error) {
 func (notebook *Notebook) UntaggedNotes(c appengine.Context) ([]Note, error) {
 	if len(notebook.untaggedNotes) == 0 && len(notebook.UntaggedNoteKeys) > 0 {
 		notebook.untaggedNotes = make([]Note, len(notebook.UntaggedNoteKeys))
-		err := datastore.GetMulti(c, notebook.UntaggedNoteKeys, notebook.untaggedNotes)
+		err := cachestore.GetMulti(c, notebook.UntaggedNoteKeys, notebook.untaggedNotes)
 		if err != nil {
 			c.Errorf("getting notebook untagged notes: %s", err)
 			return notebook.untaggedNotes, err
@@ -101,7 +110,9 @@ func (notebook *Notebook) TagsFrom(names []string, c appengine.Context) (tags []
 		if i >= 0 {
 			tags = append(tags, allTags[i])
 		} else {
-			c.Debugf("user missing tag: %s", name)
+			if Debug {
+				c.Debugf("user missing tag: %s", name)
+			}
 			return tags, errors.New("tessernote: missing tag (" + name + ")")
 		}
 	}
@@ -177,7 +188,9 @@ func (notebook *Notebook) addNote(note Note, c appengine.Context) (Note, error) 
 		}
 
 		// update note (with tags) TODO skip if no new tags
-		tc.Debugf("updating note (with tags): %+v", note)
+		if Debug {
+			tc.Debugf("updating note (with tags): %#v", note)
+		}
 		key, err = cachestore.Put(tc, key, &note)
 		if err != nil {
 			tc.Errorf("updating note (with tags): %s", err)
@@ -203,7 +216,9 @@ func (notebook Notebook) addNoteWithoutTags(note *Note, c appengine.Context) (*d
 	note.LastModified = note.Created
 	note.NotebookKeys = []*datastore.Key{notebook.Key(c)}
 	key := notebook.newNoteKey(note, c)
-	c.Debugf("adding note (without tags): %+v", note)
+	if Debug {
+		c.Debugf("adding note (without tags): %#v", note)
+	}
 	key, err := cachestore.Put(c, key, note)
 	if err != nil {
 		c.Errorf("adding note (without tags): %s", err)
@@ -239,7 +254,9 @@ func (notebook *Notebook) updateTags(key *datastore.Key, oldNote, note *Note, c 
 		return err
 	}
 	if len(tagKeys) > 0 {
-		c.Debugf("adding/updating tags: %+v", tags)
+		if Debug {
+			c.Debugf("adding/updating tags: %#v", tags)
+		}
 		tagKeys, err := cachestore.PutMulti(c, tagKeys, tags)
 		if err != nil {
 			c.Errorf("adding/updating tags: %s", err)
@@ -249,7 +266,9 @@ func (notebook *Notebook) updateTags(key *datastore.Key, oldNote, note *Note, c 
 		note.TagKeys = tagKeys[:count]
 	}
 	if len(deleted) > 0 {
-		c.Debugf("deleting empty tags: %+v", deleted)
+		if Debug {
+			c.Debugf("deleting empty tags: %#v", deleted)
+		}
 		err = cachestore.DeleteMulti(c, deleted)
 		if err != nil {
 			c.Errorf("deleting empty tags: %s", err)
@@ -350,7 +369,9 @@ func (notebook *Notebook) addTagKeys(tagKeys []*datastore.Key) {
 
 // save updates this Notebook in the datastore
 func (notebook *Notebook) save(c appengine.Context) error {
-	c.Debugf("updating notebook: %+v", *notebook)
+	if Debug {
+		c.Debugf("updating notebook: %#v", *notebook)
+	}
 	_, err := cachestore.Put(c, notebook.Key(c), notebook)
 	if err != nil {
 		c.Errorf("updating notebook: %s", err)
@@ -382,7 +403,9 @@ func (notebook *Notebook) updateNote(note Note, c appengine.Context) (Note, erro
 		note.Created = oldNote.Created
 		note.LastModified = time.Now()
 		note.NotebookKeys = oldNote.NotebookKeys
-		tc.Debugf("updating note: %+v", note)
+		if Debug {
+			tc.Debugf("updating note: %#v", note)
+		}
 		key, err = cachestore.Put(tc, key, &note)
 		if err != nil {
 			tc.Errorf("updating note: %s", err)
@@ -408,7 +431,9 @@ func (notebook *Notebook) Delete(id string, c appengine.Context) (bool, error) {
 		}
 
 		// remove note
-		tc.Debugf("deleting note: %+v", note)
+		if Debug {
+			tc.Debugf("deleting note: %#v", note)
+		}
 		err = cachestore.Delete(tc, noteKey)
 		if err != nil {
 			c.Errorf("deleting note: %s", err)
@@ -439,8 +464,13 @@ func GetNotebook(c appengine.Context) (*Notebook, error) {
 	key := notebook.Key(c)
 	err := cachestore.Get(c, key, notebook)
 	if err != nil {
+		if err != datastore.ErrNoSuchEntity {
+			c.Warningf(err.Error())
+		}
 		// create new user
-		c.Infof("adding new notebook for:", u.Email)
+		if Debug {
+			c.Debugf("adding new notebook for: %s", u.Email)
+		}
 		notebook.Name = u.Email
 		key, err = cachestore.Put(c, key, notebook)
 	}

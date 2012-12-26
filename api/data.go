@@ -104,7 +104,7 @@ func CreateNote(w http.ResponseWriter, r *http.Request, c appengine.Context, not
 	}
 	reply, err := json.Marshal(note)
 	if err != nil {
-		c.Errorf("marshaling note (%+v): %s", note, err)
+		c.Errorf("marshaling note (%#v): %s", note, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -170,7 +170,7 @@ func ReplaceNote(w http.ResponseWriter, r *http.Request, c appengine.Context, no
 	}
 	reply, err := json.Marshal(note)
 	if err != nil {
-		c.Errorf("marshaling note (%+v): %s", note, err)
+		c.Errorf("marshaling note (%#v): %s", note, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
