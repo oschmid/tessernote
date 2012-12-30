@@ -31,11 +31,9 @@ import (
 var Debug = false // If true, print debug info
 
 func init() {
-	gob.Register(*new(Notebook))
-	gob.Register(*new(Note))
-	gob.Register(*new(Tag))
-	gob.Register(*new(time.Time))
-	gob.Register(*new(datastore.Key))
+	gob.Register(Notebook{})
+	gob.Register(Note{})
+	gob.Register(Tag{})
 }
 
 // TODO use Key sets (and implement PropertyLoadSaver) not arrays
