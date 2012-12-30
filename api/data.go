@@ -79,8 +79,18 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 
 // GetAllNotes writes a JSON formatted list of all Note IDs in the authorized User's Notebook to w.
 func GetAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
-	// TODO return a list note IDs
-	http.Error(w, "not yet implemented", http.StatusInternalServerError)
+	notes, err := notebook.Notes(c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	reply, err := json.Marshal(notes)
+	if err != nil {
+		c.Errorf("marshaling notes (%d): %s", len(notes), err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(reply)
 }
 
 // ReplaceAllNotes replaces the Notes of the authorized User's Notebook with a new set of Notes. It takes as
