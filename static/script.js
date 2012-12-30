@@ -20,13 +20,11 @@ function deleteNote(e) {
     if (!e) var e = window.event;
     e.cancelBuble = true;
     if (e.stopPropagation) e.stopPropagation();
-
     textarea = $(this).next('textarea')
     note = new Object();
     note.ID = textarea.attr('noteid')
     $.ajax({url: notesURL + note.ID, type:'DELETE', success: function(response) {
-        // TODO remove note without reloading page
-        location.reload();
+        location.reload()
     }});
 }
 
@@ -49,7 +47,6 @@ function saveNote() {
             $.ajax({url:notesURL+note.ID, type:"PUT", data:JSON.stringify(note)})
         } else {
             $.post(notesURL, JSON.stringify(note), function(note) {
-                // TODO insert note without reloading page
                 location.reload();
             });
         }
