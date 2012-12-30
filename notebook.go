@@ -20,6 +20,7 @@ package tessernote
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/memcache"
 	"appengine/user"
 	"encoding/gob"
 	"errors"
@@ -65,6 +66,19 @@ func (notebook *Notebook) Tags(c appengine.Context) ([]Tag, error) {
 		}
 	}
 	return notebook.tags, nil
+}
+
+// Note returns a note by its ID.
+func (notebook *Notebook) Note(id string, c appengine.Context) (note Note, err error) {
+	key, err := datastore.DecodeKey(id)
+	if err == nil {
+		if containsKey(notebook.NoteKeys, key) {
+			err = cachestore.Get(c, key, &note)
+		} else {
+			err = errors.New("notebook does not contain note with ID: " + id)
+		}
+	}
+	return note, err
 }
 
 // Notes returns all notes in this Notebook including untagged notes
@@ -208,6 +222,9 @@ func (notebook *Notebook) addNote(note Note, c appengine.Context) (Note, error) 
 		}
 		return notebook.save(tc)
 	}, &datastore.TransactionOptions{XG: true})
+	if err != nil {
+		memcache.Flush(c)
+	}
 	return note, err
 }
 
@@ -369,6 +386,12 @@ func (notebook *Notebook) addTagKeys(tagKeys []*datastore.Key) {
 	}
 }
 
+// PutAll adds or updates notes and sorts out all Tag relationships.
+func (notebook *Notebook) PutAll(notes []Note, c appengine.Context) ([]Note, error) {
+	// TODO
+	return notes, errors.New("not yet implemented")
+}
+
 // save updates this Notebook in the datastore
 func (notebook *Notebook) save(c appengine.Context) error {
 	if Debug {
@@ -417,6 +440,9 @@ func (notebook *Notebook) updateNote(note Note, c appengine.Context) (Note, erro
 		// update notebook
 		return notebook.save(tc)
 	}, &datastore.TransactionOptions{XG: true})
+	if err != nil {
+		memcache.Flush(c)
+	}
 	return note, err
 }
 
@@ -452,7 +478,25 @@ func (notebook *Notebook) Delete(id string, c appengine.Context) (bool, error) {
 		notebook.NoteKeys = removeKey(notebook.NoteKeys, noteKey)
 		return notebook.save(tc)
 	}, &datastore.TransactionOptions{XG: true})
+	if err != nil {
+		memcache.Flush(c)
+	}
 	return err == nil, err
+}
+
+// DeleteAll deletes all Notes and Tags from this Notebook.
+func (notebook *Notebook) DeleteAll(c appengine.Context) error {
+	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
+		err := cachestore.DeleteMulti(tc, notebook.NoteKeys)
+		if err != nil {
+			return err
+		}
+		return cachestore.DeleteMulti(tc, notebook.TagKeys)
+	}, &datastore.TransactionOptions{XG: true})
+	if err != nil {
+		memcache.Flush(c)
+	}
+	return nil
 }
 
 // GetNotebook returns a user's unique Notebook

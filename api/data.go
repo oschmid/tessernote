@@ -94,10 +94,45 @@ func GetAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context, no
 }
 
 // ReplaceAllNotes replaces the Notes of the authorized User's Notebook with a new set of Notes. It takes as
-// input a JSON formatted list of Notes and writes true if succeeded or an error message otherwise to w.
+// input a JSON formatted list of Notes and writes the added notes if succeeded or an error message otherwise to w.
+// Notes may be written back with different IDs than those submitted, see ReplaceNote().
 func ReplaceAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
-	// TODO replace all notes with new notes
-	http.Error(w, "not yet implemented", http.StatusInternalServerError)
+	notes, err := readNotes(w, r)
+	if err != nil {
+		return
+	}
+	err = notebook.DeleteAll(c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	notes, err = notebook.PutAll(notes, c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	reply, err := json.Marshal(notes)
+	if err != nil {
+		c.Errorf("marshaling notes (%d): %s", len(notes), err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(reply)
+}
+
+// readNotes decodes a JSON formatted []Note from the request body.
+func readNotes(w http.ResponseWriter, r *http.Request) (notes []tessernote.Note, err error) {
+	body, err := readRequestBody(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return notes, err
+	}
+	err = json.Unmarshal(body, &notes)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return notes, err
+	}
+	return notes, nil
 }
 
 // CreateNote creates a new Note in the authorized User's Notebook. It takes as input a JSON formatted Note 
@@ -150,14 +185,36 @@ func readRequestBody(r *http.Request) ([]byte, error) {
 // DeleteAllNotes deletes all Notes from the authorized User's Notebook. It writes true if Notes were deleted,
 // and false if the Notebook was empty to w.
 func DeleteAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
-	// TODO delete all notes
-	http.Error(w, "not yet implemented", http.StatusInternalServerError)
+	empty := len(notebook.NoteKeys) == 0
+	err := notebook.DeleteAll(c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	reply, err := json.Marshal(!empty)
+	if err != nil {
+		c.Errorf("marshaling delete all response: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(reply)
 }
 
 // GetNote retrieves a note from the authorized User's Notebook by ID. The Note is written in JSON format to w.
 func GetNote(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
-	// TODO retrieve a note by ID
-	http.Error(w, "not yet implemented", http.StatusInternalServerError)
+	id := r.URL.Path[len(NotesURL):]
+	note, err := notebook.Note(id, c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	reply, err := json.Marshal(note)
+	if err != nil {
+		c.Errorf("marshaling note (%#v): %s", note, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(reply)
 }
 
 // ReplaceNote replaces a Note in the authorized User's Notebook by its ID. If the Note doesn't exist it is created.
