@@ -388,7 +388,10 @@ func (notebook *Notebook) addTagKeys(tagKeys []*datastore.Key) {
 
 // PutAll adds or updates notes and sorts out all Tag relationships.
 func (notebook *Notebook) PutAll(notes []Note, c appengine.Context) ([]Note, error) {
-	// TODO
+	// TODO batch calls
+	for _, note := range notes {
+		notebook.Put(note, c)
+	}
 	return notes, errors.New("not yet implemented")
 }
 
