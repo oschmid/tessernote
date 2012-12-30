@@ -13,7 +13,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 // hashtag regexp pattern from https://github.com/twitter/twitter-text-java/blob/master/src/com/twitter/Regex.java
 package hashtag

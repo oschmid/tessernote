@@ -21,9 +21,9 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"github.com/oschmid/cachestore"
+	"github.com/oschmid/tessernote/hashtag"
 	"strings"
 	"unicode"
-	"github.com/oschmid/tessernote/hashtag"
 )
 
 type Tag struct {
