@@ -22,6 +22,7 @@ import (
 	"appengine/user"
 	"github.com/oschmid/tessernote"
 	"github.com/oschmid/tessernote/filepath"
+	"github.com/oschmid/tessernote/hashtag"
 	"html/template"
 	"net/http"
 	"os"
@@ -30,7 +31,7 @@ import (
 )
 
 var (
-	tagPattern   = "[a-zA-Z0-9]" // TODO use twitter regex
+	tagPattern   = "(" + hashtag.AlphaNumeric + "*" + hashtag.Alpha + hashtag.AlphaNumeric + "*)" // hashtag pattern without the hash mark
 	tagSeparator = ","
 	tagsPattern  = "(" + tagPattern + "+\\" + tagSeparator + ")*" + tagPattern + "+"
 	untaggedURL  = "/untagged/"
