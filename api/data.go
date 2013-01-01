@@ -33,8 +33,8 @@ const (
 )
 
 var (
-	idPattern    = "[0-9a-zA-Z-_]"
-	validDataURL = regexp.MustCompile("^" + NotesURL + idPattern + "*$")
+	base64Char   = "[0-9a-zA-Z-_]"
+	validDataURL = regexp.MustCompile("^" + NotesURL + base64Char + "*$")
 )
 
 // serveData handles requests to Tessernote's RESTful data API
@@ -45,7 +45,7 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", http.StatusUnauthorized)
 		return
 	}
-	notebook, err := tessernote.GetNotebook(c)
+	notebook, err := tessernote.CurrentNotebook(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -53,13 +53,13 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == NotesURL {
 		switch r.Method {
 		case "GET":
-			GetAllNotes(w, r, c, notebook)
+			GetAllNotes(w, c, notebook)
 		case "PUT":
 			ReplaceAllNotes(w, r, c, notebook)
 		case "POST":
 			CreateNote(w, r, c, notebook)
 		case "DELETE":
-			DeleteAllNotes(w, r, c, notebook)
+			DeleteAllNotes(w, c, notebook)
 		default:
 			http.NotFound(w, r)
 		}
@@ -78,7 +78,7 @@ func serveData(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllNotes writes a JSON formatted list of all Note IDs in the authorized User's Notebook to w.
-func GetAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
+func GetAllNotes(w http.ResponseWriter, c appengine.Context, notebook *tessernote.Notebook) {
 	notes, err := notebook.Notes(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -184,7 +184,7 @@ func readRequestBody(r *http.Request) ([]byte, error) {
 
 // DeleteAllNotes deletes all Notes from the authorized User's Notebook. It writes true if Notes were deleted,
 // and false if the Notebook was empty to w.
-func DeleteAllNotes(w http.ResponseWriter, r *http.Request, c appengine.Context, notebook *tessernote.Notebook) {
+func DeleteAllNotes(w http.ResponseWriter, c appengine.Context, notebook *tessernote.Notebook) {
 	empty := len(notebook.NoteKeys) == 0
 	err := notebook.DeleteAll(c)
 	if err != nil {

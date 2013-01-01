@@ -35,7 +35,7 @@ var (
 	tagSeparator = ","
 	tagsPattern  = "(" + tagPattern + "+\\" + tagSeparator + ")*" + tagPattern + "+"
 	untaggedURL  = "/untagged/"
-	validPageURL = regexp.MustCompile("^(/|(" + untaggedURL + ")|(/" + tagsPattern + "))$")
+	validPageURL = regexp.MustCompile("^(/|(" + untaggedURL + ")|(/" + tagsPattern + "))(" + sortOrderURL.String() + ")?$")
 	templates    = getTemplates()
 )
 
@@ -53,7 +53,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		notebook, err := tessernote.GetNotebook(c)
+		notebook, err := tessernote.CurrentNotebook(c)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -127,20 +127,11 @@ func parseSelectedTags(w http.ResponseWriter, r *http.Request, notebook *tessern
 	}
 	tags, err := notebook.TagsFrom(names, c)
 	if err != nil {
-		names = namesFrom(tags)
+		names = tessernote.Name(tags)
 		tagString := strings.Join(names, tagSeparator)
 		http.Redirect(w, r, "/"+tagString, http.StatusFound)
 	}
 	return tags, err
-}
-
-// namesFrom returns the names of tags
-func namesFrom(tags []tessernote.Tag) []string {
-	names := *new([]string)
-	for _, tag := range tags {
-		names = append(names, tag.Name)
-	}
-	return names
 }
 
 // getTemplates returns Tessernote's HTML templates

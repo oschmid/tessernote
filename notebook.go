@@ -22,6 +22,7 @@ import (
 	"appengine/datastore"
 	"appengine/memcache"
 	"appengine/user"
+	"bytes"
 	"encoding/gob"
 	"errors"
 	"github.com/oschmid/cachestore"
@@ -34,18 +35,50 @@ func init() {
 	gob.Register(Notebook{})
 	gob.Register(Note{})
 	gob.Register(Tag{})
+	gob.Register(NoteOrder{})
+	gob.Register(orderWeight{})
 }
 
-// TODO use Key sets (and implement PropertyLoadSaver) not arrays
 type Notebook struct {
 	ID               string // user.User.ID
 	Name             string
 	TagKeys          []*datastore.Key // sorted by Tag.Name
 	NoteKeys         []*datastore.Key
 	UntaggedNoteKeys []*datastore.Key
-	tags             []Tag  // cache
-	notes            []Note // cache
-	untaggedNotes    []Note //cache
+	Order            NoteOrder `datastore:"-"`
+	tags             []Tag     // cache
+	notes            []Note    // cache
+	untaggedNotes    []Note    //cache
+}
+
+func (notebook *Notebook) Load(c <-chan datastore.Property) error {
+	// load Ordering
+	prop := <-c
+	reader := bytes.NewReader(prop.Value.([]byte))
+	decoder := gob.NewDecoder(reader)
+	err := decoder.Decode(&notebook.Order)
+	if err != nil {
+		return err
+	}
+	// load the rest
+	return datastore.LoadStruct(notebook, c)
+}
+
+func (notebook *Notebook) Save(c chan<- datastore.Property) error {
+	// save Ordering
+	buffer := new(bytes.Buffer)
+	encoder := gob.NewEncoder(buffer)
+	err := encoder.Encode(notebook.Order)
+	if err != nil {
+		return err
+	}
+	c <- datastore.Property{
+		Name:    "Order",
+		Value:   buffer.Bytes(),
+		NoIndex: true,
+	}
+	// save the rest
+	return datastore.SaveStruct(notebook, c)
 }
 
 // Key returns a datastore.Key for Notebook
@@ -500,8 +533,8 @@ func (notebook *Notebook) DeleteAll(c appengine.Context) error {
 	return nil
 }
 
-// GetNotebook returns a user's unique Notebook
-func GetNotebook(c appengine.Context) (*Notebook, error) {
+// CurrentNotebook returns the current user's Notebook
+func CurrentNotebook(c appengine.Context) (*Notebook, error) {
 	notebook := new(Notebook)
 	u := user.Current(c)
 	if u == nil {
@@ -519,6 +552,7 @@ func GetNotebook(c appengine.Context) (*Notebook, error) {
 			c.Debugf("adding new notebook for: %s", u.Email)
 		}
 		notebook.Name = u.Email
+		notebook.Order = NewNoteOrder()
 		key, err = cachestore.Put(c, key, notebook)
 	}
 	return notebook, err

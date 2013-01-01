@@ -112,3 +112,12 @@ func NewTag(name string, note Note, notebook Notebook, c appengine.Context) *Tag
 	tag.NoteKeys = []*datastore.Key{note.Key(c)}
 	return tag
 }
+
+// Name returns the names of Tags in tag.
+func Name(tag []Tag) []string {
+	name := make([]string, len(tag))
+	for i, t := range tag {
+		name[i] = t.Name
+	}
+	return name
+}
