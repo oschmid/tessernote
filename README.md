@@ -1,5 +1,5 @@
 #Tessernote
-I'm teaching myself how to web programming by making a note taking app.
+I'm making a note taking web app to teach myself web programming and to play around with different algorithms.
 
 Tessernote is:
 - minimal: notes are just text, organization is done with tags, and the interface is equally simple
