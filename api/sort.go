@@ -18,11 +18,12 @@ along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
 package api
 
 import (
+	"errors"
 	"github.com/oschmid/tessernote"
 	"regexp"
 )
 
-var sortOrderURL = regexp.MustCompile("\\?sort=" + tessernote.SortOrder.String() + "$")
+var sortOrderURL = regexp.MustCompile("\\?sort=" + tessernote.Orders.String() + "$")
 
 // parseSortOrder will parse a URL and return one of AlphaAscending, AlphaDescending, LastModified, FirstModified,
 // LastCreated, or FirstCreated. If no sort order is specified, the empty string is returned.

@@ -18,45 +18,65 @@ along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
 package tessernote
 
 import (
-	"errors"
+	"github.com/oschmid/tessernote/rl"
 	"regexp"
 	"sort"
 	"strings"
 )
 
 const (
-	AlphaAscending  = "aa"
-	AlphaDescending = "ad"
-	LastModified    = "lm"
-	FirstModified   = "fm"
-	LastCreated     = "lc"
-	FirstCreated    = "fc"
-	DefaultOrder    = AlphaAscending
-	PastOrderWeight = 0.9
-	OrderSetBonus   = 50
-	OrderGetBonus   = 10
+	AlphaAscending      = "aa"
+	AlphaDescending     = "ad"
+	LastModified        = "lm"
+	FirstModified       = "fm"
+	LastCreated         = "lc"
+	FirstCreated        = "fc"
+	alphaAscendingIndex = iota
+	alphaDescendingIndex
+	lastModifiedIndex
+	firstModifiedIndex
+	lastCreatedIndex
+	firstCreatedIndex
+	DefaultOrderIndex    = alphaAscendingIndex
+	DefaultOrderDiscount = 0.9
+	DefaultOrderSetBonus = 30.0
+	DefaultOrderGetBonus = 10.0
 )
 
-// SortOrder matches all legal methods of ordering notes
-var SortOrder = regexp.MustCompile("(" + AlphaAscending + "|" + AlphaDescending + "|" +
+// Orders matches all note order types.
+var Orders = regexp.MustCompile("(" + AlphaAscending + "|" + AlphaDescending + "|" +
 	LastModified + "|" + FirstModified + "|" + LastCreated + "|" + FirstCreated + ")")
 
-// NoteOrder tracks the preferred sort order of the notes of a set of tags.
-// Preference is based on frecency and whether is set explicitly or accepted
-// implicitly.
-type NoteOrder struct {
-	Weight map[string]*orderWeight
-	Last   string
+// Order tracks the preferred order for notes base on selected tags
+// and which device is being used to look at them.
+type Order struct {
+	Tags    map[string]*rl.Decision
+	Device  map[string]*rl.Decision
+	Default *rl.Decision
+	Last    int
 }
 
-// Get returns the preferred order for the notes of a set of tags.
-func (order *NoteOrder) Get(tag []Tag) string {
-	name := groupName(tag)
-	if _, ok := order.Weight[name]; !ok {
-		order.Weight[name] = newOrderWeight()
+// NewOrder creates a 
+func NewOrder() Order {
+	return Order{
+		Tags:   make(map[string]*rl.Decision),
+		Device: make(map[string]*rl.Decision),
+		Default: &rl.Decision{
+			Weight:     make([]float64, 6),
+			Discount:   DefaultOrderDiscount,
+			SetBonus:   DefaultOrderSetBonus,
+			GetBonus:   DefaultOrderGetBonus,
+			Dependence: []*rl.Decision{},
+		},
+		Last: DefaultOrderIndex,
 	}
-	order.Last = order.Weight[name].Get(order.Last)
-	return order.Last
+}
+
+// Get returns the preferred order for tag on device.
+func (order *Order) Get(tag []Tag, device string) int {
+	name := groupName(tag)
+	decision := order.getTagsDecision(name, device)
+	return decision.GetAction(order.Last)
 }
 
 // groupName creates a unique name for a group of tags.
@@ -66,79 +86,45 @@ func groupName(tag []Tag) string {
 	return strings.Join(name, "#")
 }
 
-// Set updates the order preferences for the notes of a set of tags.
-func (order *NoteOrder) Set(tag []Tag, o string) error {
-	if !SortOrder.MatchString(o) {
-		return errors.New("invalid sort order: " + o)
-	}
-	name := groupName(tag)
-	if _, ok := order.Weight[name]; !ok {
-		order.Weight[name] = newOrderWeight()
-	}
-	order.Weight[name].Set(o)
-	return nil
-}
-
-// Cleanup removes order weights referring to any Tag t in tag.
-func (order *NoteOrder) Cleanup(tag []Tag) {
-	name := Name(tag)
-	for on, _ := range order.Weight {
-		for _, n := range name {
-			if strings.Contains(on, n) {
-				delete(order.Weight, on)
-				break
-			}
-		} 
-	}
-}
-
-// NewNoteOrder returns a NoteOrder with default order.
-func NewNoteOrder() NoteOrder {
-	return NoteOrder{
-		Weight: make(map[string]*orderWeight),
-		Last:   DefaultOrder,
-	}
-}
-
-// orderWeight tracks the weights of different note orders.
-type orderWeight map[string]float32
-
-// Get reweighs all order weights and returns an order based on frecency of past orders.
-func (weight orderWeight) Get(lastOrder string) string {
-	weight.reweigh()
-	weight[lastOrder] += OrderGetBonus
-	return weight.Max()
-}
-
-// Max returns the order with the greatest weight. 
-func (weight orderWeight) Max() string {
-	var max float32 = 0.0
-	order := ""
-	for o, w := range weight {
-		if w > max {
-			max = w
-			order = o
+// getTagsDecision lazily creates a tags decision that depends on a
+// device decision.
+func (order *Order) getTagsDecision(tags, device string) *rl.Decision {
+	if _, ok := order.Tags[tags]; !ok {
+		order.Tags[tags] = &rl.Decision{
+			Weight:     make([]float64, 6),
+			Discount:   DefaultOrderDiscount,
+			SetBonus:   DefaultOrderSetBonus,
+			GetBonus:   DefaultOrderGetBonus,
+			Dependence: []*rl.Decision{order.getDeviceDecision(device)},
 		}
 	}
-	return order
+	return order.Tags[tags]
 }
 
-// reweigh updates the weights of previous orders.
-func (weight orderWeight) reweigh() {
-	for o, w := range weight {
-		weight[o] = w * PastOrderWeight
+// getDeviceDecision lazily creates a device decision that depends
+// on the default decision.
+func (order *Order) getDeviceDecision(device string) *rl.Decision {
+	if _, ok := order.Device[device]; !ok {
+		order.Device[device] = &rl.Decision{
+			Weight:     make([]float64, 6),
+			Discount:   DefaultOrderDiscount,
+			SetBonus:   DefaultOrderSetBonus,
+			GetBonus:   DefaultOrderGetBonus,
+			Dependence: []*rl.Decision{order.Default},
+		}
 	}
+	return order.Device[device]
 }
 
-// Set reweighs all order weights and sets the current order.
-func (weight orderWeight) Set(order string) {
-	weight.reweigh()
-	weight[order] += OrderSetBonus
-}
-
-// newOrderWeight returns an orderWeight with weight given to the default order.
-func newOrderWeight() *orderWeight {
-	order := make(orderWeight)
-	order[DefaultOrder] = OrderGetBonus
-	return &order
+// Cleanup removes tags decision for groups containing any Tag in tag.
+func (order *Order) Cleanup(tag []Tag) {
+	name := Name(tag)
+	for group, _ := range order.Tags {
+		for _, n := range name {
+			if strings.Contains(group, n) {
+				delete(order.Tags, group)
+				break
+			}
+		}
+	}
 }

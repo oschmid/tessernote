@@ -26,6 +26,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"github.com/oschmid/cachestore"
+	"github.com/oschmid/tessernote/rl"
 	"time"
 )
 
@@ -35,8 +36,8 @@ func init() {
 	gob.Register(Notebook{})
 	gob.Register(Note{})
 	gob.Register(Tag{})
-	gob.Register(NoteOrder{})
-	gob.Register(orderWeight{})
+	gob.Register(Order{})
+	gob.Register(rl.Decision{})
 }
 
 type Notebook struct {
@@ -45,10 +46,10 @@ type Notebook struct {
 	TagKeys          []*datastore.Key // sorted by Tag.Name
 	NoteKeys         []*datastore.Key
 	UntaggedNoteKeys []*datastore.Key
-	Order            NoteOrder `datastore:"-"`
-	tags             []Tag     // cache
-	notes            []Note    // cache
-	untaggedNotes    []Note    //cache
+	Order            Order  `datastore:"-"`
+	tags             []Tag  // cache
+	notes            []Note // cache
+	untaggedNotes    []Note // cache
 }
 
 func (notebook *Notebook) Load(c <-chan datastore.Property) error {
@@ -552,7 +553,7 @@ func CurrentNotebook(c appengine.Context) (*Notebook, error) {
 			c.Debugf("adding new notebook for: %s", u.Email)
 		}
 		notebook.Name = u.Email
-		notebook.Order = NewNoteOrder()
+		notebook.Order = NewOrder()
 		key, err = cachestore.Put(c, key, notebook)
 	}
 	return notebook, err
