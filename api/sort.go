@@ -18,7 +18,6 @@ along with Tessernote.  If not, see <http://www.gnu.org/licenses/>.
 package api
 
 import (
-	"errors"
 	"github.com/oschmid/tessernote"
 	"regexp"
 )
